@@ -185,7 +185,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     const logChannel = oldState.guild.channels.cache.find(c => c.name === '일기장');
                     if (logChannel) {
                         // 사용자님의 웹사이트 주소에 맞게 수정하세요.[cite: 4]
-                        const webURL = `https://your-diary-site.com?id=${docRef.id}`;
+                        const webURL = `https://game-diary-2.vercel.app?id=${docRef.id}`;
                         const gameList = Object.keys(session.gameLogs).join(', ') || '대화';
                         
                         const embed = new EmbedBuilder()
