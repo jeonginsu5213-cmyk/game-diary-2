@@ -42,7 +42,38 @@ const client = new Client({
 
 const activeSessions = new Map();
 
-// 헬퍼 함수: 게임 로그 업데이트
+// 헬퍼 함수: 시간 포맷팅 (분 -> n시간 n분)
+function formatDuration(minutes) {
+    if (minutes < 60) return `${minutes}분`;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
+}
+
+// 헬퍼 함수: 게임 추적 중지 및 시간 합산
+function stopGameTracking(session, username, gameName) {
+    if (session.gameLogs[gameName] && session.gameLogs[gameName].activeStartTime[username]) {
+        const startTime = session.gameLogs[gameName].activeStartTime[username];
+        const duration = Date.now() - startTime;
+        
+        // 전체 시간 합산
+        session.gameLogs[gameName].totalPlayTime += duration;
+        
+        // 개별 인원 시간 합산
+        if (!session.gameLogs[gameName].playerPlayTimes) {
+            session.gameLogs[gameName].playerPlayTimes = {};
+        }
+        if (!session.gameLogs[gameName].playerPlayTimes[username]) {
+            session.gameLogs[gameName].playerPlayTimes[username] = 0;
+        }
+        session.gameLogs[gameName].playerPlayTimes[username] += duration;
+        
+        session.gameLogs[gameName].activeStartTime[username] = null;
+        console.log(`🎮 [Game Tracking] ${username}이(가) ${gameName} 플레이 종료 (${Math.floor(duration/1000)}초)`);
+    }
+}
+
+// 헬퍼 함수: 게임 로그 업데이트 (시작)
 function updateGameLog(session, username, activity) {
     if (activity && activity.type === 0) {
         const gameName = activity.name;
@@ -51,6 +82,7 @@ function updateGameLog(session, username, activity) {
         if (!session.gameLogs[gameName]) {
             session.gameLogs[gameName] = { 
                 totalPlayTime: 0, 
+                playerPlayTimes: {},
                 players: new Set(), 
                 activeStartTime: {}, 
                 iconURL: iconURL,
@@ -63,14 +95,55 @@ function updateGameLog(session, username, activity) {
         if (!session.gameLogs[gameName].activeStartTime[username]) {
             session.gameLogs[gameName].activeStartTime[username] = Date.now();
             session.gameLogs[gameName].players.add(username);
+            console.log(`🎮 [Game Tracking] ${username}이(가) ${gameName} 플레이 시작`);
         }
     }
 }
 
-client.once('ready', () => {
+client.once('ready', async () => {
     console.log('--------------------------------------');
     console.log('🤖 [Game Diary] 일기 공유 및 한줄평 시스템 가동 중...');
     console.log('--------------------------------------');
+
+    // 🚀 부팅 시 이미 음성 채널에 있는 유저들 감지 및 세션 생성
+    for (const guild of client.guilds.cache.values()) {
+        for (const voiceState of guild.voiceStates.cache.values()) {
+            if (!voiceState.member || voiceState.member.user.bot || !voiceState.channelId) continue;
+            
+            const channel = voiceState.channel;
+            const channelId = channel.id;
+            const member = voiceState.member;
+            const username = member.user.username;
+            const nickname = member.displayName;
+            const avatarURL = member.user.displayAvatarURL({ format: 'png', size: 256 });
+
+            if (!activeSessions.has(channelId)) {
+                const session = {
+                    channelName: channel.name,
+                    sessionTitle: "오늘의 게임일기",
+                    startTime: Date.now(),
+                    participants: new Set(),
+                    displayNames: new Map(),
+                    profileImages: new Map(),
+                    gameLogs: {},
+                    pendingScreenshots: [],
+                    controlMessage: null 
+                };
+                activeSessions.set(channelId, session);
+                console.log(`📡 [Startup] ${channel.name} 채널 세션 자동 생성`);
+            }
+
+            const session = activeSessions.get(channelId);
+            session.participants.add(username);
+            session.displayNames.set(username, nickname);
+            session.profileImages.set(username, avatarURL);
+
+            const currentActivity = member.presence?.activities.find(a => a.type === 0);
+            if (currentActivity) {
+                updateGameLog(session, username, currentActivity);
+            }
+        }
+    }
 });
 
 // 🎤 음성 채널 세션 관리
@@ -85,8 +158,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     const oldChannel = oldState.channel;
     const newChannel = newState.channel;
 
-    if (!oldChannel && newChannel) {
+    // 1. 새로운 채널에 입장했거나 채널을 이동한 경우
+    if (newChannel) {
         const channelId = newChannel.id;
+        
+        // 해당 채널의 세션이 없으면 새로 생성
         if (!activeSessions.has(channelId)) {
             const session = {
                 channelName: newChannel.name,
@@ -135,19 +211,38 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         session.displayNames.set(username, nickname);
         session.profileImages.set(username, avatarURL);
 
+        // 현재 하고 있는 게임 추적 시작
         const currentActivity = member.presence?.activities.find(a => a.type === 0);
         if (currentActivity) {
             updateGameLog(session, username, currentActivity);
         }
-    } 
-    else if (oldChannel && !newChannel) {
+    }
+
+    // 2. 이전 채널에서 퇴장했거나 채널을 이동한 경우
+    if (oldChannel && oldChannel.id !== newChannel?.id) {
         const channelId = oldChannel.id;
         if (activeSessions.has(channelId)) {
+            const session = activeSessions.get(channelId);
+            
+            // 퇴장하는 사용자의 게임 추적 중지
+            for (const gameName of Object.keys(session.gameLogs)) {
+                stopGameTracking(session, username, gameName);
+            }
+
+            // 채널에 남은 인원 확인 (봇 제외)
             const remainingHumans = oldChannel.members.filter(m => !m.user.bot).size;
             if (remainingHumans === 0) {
-                const session = activeSessions.get(channelId);
                 const endTime = Date.now();
                 
+                // 🛑 세션 종료 전 모든 활성 게임 로그를 현재 시간으로 마감
+                for (const [gameName, data] of Object.entries(session.gameLogs)) {
+                    for (const [pName, startTime] of Object.entries(data.activeStartTime)) {
+                        if (startTime) {
+                            stopGameTracking(session, pName, gameName);
+                        }
+                    }
+                }
+
                 const diaryData = {
                     guildName: oldState.guild.name, 
                     guildIcon: oldState.guild.iconURL({ format: 'png', size: 512 }),
@@ -162,6 +257,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     games: Object.entries(session.gameLogs).map(([name, data]) => ({
                         title: name,
                         playTimeMin: Math.floor(data.totalPlayTime / 1000 / 60),
+                        playerPlayTimes: Object.fromEntries(
+                            Object.entries(data.playerPlayTimes || {}).map(([user, ms]) => [user, Math.floor(ms / 1000 / 60)])
+                        ),
                         players: Array.from(data.players),
                         iconURL: data.iconURL,
                         comments: data.comments || [] 
@@ -184,7 +282,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     // 🌟 2. 채널에 '발행 완료' 카드 전송
                     const logChannel = oldState.guild.channels.cache.find(c => c.name === '일기장');
                     if (logChannel) {
-                        // 사용자님의 웹사이트 주소에 맞게 수정하세요.[cite: 4]
                         const webURL = `https://game-diary-2.vercel.app?id=${docRef.id}`;
                         const gameList = Object.keys(session.gameLogs).join(', ') || '대화';
                         
@@ -194,7 +291,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                             .setDescription(`오늘의 추억이 성공적으로 기록되었습니다. 아래 버튼을 눌러 일기장에서 확인해보세요!`)
                             .addFields(
                                 { name: '🎮 플레이한 게임', value: gameList, inline: true },
-                                { name: '⏱️ 총 시간', value: `${diaryData.totalDurationMin}분`, inline: true },
+                                { name: '⏱️ 총 시간', value: formatDuration(diaryData.totalDurationMin), inline: true },
                                 { name: '👥 참여 인원', value: `${session.participants.size}명`, inline: true }
                             )
                             .setTimestamp();
@@ -203,7 +300,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                             new ButtonBuilder()
                                 .setLabel('웹에서 일기 확인하기')
                                 .setStyle(ButtonStyle.Link)
-                                .setURL(webURL)
+                                .setURL(webURL),
+                            new ButtonBuilder()
+                                .setCustomId(`delete_session_${docRef.id}`)
+                                .setLabel('기록 삭제')
+                                .setStyle(ButtonStyle.Danger)
                         );
 
                         await logChannel.send({ embeds: [embed], components: [row] });
@@ -217,12 +318,24 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     }
 });
 
-// 🖱️ 상호작용 처리 (기존 유지)[cite: 4]
+// 🖱️ 상호작용 처리 (기존 유지)
 client.on('interactionCreate', async (interaction) => {
     const channelId = interaction.member?.voice?.channelId;
     const session = activeSessions.get(channelId);
 
     if (interaction.isButton()) {
+        if (interaction.customId.startsWith('delete_session_')) {
+            const sessionId = interaction.customId.replace('delete_session_', '');
+            try {
+                await db.collection('sessions').doc(sessionId).delete();
+                await interaction.reply({ content: '✅ 일기 기록이 삭제되었습니다.', ephemeral: true });
+                await interaction.message.delete().catch(() => {});
+            } catch (e) {
+                console.error('❌ 삭제 실패:', e);
+                await interaction.reply({ content: '❌ 삭제에 실패했습니다.', ephemeral: true });
+            }
+            return;
+        }
         if (interaction.customId === 'btn_edit_title') {
             const modal = new ModalBuilder()
                 .setCustomId('modal_edit_title')
@@ -309,7 +422,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
-// 📸 메시지 감지 및 스크릿샷 분류 (기존 유지)[cite: 4]
+// 📸 메시지 감지 및 스크릿샷 분류 (기존 유지)
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
@@ -387,15 +500,28 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-// 🎮 실시간 게임 감지 (기존 유지)[cite: 4]
+// 🎮 실시간 게임 감지
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence || newPresence.user.bot) return;
     const member = newPresence.member;
     const channelId = member?.voice?.channelId;
     if (!channelId || !activeSessions.has(channelId)) return;
+    
     const session = activeSessions.get(channelId);
-    const activity = newPresence.activities.find(a => a.type === 0);
-    if (activity) updateGameLog(session, member.user.username, activity);
+    const username = member.user.username;
+
+    const oldGame = oldPresence?.activities.find(a => a.type === 0);
+    const newGame = newPresence.activities.find(a => a.type === 0);
+
+    // 게임이 바뀌었거나 종료된 경우
+    if (oldGame && (!newGame || oldGame.name !== newGame.name)) {
+        stopGameTracking(session, username, oldGame.name);
+    }
+
+    // 새로운 게임 시작
+    if (newGame) {
+        updateGameLog(session, username, newGame);
+    }
 });
 
 client.login(process.env.DISCORD_TOKEN);
