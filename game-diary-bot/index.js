@@ -113,6 +113,7 @@ client.once('ready', async () => {
             const channel = voiceState.channel;
             const channelId = channel.id;
             const member = voiceState.member;
+            const userId = member.user.id;
             const username = member.user.username;
             const nickname = member.displayName;
             const avatarURL = member.user.displayAvatarURL({ format: 'png', size: 256 });
@@ -134,9 +135,9 @@ client.once('ready', async () => {
             }
 
             const session = activeSessions.get(channelId);
-            session.participants.add(username);
-            session.displayNames.set(username, nickname);
-            session.profileImages.set(username, avatarURL);
+            session.participants.add(userId);
+            session.displayNames.set(userId, nickname);
+            session.profileImages.set(userId, avatarURL);
 
             const currentActivity = member.presence?.activities.find(a => a.type === 0);
             if (currentActivity) {
@@ -151,6 +152,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     const member = newState.member || oldState.member;
     if (!member || member.user.bot) return;
 
+    const userId = member.user.id;
     const username = member.user.username;
     const nickname = member.displayName;
     const avatarURL = member.user.displayAvatarURL({ format: 'png', size: 256 });
@@ -168,9 +170,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 channelName: newChannel.name,
                 sessionTitle: "오늘의 게임일기",
                 startTime: Date.now(),
-                participants: new Set([username]),
-                displayNames: new Map([[username, nickname]]),
-                profileImages: new Map([[username, avatarURL]]),
+                participants: new Set([userId]),
+                displayNames: new Map([[userId, nickname]]),
+                profileImages: new Map([[userId, avatarURL]]),
                 gameLogs: {},
                 pendingScreenshots: [],
                 controlMessage: null 
@@ -207,9 +209,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         }
         
         const session = activeSessions.get(channelId);
-        session.participants.add(username);
-        session.displayNames.set(username, nickname);
-        session.profileImages.set(username, avatarURL);
+        session.participants.add(userId);
+        session.displayNames.set(userId, nickname);
+        session.profileImages.set(userId, avatarURL);
 
         // 현재 하고 있는 게임 추적 시작
         const currentActivity = member.presence?.activities.find(a => a.type === 0);

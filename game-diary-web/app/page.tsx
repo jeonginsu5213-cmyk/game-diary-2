@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from "../src/lib/firebase"; 
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 /** 
  * 헬퍼 함수: 시간 포맷팅 (분 -> n시간 n분)
@@ -19,7 +20,6 @@ const formatDurationText = (minutes: number) => {
  */
 const formatDate = (dateStr: string) => {
   if (!dateStr || dateStr === "DATE UNKNOWN") return dateStr;
-  // dateStr이 "2026. 5. 8." 형태일 수 있으므로 안전하게 처리
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return dateStr;
   
@@ -97,18 +97,24 @@ const ScreenshotSlider = ({ screenshots, data }: any) => {
   );
 };
 
-const GameCommentInput = ({ sessionId, gameTitle, currentUser, data }: any) => {
+const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
+  const { data: session }: any = useSession();
   const [text, setText] = useState("");
 
   const handleSubmit = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() || !session) return;
     try {
       const sessionRef = doc(db, "sessions", sessionId);
       const updatedGames = data.games.map((g: any) => {
         if (g.title === gameTitle) {
           return {
             ...g,
-            comments: [...(g.comments || []), { user: currentUser, text: text.trim() }]
+            comments: [...(g.comments || []), { 
+              userId: session.user.id, // ID를 우선적으로 저장
+              user: session.user.name, 
+              image: session.user.image,
+              text: text.trim() 
+            }]
           };
         }
         return g;
@@ -128,10 +134,19 @@ const GameCommentInput = ({ sessionId, gameTitle, currentUser, data }: any) => {
     }
   };
 
+  if (!session) {
+    return (
+      <div className="mt-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center font-sans">
+        <p className="text-[10px] font-bold text-gray-400">댓글을 남기려면 디스코드로 로그인하세요.</p>
+        <button onClick={() => signIn('discord')} className="mt-2 text-[10px] font-black text-[#5865F2] hover:underline cursor-pointer">로그인하기</button>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-2 flex items-center gap-3 p-2 bg-white rounded-2xl border border-slate-100 shadow-inner group/input font-sans">
       <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-slate-50">
-        <img src={data.profileImages?.[currentUser] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser}`} alt="" className="w-full h-full" />
+        <img src={session.user.image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${session.user.name}`} alt="" className="w-full h-full" />
       </div>
       <input 
         type="text" 
@@ -313,8 +328,8 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
                           </div>
                           <span className="text-[9px] md:text-[10px] font-bold font-sans truncate max-w-[60px] md:max-w-none">{data.displayNames[player] || player}</span>
                           <span className="text-[9px] md:text-[10px] font-black text-[#949BA4] ml-1 font-sans">
-  {formatDurationText(game.playerPlayTimes?.[player] || 0)}
-</span>
+                            {formatDurationText(game.playerPlayTimes?.[player] || 0)}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -329,18 +344,24 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
               <div className="mt-2 pt-4 border-t border-slate-50 font-sans text-[#1A1D1F]">
                 <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3 px-1 font-sans">게임 한줄평</p>
                 <div className="space-y-2 font-sans">
-                  {game.comments && game.comments.map((comm: any, idx: number) => (
-                    <div key={idx} className="flex items-start gap-3 p-2 bg-[#F8F9FA] rounded-2xl border border-white font-sans">
-                      <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 border border-white shadow-sm font-sans">
-                        <img src={data.profileImages?.[comm.user] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${comm.user}`} alt="" className="w-full h-full object-cover" />
+                  {game.comments && game.comments.map((comm: any, idx: number) => {
+                    // 서버 프로필 매칭 로직: userId가 있으면 data.displayNames/profileImages에서 먼저 찾음
+                    const mappedName = (comm.userId && data.displayNames[comm.userId]) || comm.user;
+                    const mappedImage = (comm.userId && data.profileImages[comm.userId]) || comm.image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${comm.user}`;
+                    
+                    return (
+                      <div key={idx} className="flex items-start gap-3 p-2 bg-[#F8F9FA] rounded-2xl border border-white font-sans">
+                        <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 border border-white shadow-sm font-sans">
+                          <img src={mappedImage} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex flex-col font-sans">
+                          <span className="text-[10px] font-black text-gray-400 leading-none mb-1 font-sans">{mappedName}</span>
+                          <p className="text-[11px] font-bold leading-snug font-sans">{comm.text}</p>
+                        </div>
                       </div>
-                      <div className="flex flex-col font-sans">
-                        <span className="text-[10px] font-black text-gray-400 leading-none mb-1 font-sans">{data.displayNames[comm.user] || comm.user}</span>
-                        <p className="text-[11px] font-bold leading-snug font-sans">{comm.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <GameCommentInput sessionId={sessionId} gameTitle={game.title} currentUser={data.participants[0]} data={data} />
+                    );
+                  })}
+                  <GameCommentInput sessionId={sessionId} gameTitle={game.title} data={data} />
                 </div>
               </div>
             </div>
@@ -385,6 +406,7 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
 };
 
 export default function Home() {
+  const { data: session }: any = useSession();
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -472,6 +494,32 @@ export default function Home() {
               <span className="text-[10px] font-medium text-green-500 flex items-center gap-1.5 font-sans"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />연동됨</span>
             </div>
           </div>
+        </div>
+
+        {/* 유저 로그인 정보 섹션 */}
+        <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm font-sans">
+          {session ? (
+            <div className="flex flex-col gap-3 font-sans">
+              <div className="flex items-center gap-3 font-sans">
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#5865F2] font-sans">
+                  <img src={session.user.image} alt={session.user.name} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col min-w-0 font-sans">
+                  <span className="text-[12px] font-black truncate font-sans">{session.user.name}님</span>
+                  <span className="text-[9px] font-bold text-gray-400 font-sans">디스코드 연결됨</span>
+                </div>
+              </div>
+              <button onClick={() => signOut()} className="w-full py-2 bg-[#F0F2F5] hover:bg-slate-200 text-gray-500 text-[10px] font-black rounded-xl transition-all cursor-pointer font-sans">로그아웃</button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 text-center py-2 font-sans">
+              <p className="text-[10px] font-bold text-gray-400 font-sans leading-tight">로그인하고 친구들의<br/>일기에 댓글을 남겨보세요!</p>
+              <button onClick={() => signIn('discord')} className="w-full py-2.5 bg-[#5865F2] hover:bg-[#4752C4] text-white text-[11px] font-black rounded-xl transition-all shadow-md cursor-pointer font-sans flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.074 0 0 0-.079-.037a19.736 19.736 0 0 0-4.885 1.515a.07.07 0 0 0-.032.027C.533 9.048-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                디스코드 로그인
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 flex flex-col min-h-0 font-sans">
