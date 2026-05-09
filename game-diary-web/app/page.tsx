@@ -6,6 +6,7 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } fro
 import { useSession, signIn, signOut } from "next-auth/react";
 import TopNav from '../components/TopNav';
 import Lightbox from '../components/Lightbox';
+import CommentItem from '../components/CommentItem';
 
 /** 
  * 보조 컴포넌트: 서버 아이콘 (디스코드 스타일)
@@ -113,7 +114,14 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
         if (g.title === gameTitle) {
           return {
             ...g,
-            comments: [...(g.comments || []), { userId: session.user.id, user: session.user.name, image: session.user.image, text: text.trim() }]
+            comments: [...(g.comments || []), { 
+              userId: session.user.id, 
+              user: myServerName, 
+              image: myServerImage, 
+              text: text.trim(),
+              reactions: {},
+              replies: []
+            }]
           };
         }
         return g;
@@ -143,36 +151,25 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
 };
 
 const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any) => {
+  const { data: session }: any = useSession();
   const [isParticipantsExpanded, setIsParticipantsExpanded] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setNewTitle] = useState(data.sessionTitle);
 
-  // 🏆 MVP 계산 로직
   const calculateMVPs = () => {
     const playTimes: { [userId: string]: number } = {};
     const shotCounts: { [userId: string]: number } = {};
-
-    // 1. 플레이 시간 집계
     data.games.forEach((game: any) => {
       Object.entries(game.playerPlayTimes || {}).forEach(([userId, minutes]: [string, any]) => {
         playTimes[userId] = (playTimes[userId] || 0) + minutes;
       });
     });
-
-    // 2. 스크린샷 갯수 집계
-    const allShots = [
-      ...(data.unclassifiedScreenshots || []),
-      ...(data.games.flatMap((g:any) => g.comments || []).filter((c:any) => c.image)) // Actually screenshots are in screenshots array
-    ];
-    
     (data.unclassifiedScreenshots || []).forEach((shot: any) => {
       const uploaderId = Object.keys(data.displayNames || {}).find(key => data.displayNames[key] === shot.user) || shot.user;
       shotCounts[uploaderId] = (shotCounts[uploaderId] || 0) + 1;
     });
-
     const timeMvpId = Object.keys(playTimes).reduce((a, b) => playTimes[a] > playTimes[b] ? a : b, "");
     const shotMvpId = Object.keys(shotCounts).reduce((a, b) => shotCounts[a] > shotCounts[b] ? a : b, "");
-
     return {
       timeMvp: timeMvpId ? { id: timeMvpId, score: playTimes[timeMvpId] } : null,
       shotMvp: shotMvpId ? { id: shotMvpId, score: shotCounts[shotMvpId] } : null
@@ -186,6 +183,51 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
   const handleUpdateTitle = async () => {
     if (!tempTitle.trim() || tempTitle === data.sessionTitle) { setIsEditingTitle(false); return; }
     try { await updateDoc(doc(db, "sessions", sessionId), { sessionTitle: tempTitle.trim() }); setIsEditingTitle(false); } catch (err) { console.error(err); }
+  };
+
+  const handleAddReaction = async (gameIdx: number, commentIdx: number, emoji: string) => {
+    if (!session) return alert("로그인이 필요합니다.");
+    const myId = session.user.id;
+    try {
+      const sessionRef = doc(db, "sessions", sessionId);
+      const updatedGames = [...data.games];
+      const comment = updatedGames[gameIdx].comments[commentIdx];
+      if (!comment.reactions) comment.reactions = {};
+      if (!comment.reactions[emoji]) comment.reactions[emoji] = [];
+      
+      if (comment.reactions[emoji].includes(myId)) {
+        comment.reactions[emoji] = comment.reactions[emoji].filter((id: string) => id !== myId);
+        if (comment.reactions[emoji].length === 0) delete comment.reactions[emoji];
+      } else {
+        comment.reactions[emoji].push(myId);
+      }
+      
+      await updateDoc(sessionRef, { games: updatedGames });
+    } catch (err) { console.error(err); }
+  };
+
+  const handleAddReply = async (gameIdx: number, commentIdx: number, text: string) => {
+    if (!session) return alert("로그인이 필요합니다.");
+    const myId = session.user.id;
+    const myServerName = data.displayNames[myId] || session.user.name;
+    const myServerImage = data.profileImages[myId] || session.user.image;
+
+    try {
+      const sessionRef = doc(db, "sessions", sessionId);
+      const updatedGames = [...data.games];
+      const comment = updatedGames[gameIdx].comments[commentIdx];
+      if (!comment.replies) comment.replies = [];
+      
+      comment.replies.push({
+        userId: myId,
+        user: myServerName,
+        image: myServerImage,
+        text: text,
+        createdAt: new Date().toISOString()
+      });
+      
+      await updateDoc(sessionRef, { games: updatedGames });
+    } catch (err) { console.error(err); }
   };
 
   const handleShare = () => {
@@ -223,33 +265,20 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-sans">총 대화 시간</span>
               <div className="flex items-baseline gap-1 text-[#1A1D1F]"><span className="text-xl font-black font-sans">{formatDurationText(data.totalDurationMin)}</span></div>
             </div>
-
-            {/* 🏆 MVP 섹션 */}
             <div className="flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide py-1">
               {mvps.timeMvp && (
                 <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-yellow-100 shadow-sm shrink-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-400 shadow-inner shrink-0">
-                    <img src={data.profileImages?.[mvps.timeMvp.id] || ""} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-yellow-600 uppercase tracking-tighter mb-0.5">🥇 오늘의 게임 폐인</span>
-                    <span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.timeMvp.id]} ({mvps.timeMvp.score}분)</span>
-                  </div>
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-400 shadow-inner shrink-0"><img src={data.profileImages?.[mvps.timeMvp.id] || ""} alt="" className="w-full h-full object-cover" /></div>
+                  <div className="flex flex-col"><span className="text-[8px] font-black text-yellow-600 uppercase tracking-tighter mb-0.5">🥇 오늘의 게임 폐인</span><span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.timeMvp.id]} ({mvps.timeMvp.score}분)</span></div>
                 </div>
               )}
               {mvps.shotMvp && (
                 <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-blue-100 shadow-sm shrink-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-inner shrink-0">
-                    <img src={data.profileImages?.[mvps.shotMvp.id] || ""} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter mb-0.5">📸 오늘의 포토그래퍼</span>
-                    <span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.shotMvp.id]} ({mvps.shotMvp.score}장)</span>
-                  </div>
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-inner shrink-0"><img src={data.profileImages?.[mvps.shotMvp.id] || ""} alt="" className="w-full h-full object-cover" /></div>
+                  <div className="flex flex-col"><span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter mb-0.5">📸 오늘의 포토그래퍼</span><span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.shotMvp.id]} ({mvps.shotMvp.score}장)</span></div>
                 </div>
               )}
             </div>
-
             <div className="flex flex-col ml-auto">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2 font-sans px-0.5">함께한 친구들</span>
               <div className="flex items-center gap-3">
@@ -278,10 +307,10 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
 
       <div className="grid grid-cols-1 gap-8 mb-16 font-sans">
         <p className="text-[9px] font-black uppercase tracking-widest text-gray-300 px-1 font-sans">플레이 기록</p>
-        {data.games.map((game: any, i: number) => {
+        {data.games.map((game: any, gameIdx: number) => {
           const gameShots = (data.unclassifiedScreenshots || []).filter((s: any) => s.gameTitle === game.title);
           return (
-            <div key={i} className="group relative bg-white border border-slate-100 shadow-sm p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] font-sans">
+            <div key={gameIdx} className="group relative bg-white border border-slate-100 shadow-sm p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] font-sans">
               <div className="flex flex-col md:flex-row justify-between gap-6 mb-8 font-sans">
                 <div className="flex gap-4 text-[#1A1D1F] font-sans">
                   <div className="flex flex-col items-center shrink-0 justify-center font-sans"><div className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-[#F8F9FA] flex items-center justify-center border border-slate-100 shadow-inner overflow-hidden font-sans">{game.iconURL ? <img src={game.iconURL} alt="" className="w-full h-full object-contain" /> : <span className="text-xl md:text-2xl font-sans">🕹️</span>}</div></div>
@@ -305,20 +334,15 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
               </div>
               <ScreenshotSlider screenshots={gameShots} data={data} onImageClick={onImageClick} />
               <div className="mt-2 pt-4 border-t border-slate-50 font-sans text-[#1A1D1F]">
-                <div className="space-y-2 font-sans">
-                  {game.comments && game.comments.map((comm: any, idx: number) => {
-                    const mappedName = (comm.userId && data.displayNames[comm.userId]) || comm.user;
-                    const mappedImage = (comm.userId && data.profileImages[comm.userId]) || comm.image || "";
-                    return (
-                      <div key={idx} className="flex items-start gap-3 p-2 bg-[#F8F9FA] rounded-2xl border border-white font-sans">
-                        <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 border border-white shadow-sm font-sans"><img src={mappedImage} alt="" className="w-full h-full object-cover" /></div>
-                        <div className="flex flex-col font-sans">
-                          <span className="text-[10px] font-black text-gray-400 leading-none mb-1 font-sans">{mappedName}</span>
-                          <p className="text-[11px] font-bold leading-snug font-sans">{comm.text}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="space-y-0 font-sans">
+                  {game.comments && game.comments.map((comm: any, commentIdx: number) => (
+                    <CommentItem 
+                      key={commentIdx} 
+                      comment={comm} 
+                      onAddReaction={(emoji: string) => handleAddReaction(gameIdx, commentIdx, emoji)}
+                      onAddReply={(text: string) => handleAddReply(gameIdx, commentIdx, text)}
+                    />
+                  ))}
                   <GameCommentInput sessionId={sessionId} gameTitle={game.title} data={data} />
                 </div>
               </div>
@@ -326,7 +350,7 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
           );
         })}
       </div>
-
+      {/* ... Unclassified Moment Grid ... */}
       <div className="space-y-6 font-sans text-[#1A1D1F]">
         <p className="text-[9px] font-black uppercase tracking-widest text-gray-300 font-sans px-1">분류되지 않은 순간들</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 font-sans">
@@ -415,24 +439,15 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F0F2F5] text-[#1A1D1F] font-sans">
       <TopNav />
-      
       <div className="flex flex-1 overflow-hidden">
-        {/* 사이드바 */}
         <aside className={`fixed md:relative z-40 h-[calc(100vh-64px)] bg-[#F8F9FA] border-r border-[#E2E8F0] p-6 flex flex-col gap-6 font-sans transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-72 left-0' : 'w-0 -left-72 md:left-0 md:w-0 overflow-hidden'}`}>
           <div className="space-y-4 font-sans shrink-0">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider px-1 font-sans">일기 검색</p>
             <div className="relative">
-              <input 
-                type="text" 
-                placeholder="제목, 서버, 게임 검색..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:border-[#1A1D1F] transition-all shadow-sm"
-              />
+              <input type="text" placeholder="제목, 서버, 게임 검색..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:border-[#1A1D1F] transition-all shadow-sm" />
               <svg className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
           </div>
-
           <div className="flex-1 flex flex-col min-h-0 font-sans">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1 font-sans">이전 일기 기록 ({filteredSessions.length})</p>
             <div className="space-y-2 overflow-y-auto pr-2 scrollbar-hide font-sans">
@@ -440,48 +455,19 @@ export default function Home() {
                 <button key={s.id} onClick={() => { setSelectedId(s.id); if (window.innerWidth < 768) setIsSidebarOpen(false); }} className={`w-full text-left p-3 rounded-2xl border transition-all group font-sans ${selectedId === s.id ? 'bg-white border-[#1A1D1F]/10 shadow-md translate-x-1' : 'bg-transparent border-transparent hover:bg-white/50 grayscale hover:grayscale-0'}`}>
                   <div className="flex items-start gap-3 font-sans">
                     <ServerIcon url={s.serverIconURL} name={s.serverName} className="w-8 h-8 rounded-lg shrink-0 shadow-sm" />
-                    <div className="flex flex-col min-w-0 font-sans">
-                      <span className="text-[9px] font-black text-gray-400 uppercase mb-0.5 font-sans">{formatDate(s.date)}</span>
-                      <span className={`text-[12px] font-bold truncate leading-tight transition-colors font-sans ${selectedId === s.id ? 'text-[#1A1D1F]' : 'text-gray-500'}`}>{s.sessionTitle}</span>
-                    </div>
+                    <div className="flex flex-col min-w-0 font-sans"><span className="text-[9px] font-black text-gray-400 uppercase mb-0.5 font-sans">{formatDate(s.date)}</span><span className={`text-[12px] font-bold truncate leading-tight transition-colors font-sans ${selectedId === s.id ? 'text-[#1A1D1F]' : 'text-gray-500'}`}>{s.sessionTitle}</span></div>
                   </div>
                 </button>
               ))}
             </div>
           </div>
         </aside>
-
-        {/* 메인 콘텐츠 */}
         <section className="flex-1 h-[calc(100vh-64px)] overflow-y-auto p-4 md:p-8 font-sans text-[#1A1D1F] transition-all duration-300 relative">
-          {/* 사이드바 토글 (플로팅) */}
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute left-4 top-4 z-30 p-2.5 bg-white rounded-full shadow-md border border-slate-200 text-gray-500 hover:bg-slate-50 transition-all active:scale-90"
-          >
-            <svg className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 19l-7-7 7-7" /></svg>
-          </button>
-
-          <div className="max-w-5xl mx-auto pt-10">
-            {current ? (
-              <DiaryCard 
-                key={current.id} 
-                data={current} 
-                playersSet={playedUsers} 
-                sessionId={current.id} 
-                onDelete={handleDeleteSession} 
-                onImageClick={(url:string) => setActiveImageUrl(url)}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-400 font-bold">검색 결과가 없습니다.</div>
-            )}
-          </div>
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="absolute left-4 top-4 z-30 p-2.5 bg-white rounded-full shadow-md border border-slate-200 text-gray-500 hover:bg-slate-50 transition-all active:scale-90"><svg className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg></button>
+          <div className="max-w-5xl mx-auto pt-10">{current ? (<DiaryCard key={current.id} data={current} playersSet={playedUsers} sessionId={current.id} onDelete={handleDeleteSession} onImageClick={(url:string) => setActiveImageUrl(url)} />) : (<div className="flex items-center justify-center h-64 text-gray-400 font-bold">검색 결과가 없습니다.</div>)}</div>
         </section>
       </div>
-
-      {/* 🌟 1단계 추가: 라이트박스 */}
-      {activeImageUrl && (
-        <Lightbox imageUrl={activeImageUrl} onClose={() => setActiveImageUrl(null)} />
-      )}
+      {activeImageUrl && (<Lightbox imageUrl={activeImageUrl} onClose={() => setActiveImageUrl(null)} />)}
     </div>
   );
 }
