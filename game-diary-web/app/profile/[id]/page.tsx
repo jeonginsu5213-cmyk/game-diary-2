@@ -3,7 +3,6 @@
 import React, { useState, useEffect, use } from 'react';
 import { db } from "../../../src/lib/firebase"; 
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
-import TopNav from '../../../components/TopNav';
 import Link from 'next/link';
 
 const formatDurationText = (minutes: number) => {
@@ -96,105 +95,119 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   const heatmapCells = generateHeatmap();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-[#F0F2F5] text-[#1A1D1F] font-sans text-xl animate-pulse">LOADING PROFILE...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-discord-main-content text-white font-sans text-xl animate-pulse">LOADING PROFILE...</div>;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F0F2F5] text-[#1A1D1F] font-sans">
-      <TopNav />
-      
-      <main className="flex-1 p-4 md:p-12 max-w-6xl mx-auto w-full space-y-12">
-        {/* 유저 헤더 */}
-        <section className="flex flex-col md:flex-row items-center gap-8 bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100">
-          <div className="w-32 h-32 rounded-[3rem] overflow-hidden border-4 border-[#1A1D1F] shadow-2xl shrink-0">
-            <img src={latestImage || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <h1 className="text-4xl font-black tracking-tighter mb-2">{latestName}님</h1>
-            <p className="text-gray-400 font-bold mb-6">총 {sessions.length}편의 게임 일기에 함께했습니다.</p>
-            <div className="flex gap-4">
-              <div className="bg-[#F8F9FA] px-6 py-3 rounded-2xl border border-slate-100 flex flex-col">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">나의 누적 플레이</span>
-                <span className="text-xl font-black">{formatDurationText(totalMinutes)}</span>
-              </div>
+    <div className="flex flex-col h-full bg-discord-main-content font-sans overflow-hidden">
+      {/* Header (Discord Style) */}
+      <header className="h-12 flex items-center justify-between px-4 shadow-sm border-b border-black/20 shrink-0 z-20">
+        <div className="flex items-center gap-3">
+          <div className="text-discord-text-muted flex items-center gap-2">
+            <div className="w-5 h-5 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </div>
+            <h2 className="text-white font-bold text-base">유저 프로필</h2>
           </div>
-        </section>
+        </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* 활동 히트맵 */}
-          <section className="bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-slate-100">
-            <h3 className="text-lg font-black mb-8 flex items-center gap-2">
-              <span className="w-2 h-6 bg-[#1A1D1F] rounded-full" />
-              나의 잔디 기록 (Last 90 Days)
-            </h3>
-            <div className="grid grid-cols-10 md:grid-cols-15 gap-2">
-              {heatmapCells.map((cell, idx) => {
-                let color = "bg-slate-100";
-                if (cell.value > 0) color = "bg-blue-100";
-                if (cell.value > 60) color = "bg-blue-300";
-                if (cell.value > 180) color = "bg-blue-500";
-                if (cell.value > 300) color = "bg-blue-700";
-                return (
-                  <div 
-                    key={idx} 
-                    title={`${cell.date}: ${formatDurationText(cell.value)}`}
-                    className={`aspect-square rounded-md ${color} transition-all hover:scale-110 hover:ring-2 hover:ring-[#1A1D1F] cursor-help`}
-                  />
-                );
-              })}
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto discord-scrollbar p-6 md:p-12">
+        <div className="max-w-6xl mx-auto space-y-12">
+          {/* 유저 헤더 */}
+          <section className="flex flex-col md:flex-row items-center gap-8 bg-discord-card p-10 rounded-[8px] border border-black/20 shadow-xl relative overflow-hidden">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-discord-card shadow-2xl shrink-0 z-10 relative">
+              <img src={latestImage || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className="w-full h-full object-cover" />
+              <div className="absolute bottom-2 right-2 w-6 h-6 bg-discord-success border-4 border-discord-card rounded-full" />
+            </div>
+            <div className="flex flex-col items-center md:items-start text-center md:text-left z-10">
+              <h1 className="text-4xl font-bold text-white tracking-tight mb-2 font-sans">{latestName}님</h1>
+              <p className="text-discord-text-muted font-bold mb-6 font-sans">총 {sessions.length}편의 게임 일기에 함께했습니다.</p>
+              <div className="flex gap-4 font-sans">
+                <div className="bg-black/20 px-6 py-3 rounded-[8px] border border-white/5 flex flex-col font-sans">
+                  <span className="text-[10px] font-black text-discord-text-muted uppercase tracking-widest mb-1 font-sans">나의 누적 플레이</span>
+                  <span className="text-xl font-bold text-white font-sans">{formatDurationText(totalMinutes)}</span>
+                </div>
+              </div>
             </div>
           </section>
 
-          {/* 나의 선호 게임 TOP 5 */}
-          <section className="bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-slate-100">
-            <h3 className="text-lg font-black mb-8 flex items-center gap-2">
-              <span className="w-2 h-6 bg-[#1A1D1F] rounded-full" />
-              가장 많이 한 게임 TOP 5
-            </h3>
-            <div className="space-y-6">
-              {topGames.map((game, idx) => {
-                const percentage = (game.time / (topGames[0].time || 1)) * 100;
-                return (
-                  <div key={game.title} className="group">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-black text-[#1A1D1F]">{game.title}</span>
-                      <span className="text-xs font-bold text-gray-400">{formatDurationText(game.time)}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* 활동 히트맵 */}
+            <section className="bg-discord-card p-8 md:p-10 rounded-[8px] border border-black/20 shadow-lg font-sans">
+              <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-3 font-sans">
+                <div className="w-1.5 h-5 bg-discord-blue rounded-full" />
+                나의 잔디 기록 (Last 90 Days)
+              </h3>
+              <div className="grid grid-cols-10 md:grid-cols-15 gap-2 font-sans">
+                {heatmapCells.map((cell, idx) => {
+                  let color = "bg-[#2B2D31]";
+                  if (cell.value > 0) color = "bg-[#1A2A47]";
+                  if (cell.value > 60) color = "bg-[#274075]";
+                  if (cell.value > 180) color = "bg-[#3B61B3]";
+                  if (cell.value > 300) color = "bg-[#5865F2]";
+                  return (
+                    <div 
+                      key={idx} 
+                      title={`${cell.date}: ${formatDurationText(cell.value)}`}
+                      className={`aspect-square rounded-sm ${color} transition-all hover:scale-110 hover:ring-2 hover:ring-white/20 cursor-help font-sans`}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* 나의 선호 게임 TOP 5 */}
+            <section className="bg-discord-card p-8 md:p-10 rounded-[8px] border border-black/20 shadow-lg font-sans">
+              <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-3 font-sans">
+                <div className="w-1.5 h-5 bg-discord-blue rounded-full" />
+                가장 많이 한 게임 TOP 5
+              </h3>
+              <div className="space-y-6 font-sans">
+                {topGames.map((game, idx) => {
+                  const percentage = (game.time / (topGames[0].time || 1)) * 100;
+                  return (
+                    <div key={game.title} className="group font-sans">
+                      <div className="flex items-center justify-between mb-2 font-sans">
+                        <span className="text-sm font-bold text-white font-sans">{game.title}</span>
+                        <span className="text-xs font-bold text-discord-text-muted font-sans">{formatDurationText(game.time)}</span>
+                      </div>
+                      <div className="h-2 w-full bg-discord-sidebar rounded-full overflow-hidden border border-black/20 font-sans">
+                        <div 
+                          className="h-full bg-discord-blue rounded-full transition-all duration-1000 ease-out font-sans"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-3 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                      <div 
-                        className="h-full bg-[#5865F2] rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${percentage}%` }}
-                      />
+                  );
+                })}
+                {topGames.length === 0 && <div className="text-center py-10 text-discord-text-muted font-bold font-sans">참여한 게임 기록이 없습니다.</div>}
+              </div>
+            </section>
+          </div>
+
+          {/* 타임라인 (참여한 일기 목록) */}
+          <section className="space-y-6 font-sans">
+            <h3 className="text-xl font-bold text-white px-2 font-sans">참여한 일기 타임라인</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
+              {sessions.map(s => (
+                <Link key={s.id} href={`/?id=${s.id}`} className="group bg-discord-card p-6 rounded-[8px] border border-black/20 hover:border-discord-blue transition-all shadow-lg font-sans">
+                  <div className="flex items-start justify-between gap-4 font-sans">
+                    <div className="flex flex-col min-w-0 font-sans">
+                      <span className="text-[10px] font-black text-discord-text-muted uppercase mb-1 font-sans">{formatDate(s.startTime?.seconds ? new Date(s.startTime.seconds * 1000).toLocaleDateString() : "")}</span>
+                      <h4 className="text-lg font-bold text-white tracking-tight truncate group-hover:text-discord-blue transition-colors font-sans">{s.sessionTitle}</h4>
+                      <p className="text-xs font-bold text-discord-text-muted mt-1 font-sans">{s.games?.length || 0}개의 게임 플레이</p>
+                    </div>
+                    <div className="bg-discord-sidebar px-3 py-1.5 rounded-[4px] border border-black/20 font-bold text-[10px] text-discord-text-muted group-hover:bg-discord-blue group-hover:text-white transition-colors uppercase font-sans shrink-0">
+                      View Diary
                     </div>
                   </div>
-                );
-              })}
-              {topGames.length === 0 && <div className="text-center py-10 text-gray-400 font-bold">참여한 게임 기록이 없습니다.</div>}
+                </Link>
+              ))}
             </div>
           </section>
         </div>
-
-        {/* 타임라인 (참여한 일기 목록) */}
-        <section className="space-y-6">
-          <h3 className="text-xl font-black px-2">참여한 일기 타임라인</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {sessions.map(s => (
-              <Link key={s.id} href={`/?id=${s.id}`} className="group bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-black text-gray-400 uppercase mb-1">{formatDate(s.startTime?.seconds ? new Date(s.startTime.seconds * 1000).toLocaleDateString() : "")}</span>
-                    <h4 className="text-lg font-black tracking-tighter truncate group-hover:text-[#5865F2] transition-colors">{s.sessionTitle}</h4>
-                    <p className="text-xs font-bold text-gray-400 mt-1">{s.games?.length || 0}개의 게임 플레이</p>
-                  </div>
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 font-black text-[10px] group-hover:bg-[#1A1D1F] group-hover:text-white transition-colors uppercase">
-                    View Diary
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </main>
+      </div>
     </div>
   );
 }

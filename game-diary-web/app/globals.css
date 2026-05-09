@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --discord-server-list: #1E1F22;
+  --discord-sidebar: #2B2D31;
+  --discord-main-content: #313338;
+  --discord-card: #232428;
+  --discord-header: #313338;
+  --discord-text-normal: #DBDEE1;
+  --discord-text-muted: #949BA4;
+  --discord-blue: #5865F2;
+  --discord-blue-hover: #4752C4;
+  --discord-success: #23A559;
+  --discord-pink: #EB459E;
+  --discord-sidebar-hover: #35373C;
+  --discord-sidebar-active: #3F4147;
+  --discord-input: #383A40;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-discord-server-list: var(--discord-server-list);
+  --color-discord-sidebar: var(--discord-sidebar);
+  --color-discord-main-content: var(--discord-main-content);
+  --color-discord-card: var(--discord-card);
+  --color-discord-header: var(--discord-header);
+  --color-discord-text-normal: var(--discord-text-normal);
+  --color-discord-text-muted: var(--discord-text-muted);
+  --color-discord-blue: var(--discord-blue);
+  --color-discord-blue-hover: var(--discord-blue-hover);
+  --color-discord-success: var(--discord-success);
+  --color-discord-pink: var(--discord-pink);
+  --color-discord-sidebar-hover: var(--discord-sidebar-hover);
+  --color-discord-sidebar-active: var(--discord-sidebar-active);
+  --color-discord-input: var(--discord-input);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--discord-main-content);
+  color: var(--discord-text-normal);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .discord-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .discord-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .discord-scrollbar::-webkit-scrollbar-thumb {
+    background: #1A1B1E;
+    border-radius: 4px;
+  }
+  .discord-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #151618;
+  }
 }

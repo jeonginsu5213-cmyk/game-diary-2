@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from "../../src/lib/firebase"; 
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import TopNav from '../../components/TopNav';
+import Link from 'next/link';
 
 /**
  * 헬퍼: 분 단위를 시간/분 텍스트로 변환
@@ -79,107 +79,120 @@ export default function StatsPage() {
 
   const heatmapCells = generateHeatmap();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-[#F0F2F5] text-[#1A1D1F] font-sans">ANALYZING DATA...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-discord-main-content text-white font-sans">ANALYZING DATA...</div>;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F0F2F5] text-[#1A1D1F] font-sans">
-      <TopNav />
-      
-      <main className="flex-1 p-4 md:p-12 max-w-6xl mx-auto w-full space-y-10">
-        <header>
-          <h1 className="text-3xl font-black tracking-tighter mb-2">서버 통계 대시보드</h1>
-          <p className="text-gray-400 font-bold text-sm">지금까지 우리들의 모든 기록을 모았습니다.</p>
-        </header>
-
-        {/* 요약 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center text-center">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">총 누적 플레이 시간</span>
-            <span className="text-4xl font-black text-[#1A1D1F]">{formatDurationText(totalMinutes)}</span>
-          </div>
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center text-center">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">총 발행된 일기</span>
-            <span className="text-4xl font-black text-[#1A1D1F]">{sessions.length}개</span>
-          </div>
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center text-center">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">플레이한 게임 종류</span>
-            <span className="text-4xl font-black text-[#1A1D1F]">{Object.keys(topGames).length > 5 ? '5+' : Object.keys(topGames).length}종</span>
+    <div className="flex flex-col h-full bg-discord-main-content font-sans overflow-hidden">
+      {/* Header (Discord Style) */}
+      <header className="h-12 flex items-center justify-between px-4 shadow-sm border-b border-black/20 shrink-0 z-20">
+        <div className="flex items-center gap-3">
+          <div className="text-discord-text-muted flex items-center gap-2">
+            <div className="w-5 h-5 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            </div>
+            <h2 className="text-white font-bold text-base">서버 통계 대시보드</h2>
           </div>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* 활동 히트맵 */}
-          <section className="bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-slate-100">
-            <h3 className="text-lg font-black mb-8 flex items-center gap-2">
-              <span className="w-2 h-6 bg-[#1A1D1F] rounded-full" />
-              최근 활동 (Last 90 Days)
-            </h3>
-            <div className="grid grid-cols-10 md:grid-cols-15 gap-2">
-              {heatmapCells.map((cell, idx) => {
-                let color = "bg-slate-100";
-                if (cell.value > 0) color = "bg-green-100";
-                if (cell.value > 60) color = "bg-green-300";
-                if (cell.value > 180) color = "bg-green-500";
-                if (cell.value > 300) color = "bg-green-700";
-                
-                return (
-                  <div 
-                    key={idx} 
-                    title={`${cell.date}: ${formatDurationText(cell.value)}`}
-                    className={`aspect-square rounded-md ${color} transition-colors hover:ring-2 hover:ring-[#1A1D1F] cursor-help`}
-                  />
-                );
-              })}
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto discord-scrollbar p-6 md:p-12">
+        <div className="max-w-6xl mx-auto space-y-10">
+          <header>
+            <h1 className="text-3xl font-bold text-white tracking-tight mb-2 font-sans">우리들의 기록 저장소</h1>
+            <p className="text-discord-text-muted font-medium text-sm font-sans">지금까지 우리들이 함께한 모든 게임 추억을 분석했습니다.</p>
+          </header>
+
+          {/* 요약 카드 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-discord-card p-8 rounded-[8px] border border-black/20 flex flex-col items-center text-center shadow-lg">
+              <span className="text-[11px] font-black text-discord-text-muted uppercase tracking-wider mb-2 font-sans">총 누적 플레이 시간</span>
+              <span className="text-4xl font-bold text-white font-sans">{formatDurationText(totalMinutes)}</span>
             </div>
-            <div className="mt-6 flex items-center justify-end gap-2">
-              <span className="text-[10px] font-bold text-gray-400">Less</span>
-              <div className="flex gap-1">
-                <div className="w-3 h-3 rounded-sm bg-slate-100" />
-                <div className="w-3 h-3 rounded-sm bg-green-100" />
-                <div className="w-3 h-3 rounded-sm bg-green-300" />
-                <div className="w-3 h-3 rounded-sm bg-green-500" />
-                <div className="w-3 h-3 rounded-sm bg-green-700" />
+            <div className="bg-discord-card p-8 rounded-[8px] border border-black/20 flex flex-col items-center text-center shadow-lg">
+              <span className="text-[11px] font-black text-discord-text-muted uppercase tracking-wider mb-2 font-sans">총 발행된 일기</span>
+              <span className="text-4xl font-bold text-white font-sans">{sessions.length}개</span>
+            </div>
+            <div className="bg-discord-card p-8 rounded-[8px] border border-black/20 flex flex-col items-center text-center shadow-lg">
+              <span className="text-[11px] font-black text-discord-text-muted uppercase tracking-wider mb-2 font-sans">플레이한 게임 종류</span>
+              <span className="text-4xl font-bold text-white font-sans">{Object.keys(topGames).length > 5 ? '5+' : Object.keys(topGames).length}종</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* 활동 히트맵 */}
+            <section className="bg-discord-card p-8 md:p-10 rounded-[8px] border border-black/20 shadow-lg">
+              <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-3 font-sans">
+                <div className="w-1.5 h-5 bg-discord-blue rounded-full" />
+                최근 활동 (Last 90 Days)
+              </h3>
+              <div className="grid grid-cols-10 md:grid-cols-15 gap-2">
+                {heatmapCells.map((cell, idx) => {
+                  let color = "bg-[#2B2D31]";
+                  if (cell.value > 0) color = "bg-[#1E4D31]";
+                  if (cell.value > 60) color = "bg-[#2D7A4D]";
+                  if (cell.value > 180) color = "bg-[#3EB16F]";
+                  if (cell.value > 300) color = "bg-[#23A559]";
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      title={`${cell.date}: ${formatDurationText(cell.value)}`}
+                      className={`aspect-square rounded-sm ${color} transition-all hover:scale-110 hover:ring-2 hover:ring-white/20 cursor-help`}
+                    />
+                  );
+                })}
               </div>
-              <span className="text-[10px] font-bold text-gray-400">More</span>
-            </div>
-          </section>
+              <div className="mt-6 flex items-center justify-end gap-2 font-sans">
+                <span className="text-[10px] font-bold text-discord-text-muted font-sans">Less</span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-3 rounded-sm bg-[#2B2D31]" />
+                  <div className="w-3 h-3 rounded-sm bg-[#1E4D31]" />
+                  <div className="w-3 h-3 rounded-sm bg-[#2D7A4D]" />
+                  <div className="w-3 h-3 rounded-sm bg-[#3EB16F]" />
+                  <div className="w-3 h-3 rounded-sm bg-[#23A559]" />
+                </div>
+                <span className="text-[10px] font-bold text-discord-text-muted font-sans">More</span>
+              </div>
+            </section>
 
-          {/* 인기 게임 순위 */}
-          <section className="bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-slate-100">
-            <h3 className="text-lg font-black mb-8 flex items-center gap-2">
-              <span className="w-2 h-6 bg-[#1A1D1F] rounded-full" />
-              인기 게임 TOP 5
-            </h3>
-            <div className="space-y-6">
-              {topGames.map((game, idx) => {
-                const percentage = (game.time / (topGames[0].time || 1)) * 100;
-                return (
-                  <div key={game.title} className="group">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
-                          {game.icon ? <img src={game.icon} alt="" className="w-full h-full object-contain" /> : "🕹️"}
+            {/* 인기 게임 순위 */}
+            <section className="bg-discord-card p-8 md:p-10 rounded-[8px] border border-black/20 shadow-lg">
+              <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-3 font-sans">
+                <div className="w-1.5 h-5 bg-discord-blue rounded-full" />
+                인기 게임 TOP 5
+              </h3>
+              <div className="space-y-6 font-sans">
+                {topGames.map((game, idx) => {
+                  const percentage = (game.time / (topGames[0].time || 1)) * 100;
+                  return (
+                    <div key={game.title} className="group font-sans">
+                      <div className="flex items-center justify-between mb-2 font-sans">
+                        <div className="flex items-center gap-3 font-sans">
+                          <div className="w-8 h-8 rounded-[4px] bg-discord-server-list border border-black/20 flex items-center justify-center overflow-hidden font-sans">
+                            {game.icon ? <img src={game.icon} alt="" className="w-full h-full object-contain p-1" /> : <span className="text-sm">🕹️</span>}
+                          </div>
+                          <span className="text-sm font-bold text-white font-sans">{game.title}</span>
                         </div>
-                        <span className="text-sm font-black text-[#1A1D1F]">{game.title}</span>
+                        <span className="text-xs font-bold text-discord-text-muted font-sans">{formatDurationText(game.time)}</span>
                       </div>
-                      <span className="text-xs font-bold text-gray-400">{formatDurationText(game.time)}</span>
+                      <div className="h-2 w-full bg-discord-sidebar rounded-full overflow-hidden border border-black/20 font-sans">
+                        <div 
+                          className="h-full bg-discord-blue rounded-full transition-all duration-1000 ease-out group-hover:bg-discord-pink"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-3 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                      <div 
-                        className="h-full bg-[#1A1D1F] rounded-full transition-all duration-1000 ease-out group-hover:bg-[#5865F2]"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-              {topGames.length === 0 && (
-                <div className="text-center py-10 text-gray-400 font-bold">아직 기록된 게임이 없습니다.</div>
-              )}
-            </div>
-          </section>
+                  );
+                })}
+                {topGames.length === 0 && (
+                  <div className="text-center py-10 text-discord-text-muted font-bold font-sans">아직 기록된 게임이 없습니다.</div>
+                )}
+              </div>
+            </section>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
