@@ -4,10 +4,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db } from "../src/lib/firebase"; 
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useSession, signIn, signOut } from "next-auth/react";
+import TopNav from '../components/TopNav';
+import Lightbox from '../components/Lightbox';
 
 /** 
- * 헬퍼 함수: 시간 포맷팅 (분 -> n시간 n분)
+ * 보조 컴포넌트: 서버 아이콘 (디스코드 스타일)
  */
+const ServerIcon = ({ url, name, className = "w-7 h-7" }: { url?: string, name: string, className?: string }) => {
+  if (url && url.startsWith('http')) {
+    return <img src={url} alt={name} className={`${className} object-cover`} />;
+  }
+  return (
+    <div className={`${className} bg-[#5865F2] flex items-center justify-center text-white font-black uppercase overflow-hidden`}>
+      <span className="text-[40%]">{name?.charAt(0)}</span>
+    </div>
+  );
+};
+
 const formatDurationText = (minutes: number) => {
   if (minutes < 60) return `${minutes}분`;
   const h = Math.floor(minutes / 60);
@@ -15,26 +28,15 @@ const formatDurationText = (minutes: number) => {
   return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
 };
 
-/** 
- * 헬퍼 함수: 날짜 포맷팅 (요일 추가)
- */
 const formatDate = (dateStr: string) => {
   if (!dateStr || dateStr === "DATE UNKNOWN") return dateStr;
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return dateStr;
-  
-  const formattedDate = date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   const weekday = date.toLocaleDateString('ko-KR', { weekday: 'short' });
   return `${formattedDate} (${weekday})`;
 };
 
-/** 
- * 보조 컴포넌트: 다운로드 버튼
- */
 const DownloadButton = ({ url, className = "" }: { url: string; className?: string }) => (
   <button 
     onClick={(e) => { e.stopPropagation(); window.open(url, '_blank'); }}
@@ -55,7 +57,7 @@ const PhotoCaption = ({ text }: { text: string }) => (
   </div>
 );
 
-const ScreenshotSlider = ({ screenshots, data }: any) => {
+const ScreenshotSlider = ({ screenshots, data, onImageClick }: any) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -75,9 +77,8 @@ const ScreenshotSlider = ({ screenshots, data }: any) => {
         {screenshots.map((shot: any, idx: number) => {
           const uploaderId = Object.keys(data.displayNames || {}).find(key => data.displayNames[key] === shot.user) || shot.user;
           const profileImage = data.profileImages?.[uploaderId] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploaderId}&backgroundColor=f0f2f5`;
-
           return (
-            <div key={idx} className="relative shrink-0 w-64 md:w-72 snap-start flex flex-col group/unit font-sans">
+            <div key={idx} className="relative shrink-0 w-64 md:w-72 snap-start flex flex-col group/unit font-sans cursor-zoom-in" onClick={() => onImageClick(shot.url)}>
               <div className="bg-slate-50/30 p-2 rounded-[1.8rem] border border-transparent group-hover/unit:border-slate-100 group-hover/unit:bg-white transition-all duration-300">
                 <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-sm group/shot">
                   <img src={shot.url} alt="하이라이트" className="w-full h-full object-cover transition-transform duration-500 group-hover/shot:scale-105" />
@@ -100,11 +101,9 @@ const ScreenshotSlider = ({ screenshots, data }: any) => {
 const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
   const { data: session }: any = useSession();
   const [text, setText] = useState("");
-
-  // 내 현재 서버 프로필 정보 가져오기
   const myId = session?.user?.id;
-  const myServerName = data.displayNames[myId] || session?.user?.name;
-  const myServerImage = data.profileImages[myId] || session?.user?.image;
+  const myServerName = (myId && data.displayNames[myId]) || session?.user?.name;
+  const myServerImage = (myId && data.profileImages[myId]) || session?.user?.image;
 
   const handleSubmit = async () => {
     if (!text.trim() || !session) return;
@@ -114,116 +113,89 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
         if (g.title === gameTitle) {
           return {
             ...g,
-            comments: [...(g.comments || []), { 
-              userId: session.user.id,
-              user: session.user.name, 
-              image: session.user.image,
-              text: text.trim() 
-            }]
+            comments: [...(g.comments || []), { userId: session.user.id, user: session.user.name, image: session.user.image, text: text.trim() }]
           };
         }
         return g;
       });
       await updateDoc(sessionRef, { games: updatedGames });
       setText("");
-    } catch (err) {
-      console.error("댓글 등록 실패:", err);
-      alert("댓글 등록에 실패했습니다.");
-    }
+    } catch (err) { console.error("댓글 등록 실패:", err); }
   };
 
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
+  const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } };
 
-  if (!session) {
-    return (
-      <div className="mt-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center font-sans">
-        <p className="text-[10px] font-bold text-gray-400">댓글을 남기려면 디스코드로 로그인하세요.</p>
-        <button onClick={() => signIn('discord')} className="mt-2 text-[10px] font-black text-[#5865F2] hover:underline cursor-pointer">로그인하기</button>
-      </div>
-    );
-  }
+  if (!session) return (
+    <div className="mt-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center font-sans">
+      <p className="text-[10px] font-bold text-gray-400">댓글을 남기려면 로그인이 필요합니다.</p>
+    </div>
+  );
 
   return (
     <div className="mt-2 flex items-center gap-3 p-2 bg-white rounded-2xl border border-slate-100 shadow-inner group/input font-sans">
       <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-slate-50">
-        <img src={myServerImage || `https://api.dicebear.com/7.x/adventurer/svg?seed=${session.user.name}`} alt="" className="w-full h-full" />
+        <img src={myServerImage || ""} alt="" className="w-full h-full" />
       </div>
-      <input 
-        type="text" 
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={`${myServerName}님, 한줄평을 남겨주세요...`} 
-        className="flex-1 bg-transparent border-none outline-none text-[11px] font-bold text-gray-500 placeholder:text-gray-300"
-      />
-      <button 
-        onClick={handleSubmit}
-        className={`text-[10px] font-black px-3 py-1 rounded-full transition-opacity cursor-pointer ${text.trim() ? 'bg-[#1A1D1F] text-white opacity-100' : 'bg-[#F0F2F5] text-[#1A1D1F] opacity-0 group-hover/input:opacity-100'}`}
-      >
-        등록
-      </button>
+      <input type="text" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} placeholder={`${myServerName}님, 한줄평을 남겨주세요...`} className="flex-1 bg-transparent border-none outline-none text-[11px] font-bold text-gray-500 placeholder:text-gray-300" />
+      <button onClick={handleSubmit} className={`text-[10px] font-black px-3 py-1 rounded-full transition-opacity cursor-pointer ${text.trim() ? 'bg-[#1A1D1F] text-white opacity-100' : 'bg-[#F0F2F5] text-[#1A1D1F] opacity-0 group-hover/input:opacity-100'}`}>등록</button>
     </div>
   );
 };
 
-const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
+const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any) => {
   const [isParticipantsExpanded, setIsParticipantsExpanded] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setNewTitle] = useState(data.sessionTitle);
-  const [localUnclassified, setLocalUnclassified] = useState([]);
 
-  useEffect(() => {
-    const unclassifiedOnly = (data.unclassifiedScreenshots || []).filter(
-      (s: any) => !s.gameTitle || s.gameTitle === "미지정"
-    );
-    setLocalUnclassified(unclassifiedOnly);
-    setNewTitle(data.sessionTitle);
-  }, [data]);
+  // 🏆 MVP 계산 로직
+  const calculateMVPs = () => {
+    const playTimes: { [userId: string]: number } = {};
+    const shotCounts: { [userId: string]: number } = {};
 
-  const handleUpdateTitle = async () => {
-    if (!tempTitle.trim() || tempTitle === data.sessionTitle) {
-      setIsEditingTitle(false);
-      return;
-    }
-    try {
-      const sessionRef = doc(db, "sessions", sessionId);
-      await updateDoc(sessionRef, { sessionTitle: tempTitle.trim() });
-      setIsEditingTitle(false);
-    } catch (err) {
-      console.error("제목 수정 실패:", err);
-      alert("제목 수정에 실패했습니다.");
-    }
+    // 1. 플레이 시간 집계
+    data.games.forEach((game: any) => {
+      Object.entries(game.playerPlayTimes || {}).forEach(([userId, minutes]: [string, any]) => {
+        playTimes[userId] = (playTimes[userId] || 0) + minutes;
+      });
+    });
+
+    // 2. 스크린샷 갯수 집계
+    const allShots = [
+      ...(data.unclassifiedScreenshots || []),
+      ...(data.games.flatMap((g:any) => g.comments || []).filter((c:any) => c.image)) // Actually screenshots are in screenshots array
+    ];
+    
+    (data.unclassifiedScreenshots || []).forEach((shot: any) => {
+      const uploaderId = Object.keys(data.displayNames || {}).find(key => data.displayNames[key] === shot.user) || shot.user;
+      shotCounts[uploaderId] = (shotCounts[uploaderId] || 0) + 1;
+    });
+
+    const timeMvpId = Object.keys(playTimes).reduce((a, b) => playTimes[a] > playTimes[b] ? a : b, "");
+    const shotMvpId = Object.keys(shotCounts).reduce((a, b) => shotCounts[a] > shotCounts[b] ? a : b, "");
+
+    return {
+      timeMvp: timeMvpId ? { id: timeMvpId, score: playTimes[timeMvpId] } : null,
+      shotMvp: shotMvpId ? { id: shotMvpId, score: shotCounts[shotMvpId] } : null
+    };
   };
 
-  const moveImageToGame = async (imgUrl: string, gameTitle: string) => {
-    const imgToMove = data.unclassifiedScreenshots.find((item: any) => item.url === imgUrl);
-    if (!imgToMove) return;
-    try {
-      const sessionRef = doc(db, "sessions", sessionId);
-      const updatedScreenshots = data.unclassifiedScreenshots.map((s: any) => {
-        if (s.url === imgUrl) return { ...s, gameTitle: gameTitle };
-        return s;
-      });
-      await updateDoc(sessionRef, { screenshots: updatedScreenshots });
-    } catch (err) { console.error("이동 실패:", err); }
+  const mvps = calculateMVPs();
+
+  useEffect(() => { setNewTitle(data.sessionTitle); }, [data]);
+
+  const handleUpdateTitle = async () => {
+    if (!tempTitle.trim() || tempTitle === data.sessionTitle) { setIsEditingTitle(false); return; }
+    try { await updateDoc(doc(db, "sessions", sessionId), { sessionTitle: tempTitle.trim() }); setIsEditingTitle(false); } catch (err) { console.error(err); }
   };
 
   const handleShare = () => {
-    const shareText = `${data.date} 게임 일기: ${data.sessionTitle}`;
     const textArea = document.createElement("textarea");
-    textArea.value = `${window.location.href} - ${shareText}`;
+    textArea.value = window.location.href;
     document.body.appendChild(textArea);
     textArea.select();
-    try {
-      document.execCommand('copy');
-      alert("일기 링크가 복사되었습니다!");
-    } catch (err) { console.error('복사 실패', err); }
+    document.execCommand('copy');
     document.body.removeChild(textArea);
+    alert("링크가 복사되었습니다!");
   };
 
   return (
@@ -231,67 +203,59 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
       <div className="flex flex-col gap-6 mb-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <span className="font-black bg-[#1A1D1F] text-white px-3 py-1 rounded-full uppercase tracking-tighter shrink-0 text-[10px] md:text-xs font-sans w-fit">
-              {formatDate(data.date)}
-            </span>
+            <span className="font-black bg-[#1A1D1F] text-white px-3 py-1 rounded-full uppercase tracking-tighter shrink-0 text-[10px] md:text-xs font-sans w-fit">{formatDate(data.date)}</span>
             {isEditingTitle ? (
-              <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  value={tempTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
-                  onBlur={handleUpdateTitle}
-                  autoFocus
-                  className="font-black tracking-tight text-xl md:text-2xl font-sans bg-slate-50 border-b-2 border-[#1A1D1F] outline-none px-1 py-0.5"
-                />
-              </div>
+              <input type="text" value={tempTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()} onBlur={handleUpdateTitle} autoFocus className="font-black tracking-tight text-xl md:text-2xl font-sans bg-slate-50 border-b-2 border-[#1A1D1F] outline-none px-1 py-0.5" />
             ) : (
               <h2 className="font-black tracking-tight text-xl md:text-2xl font-sans">{data.sessionTitle}</h2>
             )}
           </div>
-          
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setIsEditingTitle(true)} className="p-2.5 bg-[#F0F2F5] hover:bg-[#E2E8F0] rounded-full transition-all border border-slate-200 cursor-pointer" title="제목 수정">
-              <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
-            </button>
-            <button onClick={handleShare} className="p-2.5 bg-[#F0F2F5] hover:bg-[#E2E8F0] rounded-full transition-all border border-slate-200 cursor-pointer" title="일기 공유">
-              <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                <polyline points="16 6 12 2 8 6"></polyline>
-                <line x1="12" y1="2" x2="12" y2="15"></line>
-              </svg>
-            </button>
-            <button onClick={() => onDelete(sessionId)} className="p-2.5 bg-red-50 hover:bg-red-100 rounded-full transition-all border border-red-100 cursor-pointer" title="일기 삭제">
-              <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </button>
+            <button onClick={() => setIsEditingTitle(true)} className="p-2.5 bg-[#F0F2F5] hover:bg-[#E2E8F0] rounded-full transition-all border border-slate-200 cursor-pointer"><svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+            <button onClick={handleShare} className="p-2.5 bg-[#F0F2F5] hover:bg-[#E2E8F0] rounded-full transition-all border border-slate-200 cursor-pointer"><svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></button>
+            <button onClick={() => onDelete(sessionId)} className="p-2.5 bg-red-50 hover:bg-red-100 rounded-full transition-all border border-red-100 cursor-pointer"><svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
           </div>
         </div>
 
         <div className="flex flex-col gap-4 bg-slate-50/50 p-5 rounded-[2rem] border border-slate-100/50 transition-all hover:bg-white hover:shadow-md">
-          <div className="flex flex-wrap items-center gap-6 md:gap-8">
+          <div className="flex flex-wrap items-center gap-6 md:gap-12">
             <div className="flex flex-col md:border-r md:border-slate-200 md:pr-8 shrink-0">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-sans">총 대화 시간</span>
-              <div className="flex items-baseline gap-1 text-[#1A1D1F]">
-                <span className="text-xl font-black font-sans">{formatDurationText(data.totalDurationMin)}</span>
-              </div>
+              <div className="flex items-baseline gap-1 text-[#1A1D1F]"><span className="text-xl font-black font-sans">{formatDurationText(data.totalDurationMin)}</span></div>
             </div>
-            <div className="flex flex-col">
+
+            {/* 🏆 MVP 섹션 */}
+            <div className="flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide py-1">
+              {mvps.timeMvp && (
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-yellow-100 shadow-sm shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-400 shadow-inner shrink-0">
+                    <img src={data.profileImages?.[mvps.timeMvp.id] || ""} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-yellow-600 uppercase tracking-tighter mb-0.5">🥇 오늘의 게임 폐인</span>
+                    <span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.timeMvp.id]} ({mvps.timeMvp.score}분)</span>
+                  </div>
+                </div>
+              )}
+              {mvps.shotMvp && (
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-blue-100 shadow-sm shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-inner shrink-0">
+                    <img src={data.profileImages?.[mvps.shotMvp.id] || ""} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter mb-0.5">📸 오늘의 포토그래퍼</span>
+                    <span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.shotMvp.id]} ({mvps.shotMvp.score}장)</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col ml-auto">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2 font-sans px-0.5">함께한 친구들</span>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2.5 font-sans">
                   {data.participants.slice(0, 4).map((p: string, i: number) => (
-                    <div key={p} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden shadow-sm font-sans" style={{ zIndex: 10 - i }}>
-                      <img src={data.profileImages?.[p] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p}&backgroundColor=f0f2f5`} alt={p} className="w-full h-full object-cover" />
-                    </div>
+                    <div key={p} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden shadow-sm font-sans" style={{ zIndex: 10 - i }}><img src={data.profileImages?.[p] || ""} alt={p} className="w-full h-full object-cover" /></div>
                   ))}
                   {data.participants.length > 4 && <div className="w-8 h-8 rounded-full border-2 border-white bg-[#1A1D1F] text-white flex items-center justify-center text-[9px] font-black z-0 shadow-sm font-sans">+{data.participants.length - 4}</div>}
                 </div>
@@ -303,9 +267,7 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
             <div className="pt-4 mt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 font-sans">
               {data.participants.map((p: string) => (
                 <div key={p} className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all ${playersSet.has(p) ? 'bg-yellow-50 border-yellow-200/50 text-yellow-800' : 'bg-white border-slate-100 text-gray-400'}`}>
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-white shadow-sm shrink-0 font-sans">
-                    <img src={data.profileImages?.[p] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p}&backgroundColor=f0f2f5`} alt={p} className="w-full h-full object-cover" />
-                  </div>
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-white shadow-sm shrink-0 font-sans"><img src={data.profileImages?.[p] || ""} alt={p} className="w-full h-full object-cover" /></div>
                   <div className="flex flex-col min-w-0 font-sans"><span className="text-[11px] font-black truncate leading-none mb-0.5 font-sans">{data.displayNames[p] || p}</span><span className="text-[8px] font-bold uppercase tracking-tighter opacity-60 font-sans">{playersSet.has(p) ? 'Playing' : 'Spectating'}</span></div>
                 </div>
               ))}
@@ -328,13 +290,9 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
                     <div className="flex flex-wrap gap-x-2 gap-y-1.5 font-sans">
                       {game.players?.map((player: string) => (
                         <div key={player} className="flex items-center gap-1.5 bg-[#1E1F22] px-2 py-0.5 md:py-1 rounded-full shadow-sm text-[#DBDEE1] font-sans">
-                          <div className="w-4 h-4 md:w-5 md:h-5 rounded-full overflow-hidden border border-white/10 font-sans">
-                            <img src={data.profileImages?.[player] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${player}`} alt="" className="w-full h-full object-cover" />
-                          </div>
+                          <div className="w-4 h-4 md:w-5 md:h-5 rounded-full overflow-hidden border border-white/10 font-sans"><img src={data.profileImages?.[player] || ""} alt="" className="w-full h-full object-cover" /></div>
                           <span className="text-[9px] md:text-[10px] font-bold font-sans truncate max-w-[60px] md:max-w-none">{data.displayNames[player] || player}</span>
-                          <span className="text-[9px] md:text-[10px] font-black text-[#949BA4] ml-1 font-sans">
-                            {formatDurationText(game.playerPlayTimes?.[player] || 0)}
-                          </span>
+                          <span className="text-[9px] md:text-[10px] font-black text-[#949BA4] ml-1 font-sans">{formatDurationText(game.playerPlayTimes?.[player] || 0)}</span>
                         </div>
                       ))}
                     </div>
@@ -345,20 +303,15 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
                   <div className="font-black text-[#1A1D1F] text-xl md:text-2xl font-sans">{formatDurationText(game.playTimeMin)}</div>
                 </div>
               </div>
-              <ScreenshotSlider screenshots={gameShots} data={data} />
+              <ScreenshotSlider screenshots={gameShots} data={data} onImageClick={onImageClick} />
               <div className="mt-2 pt-4 border-t border-slate-50 font-sans text-[#1A1D1F]">
-                <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3 px-1 font-sans">게임 한줄평</p>
                 <div className="space-y-2 font-sans">
                   {game.comments && game.comments.map((comm: any, idx: number) => {
-                    // 서버 프로필 매칭 로직: userId가 있으면 data.displayNames/profileImages에서 먼저 찾음
                     const mappedName = (comm.userId && data.displayNames[comm.userId]) || comm.user;
-                    const mappedImage = (comm.userId && data.profileImages[comm.userId]) || comm.image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${comm.user}`;
-                    
+                    const mappedImage = (comm.userId && data.profileImages[comm.userId]) || comm.image || "";
                     return (
                       <div key={idx} className="flex items-start gap-3 p-2 bg-[#F8F9FA] rounded-2xl border border-white font-sans">
-                        <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 border border-white shadow-sm font-sans">
-                          <img src={mappedImage} alt="" className="w-full h-full object-cover" />
-                        </div>
+                        <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 border border-white shadow-sm font-sans"><img src={mappedImage} alt="" className="w-full h-full object-cover" /></div>
                         <div className="flex flex-col font-sans">
                           <span className="text-[10px] font-black text-gray-400 leading-none mb-1 font-sans">{mappedName}</span>
                           <p className="text-[11px] font-bold leading-snug font-sans">{comm.text}</p>
@@ -375,24 +328,18 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
       </div>
 
       <div className="space-y-6 font-sans text-[#1A1D1F]">
-        <div className="flex items-center justify-between px-1 font-sans text-[#1A1D1F]"><p className="text-[9px] font-black uppercase tracking-widest text-gray-300 font-sans">분류되지 않은 순간들</p></div>
+        <p className="text-[9px] font-black uppercase tracking-widest text-gray-300 font-sans px-1">분류되지 않은 순간들</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 font-sans">
-          {localUnclassified.map((snap: any) => {
+          {(data.unclassifiedScreenshots || []).filter((s:any) => !s.gameTitle || s.gameTitle === "미지정").map((snap: any) => {
             const uploaderId = Object.keys(data.displayNames || {}).find(key => data.displayNames[key] === snap.user) || snap.user;
-            const profileImg = data.profileImages?.[uploaderId] || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploaderId}`;
+            const profileImg = data.profileImages?.[uploaderId] || "";
             return (
-              <div key={snap.url} className="bg-white p-3 md:p-4 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-50 shadow-sm relative group/snap-unit font-sans transition-all hover:shadow-md">
+              <div key={snap.url} className="bg-white p-3 md:p-4 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-50 shadow-sm relative group/snap-unit font-sans transition-all hover:shadow-md cursor-zoom-in" onClick={() => onImageClick(snap.url)}>
                 <div className="relative aspect-video rounded-[1.2rem] md:rounded-[1.8rem] overflow-hidden border border-slate-100 shadow-inner group/snap font-sans">
                   <img src={snap.url} alt="" className="w-full h-full object-cover transition-transform group-hover/snap:scale-105" />
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-[#1E1F22]/90 rounded-full border border-white/10 shadow-xl font-sans">
                     <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 font-sans"><img src={profileImg} alt="" className="w-full h-full object-cover" /></div>
                     <span className="text-[9px] font-bold text-[#DBDEE1] font-sans">{snap.user}</span>
-                  </div>
-                  <div className="absolute bottom-3 left-3 opacity-100 md:opacity-0 group-hover/snap:opacity-100 transition-all font-sans scale-90 md:scale-100">
-                    <select onChange={(e) => moveImageToGame(snap.url, e.target.value)} className="bg-[#1E1F22]/90 text-white text-[9px] font-black px-3 py-1.5 rounded-full border border-white/10 shadow-xl outline-none cursor-pointer hover:bg-black font-sans" defaultValue="">
-                      <option value="" disabled>게임 선택하여 이동</option>
-                      {data.games.map((g: any) => (<option key={g.title} value={g.title}>{g.title}</option>))}
-                    </select>
                   </div>
                   <DownloadButton url={snap.url} className="absolute top-3 right-3 opacity-100 md:opacity-0 group-hover/snap:opacity-100 transition-all font-sans" />
                 </div>
@@ -400,10 +347,6 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete }: any) => {
               </div>
             );
           })}
-          <div className="group/upload cursor-pointer h-full min-h-[180px] md:min-h-[220px] bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-[1.5rem] md:rounded-[2.5rem] flex flex-col items-center justify-center gap-4 transition-all hover:bg-white hover:border-slate-300 font-sans">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 font-sans"><svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg></div>
-            <p className="text-[10px] md:text-xs font-black text-slate-400 font-sans">스크린샷 업로드</p>
-          </div>
         </div>
       </div>
     </article>
@@ -416,6 +359,8 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const q = query(collection(db, "sessions"), orderBy("startTime", "desc"));
@@ -428,7 +373,7 @@ export default function Home() {
           channelName: d.channelName,
           sessionTitle: d.sessionTitle || `#${d.channelName} 기록`,
           serverName: d.guildName || "연동된 서버",
-          serverIconURL: d.guildIcon || `https://api.dicebear.com/7.x/identicon/svg?seed=${d.guildName}`,
+          serverIconURL: d.guildIcon,
           totalDurationMin: d.totalDurationMin || 0,
           participants: d.participants || [],
           displayNames: d.displayNames || {},
@@ -445,10 +390,7 @@ export default function Home() {
 
   const handleDeleteSession = async (id: string) => {
     if (!window.confirm("정말로 이 일기를 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
-    try { await deleteDoc(doc(db, "sessions", id)); } catch (err) {
-      console.error("일기 삭제 실패:", err);
-      alert("일기 삭제에 실패했습니다.");
-    }
+    try { await deleteDoc(doc(db, "sessions", id)); } catch (err) { console.error(err); }
   };
 
   useEffect(() => {
@@ -459,122 +401,87 @@ export default function Home() {
     } else setSelectedId(null);
   }, [sessions, loading, selectedId]);
 
+  const filteredSessions = sessions.filter(s => 
+    s.sessionTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.serverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.games.some((g:any) => g.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   const current = sessions.find(s => s.id === selectedId) || sessions[0];
   const playedUsers = new Set(current?.games.flatMap((g: any) => g.players || []));
 
-  // 현재 로그인된 유저의 서버 프로필 정보 계산
-  const myId = session?.user?.id;
-  const myActiveNickname = (myId && current?.displayNames[myId]) || session?.user?.name || "사용자";
-  const myActiveImage = (myId && current?.profileImages[myId]) || session?.user?.image;
-
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-[#F0F2F5] text-[#1A1D1F] font-sans">LOADING DIARY...</div>;
-  if (sessions.length === 0) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-[#1A1D1F] font-sans p-6">
-      <div className="bg-white p-12 rounded-[3rem] shadow-sm text-center border border-slate-100 font-sans max-w-md w-full">
-        <p className="text-xl font-black text-[#1A1D1F] mb-2 font-sans">아직 기록이 없습니다.</p>
-        <p className="text-sm font-bold text-gray-400 font-sans">봇이 디스코드 채널에서 활동을 감지할 때까지 기다려주세요.</p>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="flex min-h-screen bg-[#F0F2F5] text-[#1A1D1F] font-sans overflow-hidden">
-      {/* 사이드바 토글 버튼 (모바일용 및 데스크탑 수동용) */}
-      <button 
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className={`fixed z-50 bottom-6 right-6 w-12 h-12 bg-[#1A1D1F] text-white rounded-full shadow-2xl flex items-center justify-center transition-transform active:scale-95 ${isSidebarOpen ? 'rotate-180 md:rotate-0' : ''}`}
-      >
-        {isSidebarOpen ? (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-        ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
-        )}
-      </button>
-
-      {/* 사이드바 */}
-      <aside className={`fixed md:relative z-40 h-full bg-[#F8F9FA] border-r border-[#E2E8F0] p-6 flex flex-col gap-6 font-sans transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-72 left-0' : 'w-0 -left-72 md:left-0 md:hidden overflow-hidden'}`}>
-        <div className="space-y-3 font-sans shrink-0">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider px-1 font-sans">참여중인 서버</p>
-          <div className="flex items-center gap-3 p-2 bg-white rounded-2xl border border-slate-100 shadow-sm font-sans">
-            <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center border border-slate-100 shadow-inner overflow-hidden font-sans shrink-0">
-              <img src={current?.serverIconURL} alt="" className="w-7 h-7" />
-            </div>
-            <div className="flex flex-col overflow-hidden font-sans">
-              <span className="text-[13px] font-bold text-gray-700 truncate font-sans">{current?.serverName}</span>
-              <span className="text-[10px] font-medium text-green-500 flex items-center gap-1.5 font-sans"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />연동됨</span>
+    <div className="flex flex-col min-h-screen bg-[#F0F2F5] text-[#1A1D1F] font-sans">
+      <TopNav />
+      
+      <div className="flex flex-1 overflow-hidden">
+        {/* 사이드바 */}
+        <aside className={`fixed md:relative z-40 h-[calc(100vh-64px)] bg-[#F8F9FA] border-r border-[#E2E8F0] p-6 flex flex-col gap-6 font-sans transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-72 left-0' : 'w-0 -left-72 md:left-0 md:w-0 overflow-hidden'}`}>
+          <div className="space-y-4 font-sans shrink-0">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider px-1 font-sans">일기 검색</p>
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder="제목, 서버, 게임 검색..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:border-[#1A1D1F] transition-all shadow-sm"
+              />
+              <svg className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
           </div>
-        </div>
 
-        {/* 유저 로그인 정보 섹션 */}
-        <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm font-sans">
-          {session ? (
-            <div className="flex flex-col gap-3 font-sans">
-              <div className="flex items-center gap-3 font-sans">
-                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#5865F2] font-sans">
-                  <img src={myActiveImage} alt={myActiveNickname} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex flex-col min-w-0 font-sans">
-                  <span className="text-[12px] font-black truncate font-sans">{myActiveNickname}님</span>
-                  <span className="text-[9px] font-bold text-gray-400 font-sans">디스코드 연결됨</span>
-                </div>
-              </div>
-              <button onClick={() => signOut()} className="w-full py-2 bg-[#F0F2F5] hover:bg-slate-200 text-gray-500 text-[10px] font-black rounded-xl transition-all cursor-pointer font-sans">로그아웃</button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3 text-center py-2 font-sans">
-              <p className="text-[10px] font-bold text-gray-400 font-sans leading-tight">로그인하고 친구들의<br/>일기에 댓글을 남겨보세요!</p>
-              <button onClick={() => signIn('discord')} className="w-full py-2.5 bg-[#5865F2] hover:bg-[#4752C4] text-white text-[11px] font-black rounded-xl transition-all shadow-md cursor-pointer font-sans flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.074 0 0 0-.079-.037a19.736 19.736 0 0 0-4.885 1.515a.07.07 0 0 0-.032.027C.533 9.048-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/></svg>
-                디스코드 로그인
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 flex flex-col min-h-0 font-sans">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1 font-sans">이전 일기 기록 ({sessions.length})</p>
-          <div className="space-y-2 overflow-y-auto pr-2 scrollbar-hide font-sans">
-            {sessions.map(s => (
-              <button key={s.id} onClick={() => { setSelectedId(s.id); if (window.innerWidth < 768) setIsSidebarOpen(false); }} className={`w-full text-left p-3 rounded-2xl border transition-all group font-sans ${selectedId === s.id ? 'bg-white border-[#1A1D1F]/10 shadow-md translate-x-1' : 'bg-transparent border-transparent hover:bg-white/50 grayscale hover:grayscale-0'}`}>
-                <div className="flex items-start gap-3 font-sans">
-                  <div className={`w-1.5 h-8 rounded-full transition-all font-sans ${selectedId === s.id ? 'bg-[#1A1D1F]' : 'bg-slate-200 group-hover:bg-slate-300'}`} />
-                  <div className="flex flex-col min-w-0 font-sans">
-                    <span className="text-[9px] font-black text-gray-400 uppercase mb-1 font-sans">{formatDate(s.date)}</span>
-                    <span className={`text-[12px] font-bold truncate leading-tight transition-colors font-sans ${selectedId === s.id ? 'text-[#1A1D1F]' : 'text-gray-500'}`}>{s.sessionTitle}</span>
+          <div className="flex-1 flex flex-col min-h-0 font-sans">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1 font-sans">이전 일기 기록 ({filteredSessions.length})</p>
+            <div className="space-y-2 overflow-y-auto pr-2 scrollbar-hide font-sans">
+              {filteredSessions.map(s => (
+                <button key={s.id} onClick={() => { setSelectedId(s.id); if (window.innerWidth < 768) setIsSidebarOpen(false); }} className={`w-full text-left p-3 rounded-2xl border transition-all group font-sans ${selectedId === s.id ? 'bg-white border-[#1A1D1F]/10 shadow-md translate-x-1' : 'bg-transparent border-transparent hover:bg-white/50 grayscale hover:grayscale-0'}`}>
+                  <div className="flex items-start gap-3 font-sans">
+                    <ServerIcon url={s.serverIconURL} name={s.serverName} className="w-8 h-8 rounded-lg shrink-0 shadow-sm" />
+                    <div className="flex flex-col min-w-0 font-sans">
+                      <span className="text-[9px] font-black text-gray-400 uppercase mb-0.5 font-sans">{formatDate(s.date)}</span>
+                      <span className={`text-[12px] font-bold truncate leading-tight transition-colors font-sans ${selectedId === s.id ? 'text-[#1A1D1F]' : 'text-gray-500'}`}>{s.sessionTitle}</span>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* 메인 콘텐츠 */}
-      <section className="flex-1 h-screen overflow-y-auto p-4 md:p-8 font-sans text-[#1A1D1F] transition-all duration-300">
-        <header className="flex justify-between items-center mb-6 font-sans">
-          <div className="flex items-center gap-3 md:gap-4 p-2 pr-4 md:pr-6 bg-[#1E1F22] rounded-2xl md:rounded-[1.5rem] shadow-xl border border-white/10 cursor-default font-sans overflow-hidden max-w-full">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-[#313338] flex items-center justify-center border border-white/5 overflow-hidden font-sans shrink-0">
-              <img src={current?.serverIconURL} alt="" className="w-7 h-7 md:w-9 md:h-9" />
-            </div>
-            <div className="flex flex-col min-w-0 font-sans">
-              <span className="text-[12px] md:text-[14px] font-black text-[#DBDEE1] uppercase tracking-tight font-sans truncate">{current?.serverName}</span>
-              <div className="flex items-center gap-2 mt-1 font-sans"><span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse font-sans" /><span className="text-[8px] md:text-[10px] font-bold text-[#949BA4] uppercase tracking-widest font-sans">실시간 기록 연결중</span></div>
-            </div>
-          </div>
+        {/* 메인 콘텐츠 */}
+        <section className="flex-1 h-[calc(100vh-64px)] overflow-y-auto p-4 md:p-8 font-sans text-[#1A1D1F] transition-all duration-300 relative">
+          {/* 사이드바 토글 (플로팅) */}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden md:flex p-2.5 bg-white rounded-full shadow-sm border border-slate-200 text-gray-500 hover:bg-slate-50 transition-all"
-            title={isSidebarOpen ? "사이드바 숨기기" : "사이드바 보이기"}
+            className="absolute left-4 top-4 z-30 p-2.5 bg-white rounded-full shadow-md border border-slate-200 text-gray-500 hover:bg-slate-50 transition-all active:scale-90"
           >
-            <svg className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+            <svg className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 19l-7-7 7-7" /></svg>
           </button>
-        </header>
-        
-        <div className="max-w-5xl mx-auto">
-          {current && <DiaryCard key={current.id} data={current} playersSet={playedUsers} sessionId={current.id} onDelete={handleDeleteSession} />}
-        </div>
-      </section>
+
+          <div className="max-w-5xl mx-auto pt-10">
+            {current ? (
+              <DiaryCard 
+                key={current.id} 
+                data={current} 
+                playersSet={playedUsers} 
+                sessionId={current.id} 
+                onDelete={handleDeleteSession} 
+                onImageClick={(url:string) => setActiveImageUrl(url)}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-400 font-bold">검색 결과가 없습니다.</div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* 🌟 1단계 추가: 라이트박스 */}
+      {activeImageUrl && (
+        <Lightbox imageUrl={activeImageUrl} onClose={() => setActiveImageUrl(null)} />
+      )}
     </div>
   );
 }
