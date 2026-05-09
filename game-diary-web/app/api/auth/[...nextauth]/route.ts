@@ -14,7 +14,7 @@ const handler = NextAuth({
           imageUrl = `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${format}?size=512`;
         } else {
           // 기본 아바타 처리
-          const defaultAvatarNumber = (BigInt(profile.id) >> 22n) % 6n;
+          const defaultAvatarNumber = (BigInt(profile.id) >> BigInt(22)) % BigInt(6);
           imageUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
         }
         
