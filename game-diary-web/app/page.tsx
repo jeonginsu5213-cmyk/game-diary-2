@@ -101,6 +101,11 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
   const { data: session }: any = useSession();
   const [text, setText] = useState("");
 
+  // 내 현재 서버 프로필 정보 가져오기
+  const myId = session?.user?.id;
+  const myServerName = data.displayNames[myId] || session?.user?.name;
+  const myServerImage = data.profileImages[myId] || session?.user?.image;
+
   const handleSubmit = async () => {
     if (!text.trim() || !session) return;
     try {
@@ -110,7 +115,7 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
           return {
             ...g,
             comments: [...(g.comments || []), { 
-              userId: session.user.id, // ID를 우선적으로 저장
+              userId: session.user.id,
               user: session.user.name, 
               image: session.user.image,
               text: text.trim() 
@@ -146,14 +151,14 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
   return (
     <div className="mt-2 flex items-center gap-3 p-2 bg-white rounded-2xl border border-slate-100 shadow-inner group/input font-sans">
       <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-slate-50">
-        <img src={session.user.image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${session.user.name}`} alt="" className="w-full h-full" />
+        <img src={myServerImage || `https://api.dicebear.com/7.x/adventurer/svg?seed=${session.user.name}`} alt="" className="w-full h-full" />
       </div>
       <input 
         type="text" 
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder="한줄평을 남겨주세요..." 
+        placeholder={`${myServerName}님, 한줄평을 남겨주세요...`} 
         className="flex-1 bg-transparent border-none outline-none text-[11px] font-bold text-gray-500 placeholder:text-gray-300"
       />
       <button 
@@ -457,6 +462,11 @@ export default function Home() {
   const current = sessions.find(s => s.id === selectedId) || sessions[0];
   const playedUsers = new Set(current?.games.flatMap((g: any) => g.players || []));
 
+  // 현재 로그인된 유저의 서버 프로필 정보 계산
+  const myId = session?.user?.id;
+  const myActiveNickname = (myId && current?.displayNames[myId]) || session?.user?.name || "사용자";
+  const myActiveImage = (myId && current?.profileImages[myId]) || session?.user?.image;
+
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-[#F0F2F5] text-[#1A1D1F] font-sans">LOADING DIARY...</div>;
   if (sessions.length === 0) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] text-[#1A1D1F] font-sans p-6">
@@ -502,10 +512,10 @@ export default function Home() {
             <div className="flex flex-col gap-3 font-sans">
               <div className="flex items-center gap-3 font-sans">
                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#5865F2] font-sans">
-                  <img src={session.user.image} alt={session.user.name} className="w-full h-full object-cover" />
+                  <img src={myActiveImage} alt={myActiveNickname} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col min-w-0 font-sans">
-                  <span className="text-[12px] font-black truncate font-sans">{session.user.name}님</span>
+                  <span className="text-[12px] font-black truncate font-sans">{myActiveNickname}님</span>
                   <span className="text-[9px] font-bold text-gray-400 font-sans">디스코드 연결됨</span>
                 </div>
               </div>

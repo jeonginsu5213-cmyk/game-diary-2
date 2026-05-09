@@ -51,9 +51,9 @@ function formatDuration(minutes) {
 }
 
 // 헬퍼 함수: 게임 추적 중지 및 시간 합산
-function stopGameTracking(session, username, gameName) {
-    if (session.gameLogs[gameName] && session.gameLogs[gameName].activeStartTime[username]) {
-        const startTime = session.gameLogs[gameName].activeStartTime[username];
+function stopGameTracking(session, userId, gameName) {
+    if (session.gameLogs[gameName] && session.gameLogs[gameName].activeStartTime[userId]) {
+        const startTime = session.gameLogs[gameName].activeStartTime[userId];
         const duration = Date.now() - startTime;
         
         // 전체 시간 합산
@@ -63,18 +63,18 @@ function stopGameTracking(session, username, gameName) {
         if (!session.gameLogs[gameName].playerPlayTimes) {
             session.gameLogs[gameName].playerPlayTimes = {};
         }
-        if (!session.gameLogs[gameName].playerPlayTimes[username]) {
-            session.gameLogs[gameName].playerPlayTimes[username] = 0;
+        if (!session.gameLogs[gameName].playerPlayTimes[userId]) {
+            session.gameLogs[gameName].playerPlayTimes[userId] = 0;
         }
-        session.gameLogs[gameName].playerPlayTimes[username] += duration;
+        session.gameLogs[gameName].playerPlayTimes[userId] += duration;
         
-        session.gameLogs[gameName].activeStartTime[username] = null;
-        console.log(`🎮 [Game Tracking] ${username}이(가) ${gameName} 플레이 종료 (${Math.floor(duration/1000)}초)`);
+        session.gameLogs[gameName].activeStartTime[userId] = null;
+        console.log(`🎮 [Game Tracking] 유저(${userId})가 ${gameName} 플레이 종료 (${Math.floor(duration/1000)}초)`);
     }
 }
 
 // 헬퍼 함수: 게임 로그 업데이트 (시작)
-function updateGameLog(session, username, activity) {
+function updateGameLog(session, userId, activity) {
     if (activity && activity.type === 0) {
         const gameName = activity.name;
         let iconURL = activity.assets ? activity.assets.largeImageURL({ format: 'png', size: 512 }) : null;
@@ -92,10 +92,10 @@ function updateGameLog(session, username, activity) {
             session.gameLogs[gameName].iconURL = iconURL;
         }
 
-        if (!session.gameLogs[gameName].activeStartTime[username]) {
-            session.gameLogs[gameName].activeStartTime[username] = Date.now();
-            session.gameLogs[gameName].players.add(username);
-            console.log(`🎮 [Game Tracking] ${username}이(가) ${gameName} 플레이 시작`);
+        if (!session.gameLogs[gameName].activeStartTime[userId]) {
+            session.gameLogs[gameName].activeStartTime[userId] = Date.now();
+            session.gameLogs[gameName].players.add(userId);
+            console.log(`🎮 [Game Tracking] 유저(${userId})가 ${gameName} 플레이 시작`);
         }
     }
 }
@@ -114,7 +114,6 @@ client.once('ready', async () => {
             const channelId = channel.id;
             const member = voiceState.member;
             const userId = member.user.id;
-            const username = member.user.username;
             const nickname = member.displayName;
             const avatarURL = member.user.displayAvatarURL({ format: 'png', size: 256 });
 
@@ -141,7 +140,7 @@ client.once('ready', async () => {
 
             const currentActivity = member.presence?.activities.find(a => a.type === 0);
             if (currentActivity) {
-                updateGameLog(session, username, currentActivity);
+                updateGameLog(session, userId, currentActivity);
             }
         }
     }
@@ -153,7 +152,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     if (!member || member.user.bot) return;
 
     const userId = member.user.id;
-    const username = member.user.username;
     const nickname = member.displayName;
     const avatarURL = member.user.displayAvatarURL({ format: 'png', size: 256 });
     
@@ -216,7 +214,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         // 현재 하고 있는 게임 추적 시작
         const currentActivity = member.presence?.activities.find(a => a.type === 0);
         if (currentActivity) {
-            updateGameLog(session, username, currentActivity);
+            updateGameLog(session, userId, currentActivity);
         }
     }
 
@@ -228,7 +226,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             
             // 퇴장하는 사용자의 게임 추적 중지
             for (const gameName of Object.keys(session.gameLogs)) {
-                stopGameTracking(session, username, gameName);
+                stopGameTracking(session, userId, gameName);
             }
 
             // 채널에 남은 인원 확인 (봇 제외)
@@ -238,9 +236,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 
                 // 🛑 세션 종료 전 모든 활성 게임 로그를 현재 시간으로 마감
                 for (const [gameName, data] of Object.entries(session.gameLogs)) {
-                    for (const [pName, startTime] of Object.entries(data.activeStartTime)) {
+                    for (const [pId, startTime] of Object.entries(data.activeStartTime)) {
                         if (startTime) {
-                            stopGameTracking(session, pName, gameName);
+                            stopGameTracking(session, pId, gameName);
                         }
                     }
                 }
@@ -260,7 +258,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                         title: name,
                         playTimeMin: Math.floor(data.totalPlayTime / 1000 / 60),
                         playerPlayTimes: Object.fromEntries(
-                            Object.entries(data.playerPlayTimes || {}).map(([user, ms]) => [user, Math.floor(ms / 1000 / 60)])
+                            Object.entries(data.playerPlayTimes || {}).map(([id, ms]) => [id, Math.floor(ms / 1000 / 60)])
                         ),
                         players: Array.from(data.players),
                         iconURL: data.iconURL,
@@ -510,19 +508,19 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!channelId || !activeSessions.has(channelId)) return;
     
     const session = activeSessions.get(channelId);
-    const username = member.user.username;
+    const userId = member.user.id;
 
     const oldGame = oldPresence?.activities.find(a => a.type === 0);
     const newGame = newPresence.activities.find(a => a.type === 0);
 
     // 게임이 바뀌었거나 종료된 경우
     if (oldGame && (!newGame || oldGame.name !== newGame.name)) {
-        stopGameTracking(session, username, oldGame.name);
+        stopGameTracking(session, userId, oldGame.name);
     }
 
     // 새로운 게임 시작
     if (newGame) {
-        updateGameLog(session, username, newGame);
+        updateGameLog(session, userId, newGame);
     }
 });
 
