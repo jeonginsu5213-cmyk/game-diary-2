@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useSession } from "next-auth/react";
 import ReactionPicker from './ReactionPicker';
+import Link from 'next/link';
 
 interface CommentItemProps {
   comment: any;
@@ -29,12 +30,16 @@ export default function CommentItem({ comment, onAddReaction, onAddReply, isRepl
   return (
     <div className={`flex flex-col gap-2 ${isReply ? 'ml-8 mt-2' : 'mt-4'}`}>
       <div className="flex items-start gap-3 p-2 bg-[#F8F9FA] rounded-2xl border border-white font-sans transition-all hover:shadow-sm">
-        <div className={`${isReply ? 'w-5 h-5' : 'w-7 h-7'} rounded-full overflow-hidden shrink-0 mt-0.5 border border-white shadow-sm font-sans`}>
-          <img src={comment.image || ""} alt="" className="w-full h-full object-cover" />
-        </div>
+        <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
+          <div className={`${isReply ? 'w-5 h-5' : 'w-7 h-7'} rounded-full overflow-hidden border border-white shadow-sm font-sans hover:scale-110 transition-transform`}>
+            <img src={comment.image || ""} alt="" className="w-full h-full object-cover" />
+          </div>
+        </Link>
         <div className="flex flex-col flex-1 font-sans">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black text-gray-400 leading-none mb-1 font-sans">{comment.user}</span>
+            <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="hover:underline">
+              <span className="text-[10px] font-black text-gray-400 leading-none mb-1 font-sans">{comment.user}</span>
+            </Link>
           </div>
           <p className={`${isReply ? 'text-[10px]' : 'text-[11px]'} font-bold leading-snug font-sans text-gray-700`}>{comment.text}</p>
           

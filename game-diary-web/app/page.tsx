@@ -265,43 +265,58 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-sans">총 대화 시간</span>
               <div className="flex items-baseline gap-1 text-[#1A1D1F]"><span className="text-xl font-black font-sans">{formatDurationText(data.totalDurationMin)}</span></div>
             </div>
+            {/* 🏆 MVP 섹션 */}
             <div className="flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide py-1">
               {mvps.timeMvp && (
-                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-yellow-100 shadow-sm shrink-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-400 shadow-inner shrink-0"><img src={data.profileImages?.[mvps.timeMvp.id] || ""} alt="" className="w-full h-full object-cover" /></div>
-                  <div className="flex flex-col"><span className="text-[8px] font-black text-yellow-600 uppercase tracking-tighter mb-0.5">🥇 오늘의 게임 폐인</span><span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.timeMvp.id]} ({mvps.timeMvp.score}분)</span></div>
-                </div>
+                <Link href={`/profile/${mvps.timeMvp.id}`} className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-yellow-100 shadow-sm shrink-0 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-400 shadow-inner shrink-0">
+                    <img src={data.profileImages?.[mvps.timeMvp.id] || ""} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-yellow-600 uppercase tracking-tighter mb-0.5">🥇 오늘의 게임 폐인</span>
+                    <span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.timeMvp.id]} ({mvps.timeMvp.score}분)</span>
+                  </div>
+                </Link>
               )}
               {mvps.shotMvp && (
-                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-blue-100 shadow-sm shrink-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-inner shrink-0"><img src={data.profileImages?.[mvps.shotMvp.id] || ""} alt="" className="w-full h-full object-cover" /></div>
-                  <div className="flex flex-col"><span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter mb-0.5">📸 오늘의 포토그래퍼</span><span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.shotMvp.id]} ({mvps.shotMvp.score}장)</span></div>
-                </div>
+                <Link href={`/profile/${mvps.shotMvp.id}`} className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-blue-100 shadow-sm shrink-0 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-inner shrink-0">
+                    <img src={data.profileImages?.[mvps.shotMvp.id] || ""} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter mb-0.5">📸 오늘의 포토그래퍼</span>
+                    <span className="text-[11px] font-black text-gray-800 leading-none">{data.displayNames?.[mvps.shotMvp.id]} ({mvps.shotMvp.score}장)</span>
+                  </div>
+                </Link>
               )}
             </div>
+
             <div className="flex flex-col ml-auto">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2 font-sans px-0.5">함께한 친구들</span>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2.5 font-sans">
                   {data.participants.slice(0, 4).map((p: string, i: number) => (
-                    <div key={p} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden shadow-sm font-sans" style={{ zIndex: 10 - i }}><img src={data.profileImages?.[p] || ""} alt={p} className="w-full h-full object-cover" /></div>
+                    <Link key={p} href={`/profile/${p}`} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden shadow-sm font-sans hover:scale-110 transition-transform" style={{ zIndex: 10 - i }}>
+                      <img src={data.profileImages?.[p] || ""} alt={p} className="w-full h-full object-cover" />
+                    </Link>
                   ))}
                   {data.participants.length > 4 && <div className="w-8 h-8 rounded-full border-2 border-white bg-[#1A1D1F] text-white flex items-center justify-center text-[9px] font-black z-0 shadow-sm font-sans">+{data.participants.length - 4}</div>}
                 </div>
                 <button onClick={() => setIsParticipantsExpanded(!isParticipantsExpanded)} className={`p-1.5 rounded-full transition-all cursor-pointer ${isParticipantsExpanded ? 'bg-[#1A1D1F] text-white rotate-180' : 'bg-white text-gray-400 border border-slate-100 shadow-sm'}`}><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
               </div>
             </div>
-          </div>
-          {isParticipantsExpanded && (
+            </div>
+            {isParticipantsExpanded && (
             <div className="pt-4 mt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 font-sans">
               {data.participants.map((p: string) => (
-                <div key={p} className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all ${playersSet.has(p) ? 'bg-yellow-50 border-yellow-200/50 text-yellow-800' : 'bg-white border-slate-100 text-gray-400'}`}>
+                <Link key={p} href={`/profile/${p}`} className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all hover:shadow-md ${playersSet.has(p) ? 'bg-yellow-50 border-yellow-200/50 text-yellow-800' : 'bg-white border-slate-100 text-gray-400'}`}>
                   <div className="w-7 h-7 rounded-full overflow-hidden border border-white shadow-sm shrink-0 font-sans"><img src={data.profileImages?.[p] || ""} alt={p} className="w-full h-full object-cover" /></div>
                   <div className="flex flex-col min-w-0 font-sans"><span className="text-[11px] font-black truncate leading-none mb-0.5 font-sans">{data.displayNames[p] || p}</span><span className="text-[8px] font-bold uppercase tracking-tighter opacity-60 font-sans">{playersSet.has(p) ? 'Playing' : 'Spectating'}</span></div>
-                </div>
+                </Link>
               ))}
             </div>
-          )}
+            )}
+
         </div>
       </div>
 
@@ -318,11 +333,13 @@ const DiaryCard = ({ data, playersSet, sessionId, onDelete, onImageClick }: any)
                     <h4 className="font-black tracking-tight mb-2 md:mb-3 uppercase text-base md:text-lg font-sans truncate">{game.title}</h4>
                     <div className="flex flex-wrap gap-x-2 gap-y-1.5 font-sans">
                       {game.players?.map((player: string) => (
-                        <div key={player} className="flex items-center gap-1.5 bg-[#1E1F22] px-2 py-0.5 md:py-1 rounded-full shadow-sm text-[#DBDEE1] font-sans">
-                          <div className="w-4 h-4 md:w-5 md:h-5 rounded-full overflow-hidden border border-white/10 font-sans"><img src={data.profileImages?.[player] || ""} alt="" className="w-full h-full object-cover" /></div>
+                        <Link key={player} href={`/profile/${player}`} className="flex items-center gap-1.5 bg-[#1E1F22] px-2 py-0.5 md:py-1 rounded-full shadow-sm text-[#DBDEE1] font-sans hover:bg-[#313338] transition-colors">
+                          <div className="w-4 h-4 md:w-5 md:h-5 rounded-full overflow-hidden border border-white/10 font-sans">
+                            <img src={data.profileImages?.[player] || ""} alt="" className="w-full h-full object-cover" />
+                          </div>
                           <span className="text-[9px] md:text-[10px] font-bold font-sans truncate max-w-[60px] md:max-w-none">{data.displayNames[player] || player}</span>
                           <span className="text-[9px] md:text-[10px] font-black text-[#949BA4] ml-1 font-sans">{formatDurationText(game.playerPlayTimes?.[player] || 0)}</span>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
