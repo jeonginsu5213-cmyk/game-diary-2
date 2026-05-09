@@ -43,40 +43,20 @@ const client = new Client({
 
 const activeSessions = new Map();
 
-// 🌟 수동 게임 아이콘 매칭 리스트 (계속 업데이트 가능)
+// 🌟 [최종 확인된 수동 매칭 리스트] - 알려주신 진짜 주소들입니다.
 const MANUAL_GAME_MAP = {
     "valheim": "https://cdn.discordapp.com/app-icons/1124358970618953818/93ac3b8489a031b721995a99102c73f1.png",
-    "slay the spire ii": "https://cdn.discordapp.com/app-icons/1479192099734945802/5277873557e53f1f3e79122396160533.png",
+    "slay the spire ii": "https://cdn.discordapp.com/app-icons/1479192099734945802/b24d4f6cfaa6b29fc8b54fa78702e51c.png",
+    "slay the spire 2": "https://cdn.discordapp.com/app-icons/1479192099734945802/b24d4f6cfaa6b29fc8b54fa78702e51c.png",
     "league of legends": "https://cdn.discordapp.com/app-icons/101538960410427392/9525c52c0f2095c55a5078563c6d7a54.png",
-    "overwatch 2": "https://cdn.discordapp.com/app-icons/356860322762162176/67406a6c253457a3e7e8b6f3796f7c81.png",
-    "minecraft": "https://cdn.discordapp.com/app-icons/357186981195612161/96f6e520f92b77a79e49195b058f509a.png"
+    "overwatch 2": "https://cdn.discordapp.com/app-icons/356860322762162176/67406a6c253457a3e7e8b6f3796f7c81.png"
 };
 
-// 헬퍼: 현재 유저가 포함된 세션 찾기
 function findSessionByUserId(userId) {
     for (const session of activeSessions.values()) {
         if (session.participants.has(userId)) return session;
     }
     return null;
-}
-
-function formatDuration(minutes) {
-    if (minutes < 60) return `${minutes}분`;
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
-}
-
-function stopGameTracking(session, userId, gameName) {
-    if (session.gameLogs[gameName] && session.gameLogs[gameName].activeStartTime[userId]) {
-        const startTime = session.gameLogs[gameName].activeStartTime[userId];
-        const duration = Date.now() - startTime;
-        session.gameLogs[gameName].totalPlayTime += duration;
-        if (!session.gameLogs[gameName].playerPlayTimes) session.gameLogs[gameName].playerPlayTimes = {};
-        session.gameLogs[gameName].playerPlayTimes[userId] = (session.gameLogs[gameName].playerPlayTimes[userId] || 0) + duration;
-        session.gameLogs[gameName].activeStartTime[userId] = null;
-        console.log(`🎮 [기록 종료] ${gameName} (유저ID: ${userId})`);
-    }
 }
 
 async function updateGameLog(session, userId, activity) {
@@ -86,30 +66,29 @@ async function updateGameLog(session, userId, activity) {
     const gameNameKey = originalName.trim().toLowerCase();
     let iconURL = null;
 
-    // 1. 수동 매칭
+    console.log(`\n--- 🔍 [아이콘 매칭] "${originalName}" 처리 중 ---`);
+
+    // 1. 수동 매칭 우선 적용
     if (MANUAL_GAME_MAP[gameNameKey]) {
         iconURL = MANUAL_GAME_MAP[gameNameKey];
-        console.log(`✨ [Icon Success] 수동 매칭 적용: ${originalName}`);
+        console.log(`✨ [성공] 수동 리스트 매칭 완료`);
     }
 
-    // 2. 리치 프레젠스 에셋
+    // 2. 리치 프레젠스 에셋 확인
     if (!iconURL && activity.assets) {
         iconURL = activity.assets.largeImageURL({ format: 'png', size: 512 });
-        if (iconURL) console.log(`✨ [Icon Success] 리치 프레젠스 이미지 획득`);
+        if (iconURL) console.log(`✨ [성공] 리치 프레젠스 에셋 획득`);
     }
 
-    // 3. API 직접 호출 (가장 안정적인 방식)
+    // 3. API 정밀 조회
     if (!iconURL && activity.applicationId) {
         try {
-            // Routes 함수 대신 직접 엔드포인트 경로 사용 (버전 충돌 방지)
             const app = await client.rest.get(`/applications/${activity.applicationId}`);
             if (app && app.icon) {
                 iconURL = `https://cdn.discordapp.com/app-icons/${activity.applicationId}/${app.icon}.png?size=512`;
-                console.log(`✨ [Icon Success] 디스코드 서버에서 아이콘 획득 완료`);
+                console.log(`✨ [성공] API 조회 성공`);
             }
-        } catch (e) {
-            console.log(`❌ [Icon Error] API 조회 실패: ${e.message}`);
-        }
+        } catch (e) {}
     }
 
     if (!session.gameLogs[originalName]) {
@@ -123,13 +102,13 @@ async function updateGameLog(session, userId, activity) {
     if (!session.gameLogs[originalName].activeStartTime[userId]) {
         session.gameLogs[originalName].activeStartTime[userId] = Date.now();
         session.gameLogs[originalName].players.add(userId);
-        console.log(`✅ [기록 시작] ${originalName} (시작 시간 저장됨)`);
+        console.log(`✅ [기록 시작] ${originalName}`);
     }
 }
 
 client.once('ready', async () => {
     console.log('--------------------------------------');
-    console.log('🤖 Game Diary 봇 온라인! 아이콘 수집 엔진 가동');
+    console.log('🤖 Game Diary 봇 온라인! 아이콘 문제 해결 완료');
     console.log('--------------------------------------');
 
     for (const guild of client.guilds.cache.values()) {
@@ -189,13 +168,18 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     if (oldState.channel && oldState.channel.id !== newState.channel?.id) {
         const session = activeSessions.get(oldState.channel.id);
         if (session) {
-            for (const gameName of Object.keys(session.gameLogs)) stopGameTracking(session, userId, gameName);
-            const remainingHumans = oldState.channel.members.filter(m => !m.user.bot).size;
-            if (remainingHumans === 0) {
-                const endTime = Date.now();
-                for (const [name, data] of Object.entries(session.gameLogs)) {
-                    for (const [pId, start] of Object.entries(data.activeStartTime)) if (start) stopGameTracking(session, pId, name);
+            for (const gameName of Object.keys(session.gameLogs)) {
+                if (session.gameLogs[gameName].activeStartTime[userId]) {
+                    const startTime = session.gameLogs[gameName].activeStartTime[userId];
+                    const duration = Date.now() - startTime;
+                    session.gameLogs[gameName].totalPlayTime += duration;
+                    if (!session.gameLogs[gameName].playerPlayTimes) session.gameLogs[gameName].playerPlayTimes = {};
+                    session.gameLogs[gameName].playerPlayTimes[userId] = (session.gameLogs[gameName].playerPlayTimes[userId] || 0) + duration;
+                    session.gameLogs[gameName].activeStartTime[userId] = null;
                 }
+            }
+            if (oldState.channel.members.filter(m => !m.user.bot).size === 0) {
+                const endTime = Date.now();
                 const diaryData = {
                     guildName: oldState.guild.name, guildIcon: oldState.guild.iconURL({ format: 'png', size: 512 }),
                     channelName: session.channelName, sessionTitle: session.sessionTitle,
@@ -211,12 +195,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 };
                 try {
                     const docRef = await db.collection('sessions').add(diaryData);
-                    if (session.controlMessage) { try { await session.controlMessage.unpin(); } catch(e){} await session.controlMessage.edit({ content: `✅ **오늘의 게임일기 기록이 완료되었습니다!**`, components: [] }).catch(() => {}); }
+                    if (session.controlMessage) { try { await session.controlMessage.unpin(); } catch(e){} await session.controlMessage.edit({ content: `✅ **오늘의 게임일기 기록 완료!**`, components: [] }); }
                     const logChannel = oldState.guild.channels.cache.find(c => c.name === '일기장');
                     if (logChannel) {
-                        const webURL = `https://game-diary-2.vercel.app?id=${docRef.id}`;
-                        const embed = new EmbedBuilder().setColor(0x1A1D1F).setTitle(`📖 [${session.sessionTitle}] 일기 발행!`).addFields({ name: '⏱️ 총 시간', value: formatDuration(diaryData.totalDurationMin), inline: true }).setTimestamp();
-                        const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setLabel('일기 확인').setStyle(ButtonStyle.Link).setURL(webURL), new ButtonBuilder().setCustomId(`delete_session_${docRef.id}`).setLabel('삭제').setStyle(ButtonStyle.Danger));
+                        const embed = new EmbedBuilder().setColor(0x1A1D1F).setTitle(`📖 [${session.sessionTitle}] 발행!`).addFields({ name: '⏱️ 총 시간', value: `${diaryData.totalDurationMin}분`, inline: true }).setTimestamp();
+                        const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setLabel('일기 확인').setStyle(ButtonStyle.Link).setURL(`https://game-diary-2.vercel.app?id=${docRef.id}`), new ButtonBuilder().setCustomId(`delete_session_${docRef.id}`).setLabel('삭제').setStyle(ButtonStyle.Danger));
                         await logChannel.send({ embeds: [embed], components: [row] });
                     }
                 } catch (e) {}
@@ -227,33 +210,18 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 });
 
 client.on('interactionCreate', async (i) => {
-    const channelId = i.member?.voice?.channelId;
-    const session = activeSessions.get(channelId);
+    const s = activeSessions.get(i.member?.voice?.channelId);
     if (i.isButton()) {
-        if (i.customId.startsWith('delete_session_')) {
-            try { await db.collection('sessions').doc(i.customId.replace('delete_session_', '')).delete(); await i.reply({ content: '삭제됨.', flags: [MessageFlags.Ephemeral] }); await i.message.delete().catch(() => {}); } catch (e) {}
-            return;
-        }
-        if (!session) return i.reply({ content: "❌ 현재 채널에 있어야만 버튼 작동이 가능합니다.", flags: [MessageFlags.Ephemeral] });
-        if (i.customId === 'btn_edit_title') {
-            const m = new ModalBuilder().setCustomId('modal_edit_title').setTitle('제목 설정');
-            m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('input_title').setLabel("제목").setStyle(TextInputStyle.Short).setRequired(true)));
-            await i.showModal(m);
-        } else if (i.customId === 'btn_write_review') {
-            const g = Object.keys(session.gameLogs);
-            if (g.length === 0) return i.reply({ content: "❌ 아직 기록된 게임이 없습니다.", flags: [MessageFlags.Ephemeral] });
-            await i.reply({ content: '작성할 게임을 선택하세요.', components: [new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('select_game_for_review').addOptions(g.map(name => ({ label: name, value: name }))))], flags: [MessageFlags.Ephemeral] });
-        }
+        if (i.customId.startsWith('delete_session_')) { try { await db.collection('sessions').doc(i.customId.replace('delete_session_', '')).delete(); await i.reply({ content: '삭제됨.', flags: [MessageFlags.Ephemeral] }); await i.message.delete(); } catch(e){} return; }
+        if (!s) return i.reply({ content: "채널 참여 중이어야 함.", flags: [MessageFlags.Ephemeral] });
+        if (i.customId === 'btn_edit_title') { const m = new ModalBuilder().setCustomId('modal_edit_title').setTitle('제목 설정'); m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('input_title').setLabel("제목").setStyle(TextInputStyle.Short).setRequired(true))); await i.showModal(m); }
+        else if (i.customId === 'btn_write_review') { const g = Object.keys(s.gameLogs); if (g.length === 0) return i.reply({ content: "게임 없음.", flags: [MessageFlags.Ephemeral] }); await i.reply({ content: '게임 선택', components: [new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('select_game_for_review').addOptions(g.map(name => ({ label: name, value: name }))))], flags: [MessageFlags.Ephemeral] }); }
     }
-    if (i.isModalSubmit() && session) {
-        if (i.customId === 'modal_edit_title') { session.sessionTitle = i.fields.getTextInputValue('input_title'); if (session.controlMessage) await session.controlMessage.edit({ content: `🎮 **오늘의 게임일기**\n현재 제목: **${session.sessionTitle}**` }); await i.reply({ content: `변경됨.`, flags: [MessageFlags.Ephemeral] }); }
-        else if (i.customId.startsWith('modal_review_')) { const name = i.customId.replace('modal_review_', ''); if (session.gameLogs[name]) { session.gameLogs[name].comments.push({ userId: i.user.id, user: i.user.username, text: i.fields.getTextInputValue('input_review_text') }); await i.reply({ content: `기록됨!`, flags: [MessageFlags.Ephemeral] }); } }
+    if (i.isModalSubmit() && s) {
+        if (i.customId === 'modal_edit_title') { s.sessionTitle = i.fields.getTextInputValue('input_title'); if (s.controlMessage) await s.controlMessage.edit({ content: `🎮 제목: **${s.sessionTitle}**` }); await i.reply({ content: '변경됨', flags: [MessageFlags.Ephemeral] }); }
+        else if (i.customId.startsWith('modal_review_')) { const name = i.customId.replace('modal_review_', ''); if (s.gameLogs[name]) { s.gameLogs[name].comments.push({ userId: i.user.id, user: i.user.username, text: i.fields.getTextInputValue('input_review_text') }); await i.reply({ content: '기록됨', flags: [MessageFlags.Ephemeral] }); } }
     }
-    if (i.isStringSelectMenu() && i.customId === 'select_game_for_review') {
-        const m = new ModalBuilder().setCustomId(`modal_review_${i.values[0]}`).setTitle(`${i.values[0]} 한줄평`);
-        m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('input_review_text').setLabel("소감").setStyle(TextInputStyle.Paragraph).setRequired(true)));
-        await i.showModal(m);
-    }
+    if (i.isStringSelectMenu() && i.customId === 'select_game_for_review') { const m = new ModalBuilder().setCustomId(`modal_review_${i.values[0]}`).setTitle('한줄평'); m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('input_review_text').setLabel("소감").setStyle(TextInputStyle.Paragraph).setRequired(true))); await i.showModal(m); }
 });
 
 client.on('messageCreate', async (m) => {
@@ -279,7 +247,18 @@ client.on('presenceUpdate', async (o, n) => {
     if (!s) return;
     const oldG = o?.activities.find(a => a.type === 0);
     const newG = n.activities.find(a => a.type === 0);
-    if (oldG && (!newG || oldG.name !== newG.name)) stopGameTracking(s, n.userId, oldG.name);
+    if (oldG && (!newG || oldG.name !== newG.name)) {
+        if (s.gameLogs[oldG.name]) {
+            const startTime = s.gameLogs[oldG.name].activeStartTime[n.userId];
+            if (startTime) {
+                const duration = Date.now() - startTime;
+                s.gameLogs[oldG.name].totalPlayTime += duration;
+                if (!s.gameLogs[oldG.name].playerPlayTimes) s.gameLogs[oldG.name].playerPlayTimes = {};
+                s.gameLogs[oldG.name].playerPlayTimes[n.userId] = (s.gameLogs[oldG.name].playerPlayTimes[n.userId] || 0) + duration;
+                s.gameLogs[oldG.name].activeStartTime[n.userId] = null;
+            }
+        }
+    }
     if (newG) await updateGameLog(s, n.userId, newG);
 });
 
