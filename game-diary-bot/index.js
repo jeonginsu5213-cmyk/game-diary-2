@@ -73,11 +73,26 @@ function stopGameTracking(session, userId, gameName) {
     }
 }
 
-// 헬퍼 함수: 게임 로그 업데이트 (시작)
-function updateGameLog(session, userId, activity) {
+// 헬퍼 함수: 게임 로그 업데이트 (시작) - 아이콘 수집 로직 강화
+async function updateGameLog(session, userId, activity) {
     if (activity && activity.type === 0) {
         const gameName = activity.name;
+        
+        // 1. 우선순위: 리치 프레젠스 에셋 이미지
         let iconURL = activity.assets ? activity.assets.largeImageURL({ format: 'png', size: 512 }) : null;
+
+        // 2. 차선순위: 애플리케이션 공식 아이콘 (사용자 제보 기반)
+        if (!iconURL && activity.applicationId) {
+            try {
+                // 게임 앱 정보를 디스코드에서 가져와 아이콘 추출
+                const app = await client.applications.fetch(activity.applicationId);
+                if (app && app.icon) {
+                    iconURL = app.iconURL({ format: 'png', size: 512 });
+                }
+            } catch (e) {
+                // 오류 시 무시 (권한 또는 등록되지 않은 앱)
+            }
+        }
 
         if (!session.gameLogs[gameName]) {
             session.gameLogs[gameName] = { 
@@ -89,6 +104,7 @@ function updateGameLog(session, userId, activity) {
                 comments: [] 
             };
         } else if (!session.gameLogs[gameName].iconURL && iconURL) {
+            // 나중에라도 아이콘을 찾으면 업데이트
             session.gameLogs[gameName].iconURL = iconURL;
         }
 
@@ -140,7 +156,7 @@ client.once('ready', async () => {
 
             const currentActivity = member.presence?.activities.find(a => a.type === 0);
             if (currentActivity) {
-                updateGameLog(session, userId, currentActivity);
+                await updateGameLog(session, userId, currentActivity);
             }
         }
     }
@@ -214,7 +230,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         // 현재 하고 있는 게임 추적 시작
         const currentActivity = member.presence?.activities.find(a => a.type === 0);
         if (currentActivity) {
-            updateGameLog(session, userId, currentActivity);
+            await updateGameLog(session, userId, currentActivity);
         }
     }
 
@@ -318,110 +334,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     }
 });
 
-// 🖱️ 상호작용 처리 (기존 유지)
-client.on('interactionCreate', async (interaction) => {
-    const channelId = interaction.member?.voice?.channelId;
-    const session = activeSessions.get(channelId);
-
-    if (interaction.isButton()) {
-        if (interaction.customId.startsWith('delete_session_')) {
-            const sessionId = interaction.customId.replace('delete_session_', '');
-            try {
-                await db.collection('sessions').doc(sessionId).delete();
-                await interaction.reply({ content: '✅ 일기 기록이 삭제되었습니다.', ephemeral: true });
-                await interaction.message.delete().catch(() => {});
-            } catch (e) {
-                console.error('❌ 삭제 실패:', e);
-                await interaction.reply({ content: '❌ 삭제에 실패했습니다.', ephemeral: true });
-            }
-            return;
-        }
-        if (interaction.customId === 'btn_edit_title') {
-            const modal = new ModalBuilder()
-                .setCustomId('modal_edit_title')
-                .setTitle('일기 제목 설정');
-
-            const titleInput = new TextInputBuilder()
-                .setCustomId('input_title')
-                .setLabel("오늘의 일기 제목을 입력해 주세요")
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('예: 새벽 발헤임 대탐험')
-                .setMaxLength(50)
-                .setRequired(true);
-
-            modal.addComponents(new ActionRowBuilder().addComponents(titleInput));
-            await interaction.showModal(modal);
-        }
-        else if (interaction.customId === 'btn_write_review') {
-            if (!session || Object.keys(session.gameLogs).length === 0) {
-                return interaction.reply({ content: "❌ 아직 기록된 게임이 없습니다!", ephemeral: true });
-            }
-
-            const games = Object.keys(session.gameLogs);
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId('select_game_for_review')
-                .setPlaceholder('한줄평을 남길 게임을 선택하세요')
-                .addOptions(games.map(game => ({ label: game, value: game })));
-
-            await interaction.reply({
-                content: '📝 **어떤 게임의 한줄평을 작성할까요?**',
-                components: [new ActionRowBuilder().addComponents(selectMenu)],
-                ephemeral: true
-            });
-        }
-        return; 
-    }
-
-    if (interaction.isModalSubmit()) {
-        if (interaction.customId === 'modal_edit_title') {
-            const newTitle = interaction.fields.getTextInputValue('input_title');
-            if (session) {
-                session.sessionTitle = newTitle;
-                if (session.controlMessage) {
-                    await session.controlMessage.edit({
-                        content: `🎮 **오늘의 게임일기 작성을 시작합니다!**\n현재 제목: **${newTitle}**`
-                    }).catch(() => {});
-                }
-                await interaction.reply({ content: `✅ 일기 제목이 **"${newTitle}"**(으)로 변경되었습니다.`, ephemeral: true });
-            }
-        } 
-        else if (interaction.customId.startsWith('modal_review_')) {
-            const gameName = interaction.customId.replace('modal_review_', '');
-            const reviewText = interaction.fields.getTextInputValue('input_review_text');
-
-            if (session && session.gameLogs[gameName]) {
-                session.gameLogs[gameName].comments.push({
-                    user: interaction.user.username,
-                    text: reviewText
-                });
-                await interaction.reply({ content: `✅ **${gameName}**에 대한 한줄평이 기록되었습니다!`, ephemeral: true });
-            }
-        }
-        return; 
-    }
-
-    if (interaction.isStringSelectMenu()) {
-        if (interaction.customId === 'select_game_for_review') {
-            const selectedGame = interaction.values[0];
-            const modal = new ModalBuilder()
-                .setCustomId(`modal_review_${selectedGame}`)
-                .setTitle(`${selectedGame} 한줄평 작성`);
-
-            const reviewInput = new TextInputBuilder()
-                .setCustomId('input_review_text')
-                .setLabel("이 게임은 어떠셨나요?")
-                .setStyle(TextInputStyle.Paragraph)
-                .setPlaceholder('오늘 플레이한 소감을 짧게 남겨주세요!')
-                .setMaxLength(200)
-                .setRequired(true);
-
-            modal.addComponents(new ActionRowBuilder().addComponents(reviewInput));
-            await interaction.showModal(modal);
-        }
-        return; 
-    }
-});
-
 // 📸 메시지 감지 및 스크릿샷 분류 (기존 유지)
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
@@ -501,7 +413,7 @@ client.on('messageCreate', async (message) => {
 });
 
 // 🎮 실시간 게임 감지
-client.on('presenceUpdate', (oldPresence, newPresence) => {
+client.on('presenceUpdate', async (oldPresence, newPresence) => {
     if (!newPresence || newPresence.user.bot) return;
     const member = newPresence.member;
     const channelId = member?.voice?.channelId;
@@ -520,7 +432,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
 
     // 새로운 게임 시작
     if (newGame) {
-        updateGameLog(session, userId, newGame);
+        await updateGameLog(session, userId, newGame);
     }
 });
 
