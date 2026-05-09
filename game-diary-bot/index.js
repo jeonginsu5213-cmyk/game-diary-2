@@ -44,12 +44,13 @@ const client = new Client({
 
 const activeSessions = new Map();
 
-// 🌟 [수동 게임 매칭 리스트] 디스코드가 ID를 주지 않는 게임들을 위해 작성
+// 🌟 [수동 게임 매칭 리스트] 아이콘이 잘 안 나오는 게임들을 위해 URL 직접 등록
 const MANUAL_GAME_MAP = {
-    "Valheim": "1124358970618953818",
-    "League of Legends": "101538960410427392",
-    "Overwatch 2": "356860322762162176",
-    // 추가하고 싶은 게임이 있다면 "게임이름": "애플리케이션ID" 형식으로 넣으세요.
+    "Valheim": "https://cdn.discordapp.com/app-icons/1124358970618953818/93ac3b8489a031b721995a99102c73f1.png",
+    "League of Legends": "https://cdn.discordapp.com/app-icons/101538960410427392/9525c52c0f2095c55a5078563c6d7a54.png",
+    "Overwatch 2": "https://cdn.discordapp.com/app-icons/356860322762162176/67406a6c253457a3e7e8b6f3796f7c81.png",
+    "Minecraft": "https://cdn.discordapp.com/app-icons/357186981195612161/96f6e520f92b77a79e49195b058f509a.png",
+    "PUBG: BATTLEGROUNDS": "https://cdn.discordapp.com/app-icons/533343206016581632/66f6c888d3e6d299446d3f234383c480.png"
 };
 
 // 헬퍼 함수: 시간 포맷팅
@@ -74,32 +75,31 @@ function stopGameTracking(session, userId, gameName) {
     }
 }
 
-// 헬퍼 함수: 게임 로그 업데이트 (수동 매칭 로직 포함)
+// 헬퍼 함수: 게임 로그 업데이트
 async function updateGameLog(session, userId, activity) {
     if (activity && activity.type === 0) {
-        const gameName = activity.name;
-        // 1. 디스코드 제공 ID 또는 수동 매칭 ID 확인
-        let appId = activity.applicationId || MANUAL_GAME_MAP[gameName];
-        
+        const gameName = activity.name.trim(); // 공백 제거
         let iconURL = null;
 
-        // 2. 리치 프레젠스 에셋 확인
-        if (activity.assets) {
+        // 1. 우선순위: 수동 매칭 리스트
+        if (MANUAL_GAME_MAP[gameName]) {
+            iconURL = MANUAL_GAME_MAP[gameName];
+            console.log(`🖼️ [Icon Success] ${gameName} 수동 매칭 적용 완료!`);
+        }
+
+        // 2. 차선순위: 리치 프레젠스 에셋
+        if (!iconURL && activity.assets) {
             iconURL = activity.assets.largeImageURL({ format: 'png', size: 512 });
         }
 
-        // 3. 앱 아이콘 직접 조회
-        if (!iconURL && appId) {
+        // 3. 마지막 수단: API 조회
+        if (!iconURL && activity.applicationId) {
             try {
-                const app = await client.rest.get(Routes.application(appId));
+                const app = await client.rest.get(Routes.application(activity.applicationId));
                 if (app && app.icon) {
-                    iconURL = `https://cdn.discordapp.com/app-icons/${appId}/${app.icon}.png?size=512`;
-                    console.log(`🖼️ [Icon Fix] ${gameName} 아이콘 매칭 성공: ${iconURL}`);
+                    iconURL = `https://cdn.discordapp.com/app-icons/${activity.applicationId}/${app.icon}.png?size=512`;
                 }
-            } catch (e) {
-                // ID가 있어도 아이콘이 없는 경우 대비
-                console.log(`❌ [Icon Fix] ${gameName} 아이콘 가져오기 실패`);
-            }
+            } catch (e) {}
         }
 
         if (!session.gameLogs[gameName]) {
@@ -125,31 +125,28 @@ async function updateGameLog(session, userId, activity) {
 
 client.once('ready', async () => {
     console.log('--------------------------------------');
-    console.log('🤖 [Game Diary] 일기 공유 및 한줄평 시스템 가동 중...');
+    console.log('🤖 [Game Diary] 시스템이 성공적으로 재시작되었습니다.');
     console.log('--------------------------------------');
 
     for (const guild of client.guilds.cache.values()) {
         for (const voiceState of guild.voiceStates.cache.values()) {
             if (!voiceState.member || voiceState.member.user.bot || !voiceState.channelId) continue;
-            const channel = voiceState.channel;
-            const userId = voiceState.member.user.id;
-            const nickname = voiceState.member.displayName;
-            const avatarURL = voiceState.member.user.displayAvatarURL({ format: 'png', size: 256 });
-
-            if (!activeSessions.has(channel.id)) {
-                activeSessions.set(channel.id, {
-                    channelName: channel.name, sessionTitle: "오늘의 게임일기", startTime: Date.now(),
+            const session = activeSessions.get(voiceState.channelId);
+            if (!session) {
+                activeSessions.set(voiceState.channelId, {
+                    channelName: voiceState.channel.name, sessionTitle: "오늘의 게임일기", startTime: Date.now(),
                     participants: new Set(), displayNames: new Map(), profileImages: new Map(),
                     gameLogs: {}, pendingScreenshots: [], controlMessage: null 
                 });
             }
-            const session = activeSessions.get(channel.id);
-            session.participants.add(userId);
-            session.displayNames.set(userId, nickname);
-            session.profileImages.set(userId, avatarURL);
+            const s = activeSessions.get(voiceState.channelId);
+            const userId = voiceState.member.user.id;
+            s.participants.add(userId);
+            s.displayNames.set(userId, voiceState.member.displayName);
+            s.profileImages.set(userId, voiceState.member.user.displayAvatarURL({ format: 'png', size: 256 }));
 
             const activity = voiceState.member.presence?.activities.find(a => a.type === 0);
-            if (activity) await updateGameLog(session, userId, activity);
+            if (activity) await updateGameLog(s, userId, activity);
         }
     }
 });
