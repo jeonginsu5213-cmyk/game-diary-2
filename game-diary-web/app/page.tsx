@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { db, storage } from "../src/lib/firebase"; 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion } from "firebase/firestore";
@@ -689,7 +689,7 @@ const DiaryCard = ({ data, playersSet, sessionId, onImageClick }: any) => {
   );
 };
 
-export default function Home() {
+function HomeContent() {
   const { data: session }: any = useSession();
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -965,5 +965,13 @@ export default function Home() {
 
       {activeImageUrl && (<Lightbox imageUrl={activeImageUrl} onClose={() => setActiveImageUrl(null)} />)}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-black bg-discord-main-content text-white font-sans text-xl animate-pulse">LOADING DIARY...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
