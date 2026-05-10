@@ -370,11 +370,14 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
 
     const handleViewportChange = () => {
       if (isFocused && containerRef.current) {
-        // 비주얼 뷰포트의 하단 여백을 계산하여 입력창의 bottom 위치를 조정
-        // iOS Safari 등에서 툴바와 키보드 높이를 정확히 반영함
+        // 비주얼 뷰포트의 하단 여백을 계산하여 입력창의 위치를 조정
+        // bottom 대신 padding-bottom을 사용하여 입력창 배경색이 키보드 아래까지 채워지도록 함 (치마 효과)
+        // 툴바 등에 가려지지 않도록 12px의 추가 여유 공간을 부여
         const offset = window.innerHeight - vv.height - vv.offsetTop;
-        containerRef.current.style.bottom = `${Math.max(0, offset)}px`;
+        containerRef.current.style.paddingBottom = `${Math.max(0, offset) + 12}px`;
+        containerRef.current.style.bottom = '0px';
       } else if (containerRef.current) {
+        containerRef.current.style.paddingBottom = '0px';
         containerRef.current.style.bottom = '0px';
       }
     };
@@ -436,17 +439,17 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
 
   return (
     <>
-      {/* [Mobile Only] Backdrop: 터치 시 포커스 해제 */}
+      {/* [Mobile Only] Backdrop: 터치 시 포커스 해제 및 백그라운드 스크롤 방지 */}
       {isFocused && (
         <div 
-          className="fixed inset-0 z-[190] bg-black/40 md:hidden animate-in fade-in duration-300" 
+          className="fixed inset-0 z-[190] bg-black/40 md:hidden animate-in fade-in duration-300 touch-none" 
           onClick={() => { setIsFocused(false); setIsChecklistMode(false); }}
         />
       )}
 
       {/* Input UI */}
       <div ref={containerRef} className={`
-        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300 transition-[bottom] ease-out !duration-150' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
+        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
         md:!static md:!mt-3 md:!flex md:!items-center md:!gap-2 md:!p-1.5 md:!bg-[#383A40] md:!rounded-[6px] md:!h-[42px] md:!shadow-none md:!border-none md:!z-auto md:!animate-none md:!transition-none
       `}>
         <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-discord-server-list font-sans hidden sm:block">
@@ -597,7 +600,7 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
         <div className={`border-t border-white/5 mt-2 pt-2 ${gameShots.length === 0 ? 'hidden md:block' : ''}`} />
         <ScreenshotSlider screenshots={gameShots} data={data} sessionId={sessionId} onImageClick={onImageClick} onFileSelect={(file: File) => onFileSelect(file, game.title)} allSessions={allSessions} />
       </div>
-      <div ref={headerRef} className="bg-black/20 px-3 py-2 md:px-4 md:py-2.5 border-t border-white/5 scroll-mt-[env(safe-area-inset-top)+100px] md:scroll-mt-24">
+      <div ref={headerRef} className="bg-black/20 px-3 py-2 md:px-4 md:py-2.5 border-t border-white/5 scroll-mt-[env(safe-area-inset-top)+110px] md:scroll-mt-24">
         <p className="text-[10px] font-black text-discord-text-muted uppercase tracking-wider mb-2">우리들의 하소연</p>
         <div className="space-y-0 font-sans">
           {hasMoreComments && !isCommentsExpanded && (
