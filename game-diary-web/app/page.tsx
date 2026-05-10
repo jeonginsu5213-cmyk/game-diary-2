@@ -357,7 +357,7 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
       });
       await updateDoc(sessionRef, { games: updatedGames });
       setText("");
-      if (window.innerWidth < 768) setIsFocused(false);
+      setIsFocused(false);
     } catch (err) { console.error("댓글 등록 실패:", err); }
   };
 
@@ -365,57 +365,63 @@ const GameCommentInput = ({ sessionId, gameTitle, data }: any) => {
 
   if (!session) return null;
 
-  return (
-    <div className="mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]">
-      <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-discord-server-list font-sans hidden sm:block">
-        <img src={myServerImage || ""} alt="" className="w-full h-full object-cover" />
-      </div>
-      <input 
-        type="text" 
-        value={text} 
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => !text.trim() && setTimeout(() => setIsFocused(false), 200) }
-        onChange={(e) => setText(e.target.value)} 
-        onKeyDown={onKeyDown} 
-        placeholder={`${myServerName}님, ${gameTitle} 후기를 작성해주세요.`} 
-        className="flex-1 bg-transparent border-none outline-none text-[13px] text-discord-text-normal placeholder:text-discord-text-muted font-sans px-1 h-full" 
-      />
-      
-      <div className="flex items-center gap-1.5 shrink-0 min-w-0">
-        {(isFocused || text.trim()) && (
-          <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
-            {/* Mobile Icons */}
-            <button 
-              onClick={() => handleSubmit(true)} 
-              className={`p-2 md:hidden rounded-[3px] transition-all cursor-pointer border ${text.trim() ? 'bg-discord-blue/10 border-discord-blue text-discord-blue' : 'bg-discord-sidebar border-transparent text-discord-text-muted opacity-50'}`}
-              title="체크리스트"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-            </button>
-            <button 
-              onClick={() => handleSubmit(false)} 
-              className={`p-2 md:hidden rounded-[3px] transition-colors cursor-pointer ${text.trim() ? 'bg-discord-blue text-white' : 'bg-discord-sidebar text-discord-text-muted hover:text-white hover:bg-white/10 opacity-50'}`}
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 6 22 2"></polygon></svg>
-            </button>
+  // 모바일에서 포커스 시 고정 위치 스타일
+  const mobileActiveClasses = "fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-4 border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-3 animate-in slide-in-from-bottom duration-300";
+  const defaultClasses = "mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]";
 
-            {/* Desktop Text Buttons */}
-            <button 
-              onClick={() => handleSubmit(true)} 
-              className={`hidden md:block text-[11px] font-bold px-3 py-1.5 rounded-[3px] transition-all cursor-pointer border ${text.trim() ? 'bg-discord-blue/10 border-discord-blue text-discord-blue hover:bg-discord-blue hover:text-white' : 'bg-discord-sidebar border-transparent text-discord-text-muted opacity-50'}`}
-            >
-              체크리스트
-            </button>
-            <button 
-              onClick={() => handleSubmit(false)} 
-              className={`hidden md:block text-[11px] font-bold px-4 py-1.5 rounded-[3px] transition-colors cursor-pointer ${text.trim() ? 'bg-discord-blue text-white' : 'bg-discord-sidebar text-discord-text-muted hover:text-white hover:bg-white/10 opacity-50'}`}
-            >
-              등록
-            </button>
-          </div>
-        )}
+  return (
+    <>
+      {/* 모바일 포커스 시 배경 어둡게 처리 */}
+      {isFocused && (
+        <div 
+          className="fixed inset-0 z-[190] bg-black/60 md:hidden animate-in fade-in duration-300" 
+          onClick={() => setIsFocused(false)}
+        />
+      )}
+
+      <div className={`md:!static md:!flex md:!p-1.5 md:!bg-[#383A40] md:!rounded-[6px] md:!h-[42px] md:!mt-3 ${isFocused ? mobileActiveClasses : defaultClasses}`}>
+        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-discord-server-list font-sans hidden sm:block">
+          <img src={myServerImage || ""} alt="" className="w-full h-full object-cover" />
+        </div>
+        <input 
+          type="text" 
+          value={text} 
+          onFocus={() => setIsFocused(true)}
+          onChange={(e) => setText(e.target.value)} 
+          onKeyDown={onKeyDown} 
+          placeholder={`${myServerName}님, ${gameTitle} 후기를 작성해주세요.`} 
+          className="flex-1 bg-transparent border-none outline-none text-[15px] md:text-[13px] text-discord-text-normal placeholder:text-discord-text-muted font-sans px-1 h-full" 
+        />
+        
+        <div className="flex items-center gap-2 shrink-0">
+          {(isFocused || text.trim()) && (
+            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
+              <button 
+                onClick={() => handleSubmit(true)} 
+                className={`p-2 rounded-[4px] transition-all cursor-pointer border ${text.trim() ? 'bg-discord-blue/20 border-discord-blue text-discord-blue' : 'bg-discord-sidebar border-transparent text-discord-text-muted opacity-50'}`}
+                title="체크리스트"
+              >
+                <svg className="w-5 h-5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              </button>
+              <button 
+                onClick={() => handleSubmit(false)} 
+                className={`p-2 rounded-[4px] transition-colors cursor-pointer ${text.trim() ? 'bg-discord-blue text-white' : 'bg-discord-sidebar text-discord-text-muted opacity-50'}`}
+              >
+                <svg className="w-5 h-5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 6 22 2"></polygon></svg>
+              </button>
+              
+              {/* 모바일 닫기 버튼 */}
+              <button onClick={() => setIsFocused(false)} className="p-2 text-discord-text-muted md:hidden">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      
+      {/* 인풋이 떠 있을 때 공간 확보를 위한 플레이스홀더 (모바일 전용) */}
+      {isFocused && <div className="h-[42px] mt-3 md:hidden" />}
+    </>
   );
 };
 
