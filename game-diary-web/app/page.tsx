@@ -394,10 +394,10 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
 
   useEffect(() => {
     if (isFocused && window.innerWidth < 768 && rootRef?.current) {
-      // 입력창 활성화 시 해당 게임 섹션 전체를 최상단으로 올려 다음 게임이 안 보이게 함
+      // 입력창 활성화 시 해당 게임 섹션의 댓글 헤더를 최상단으로 올려 다음 게임이 안 보이게 함
       setTimeout(() => {
         rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300);
+      }, 400);
     }
   }, [isFocused, rootRef]);
 
@@ -446,7 +446,7 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
 
       {/* Input UI */}
       <div ref={containerRef} className={`
-        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300 transition-[bottom] ease-out' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
+        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300 transition-[bottom] ease-out !duration-150' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
         md:!static md:!mt-3 md:!flex md:!items-center md:!gap-2 md:!p-1.5 md:!bg-[#383A40] md:!rounded-[6px] md:!h-[42px] md:!shadow-none md:!border-none md:!z-auto md:!animate-none md:!transition-none
       `}>
         <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-discord-server-list font-sans hidden sm:block">
@@ -497,6 +497,7 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const gameRowRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLParagraphElement>(null);
   const gameShots = (data.unclassifiedScreenshots || []).filter((s: any) => s.gameTitle === game.title);
 
   const handleDeleteComment = async (commentIdx: number) => {
@@ -597,7 +598,7 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
         <ScreenshotSlider screenshots={gameShots} data={data} sessionId={sessionId} onImageClick={onImageClick} onFileSelect={(file: File) => onFileSelect(file, game.title)} allSessions={allSessions} />
       </div>
       <div className="bg-black/20 px-3 py-2 md:px-4 md:py-2.5 border-t border-white/5">
-        <p className="text-[10px] font-black text-discord-text-muted uppercase tracking-wider mb-2">우리들의 하소연</p>
+        <p ref={headerRef} className="text-[10px] font-black text-discord-text-muted uppercase tracking-wider mb-2 scroll-mt-[env(safe-area-inset-top)+64px] md:scroll-mt-20">우리들의 하소연</p>
         <div className="space-y-0 font-sans">
           {hasMoreComments && !isCommentsExpanded && (
             <button onClick={() => setIsCommentsExpanded(true)} className="w-full py-1.5 mb-3 text-[11px] font-bold text-discord-blue hover:underline bg-discord-blue/5 rounded transition-all cursor-pointer border border-discord-blue/10">이전 댓글 {sortedComments.length - 10}개 더보기</button>
@@ -617,7 +618,7 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
               />
             );
           })}
-          <GameCommentInput sessionId={sessionId} gameTitle={game.title} data={data} allSessions={allSessions} rootRef={gameRowRef} />
+          <GameCommentInput sessionId={sessionId} gameTitle={game.title} data={data} allSessions={allSessions} rootRef={headerRef} />
         </div>
       </div>
     </div>
