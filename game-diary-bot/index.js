@@ -16,7 +16,23 @@ const {
 const admin = require('firebase-admin');
 const path = require('path');
 
-const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+// ☁️ 클라우드 배포 대응: 환경 변수에서 서비스 계정 키를 읽거나 로컬 파일을 읽음
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (err) {
+        console.error("FIREBASE_SERVICE_ACCOUNT 환경 변수 파싱 실패:", err);
+        process.exit(1);
+    }
+} else {
+    try {
+        serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+    } catch (err) {
+        console.error("serviceAccountKey.json 파일을 찾을 수 없습니다. 환경 변수를 확인하세요.");
+        process.exit(1);
+    }
+}
 
 if (serviceAccount.private_key) {
     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
