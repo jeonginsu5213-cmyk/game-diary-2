@@ -338,6 +338,7 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isChecklistMode, setIsChecklistMode] = useState(false);
   const longPressTimer = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const myId = session?.user?.id;
 
   let myServerName = data.displayNames?.[myId];
@@ -361,6 +362,15 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
     }
   }
   myServerImage = myServerImage || session?.user?.image;
+
+  useEffect(() => {
+    if (isFocused && window.innerWidth < 768 && containerRef.current) {
+      // 입력창이 활성화되면 해당 위치로 부드럽게 스크롤 (댓글창 상단이 보이도록)
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [isFocused]);
 
   const handleSubmit = async (isChecklist = false) => {
     const finalChecklist = isChecklist || isChecklistMode;
@@ -395,42 +405,19 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
 
   if (!session) return null;
 
-  const gameData = data.games.find((g: any) => g.title === gameTitle);
-  const gameComments = gameData?.comments || [];
-
   return (
     <>
-      {/* Mobile Focus Mode Overlay */}
+      {/* [Mobile Only] Backdrop: 터치 시 포커스 해제 */}
       {isFocused && (
-        <div className="fixed inset-0 z-[190] bg-[#1E1F22] md:hidden flex flex-col animate-in fade-in duration-300">
-          <div className="h-12 border-b border-white/5 flex items-center justify-between px-4 bg-discord-sidebar shrink-0">
-             <div className="flex items-center gap-2">
-                <span className="text-discord-text-muted font-light text-xl">#</span>
-                <span className="text-white font-bold text-sm truncate max-w-[200px]">{gameTitle}</span>
-             </div>
-             <button onClick={() => { setIsFocused(false); setIsChecklistMode(false); }} className="text-[13px] font-bold text-discord-text-muted hover:text-white transition-colors">닫기</button>
-          </div>
-          <div className="flex-1 overflow-y-auto discord-scrollbar p-4 space-y-4" onClick={() => setIsFocused(false)}>
-             <div onClick={(e) => e.stopPropagation()} className="space-y-4">
-               {gameComments.length > 0 ? (
-                 gameComments.map((comm: any, idx: number) => (
-                   <CommentItem key={idx} comment={comm} onAddReaction={() => {}} onAddReply={() => {}} displayNames={data.displayNames} />
-                 ))
-               ) : (
-                 <div className="h-[50vh] flex flex-col items-center justify-center text-discord-text-muted opacity-40">
-                    <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                    <p className="text-xs font-bold italic">첫 번째 후기를 남겨보세요</p>
-                 </div>
-               )}
-             </div>
-             <div className="h-24" />
-          </div>
-        </div>
+        <div 
+          className="fixed inset-0 z-[190] bg-black/40 md:hidden animate-in fade-in duration-300" 
+          onClick={() => { setIsFocused(false); setIsChecklistMode(false); }}
+        />
       )}
 
       {/* Input UI */}
-      <div className={`
-        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
+      <div ref={containerRef} className={`
+        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
         md:!static md:!mt-3 md:!flex md:!items-center md:!gap-2 md:!p-1.5 md:!bg-[#383A40] md:!rounded-[6px] md:!h-[42px] md:!shadow-none md:!border-none md:!z-auto md:!animate-none
       `}>
         <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-discord-server-list font-sans hidden sm:block">
@@ -444,7 +431,9 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
           onKeyDown={onKeyDown} 
           autoComplete="off"
           autoCorrect="off"
-          placeholder={isChecklistMode ? "체크리스트 내용을 입력하세요..." : `${myServerName}님, ${gameTitle} 후기를 작성해주세요.`} 
+          inputMode="text"
+          enterKeyHint="send"
+          placeholder={isChecklistMode ? "체크리스트 등록 모드..." : `${myServerName}님, ${gameTitle} 후기 작성...`} 
           className="flex-1 bg-transparent border-none outline-none text-[16px] md:text-[13px] text-discord-text-normal placeholder:text-discord-text-muted font-sans px-1 h-full" 
         />
         <div className="flex items-center gap-1.5 shrink-0">
