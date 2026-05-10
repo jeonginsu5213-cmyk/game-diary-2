@@ -459,10 +459,10 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
           )}
         </div>
       </div>
-      {isFocused && <div className="h-[42px] mt-3 md:hidden" />}
-    </>
-  );
-};
+      {isFocused && <div className="h-[80vh] mt-3 md:hidden" />}
+      </>
+      );
+      };
 
 const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddReaction, handleAddReply, onImageClick, onFileSelect, allSessions }: any) => {
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
