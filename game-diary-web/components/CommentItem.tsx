@@ -92,7 +92,7 @@ export default function CommentItem({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </button>
                   {!isReply && (
-                    <button onClick={() => { setShowReplyInput(!showReplyInput); setShowMobileMenu(false); }} className="text-discord-text-muted hover:text-white p-1.5 transition-colors">
+                    <button onClick={() => { setShowReplyInput(true); setShowMobileMenu(false); }} className="text-discord-text-muted hover:text-white p-1.5 transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                     </button>
                   )}
@@ -173,18 +173,47 @@ export default function CommentItem({
         </div>
       )}
 
+      {/* Reply Input (Keyboard Attached Style on Mobile) */}
       {showReplyInput && (
-        <div className="ml-14 mt-1 flex items-center gap-3 p-2 bg-discord-server-list rounded-[8px] border border-black/10 shadow-inner group/reply-input font-sans">
-          <input 
-            type="text" 
-            value={replyText} 
-            onChange={(e) => setReplyInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleReplySubmit()}
-            placeholder="답글 남기기..." 
-            className="flex-1 bg-transparent border-none outline-none text-[13px] text-discord-text-normal placeholder:text-discord-text-muted"
+        <>
+          {/* Mobile Backdrop */}
+          <div 
+            className="fixed inset-0 z-[190] bg-black/60 md:hidden animate-in fade-in duration-300" 
+            onClick={() => setShowReplyInput(false)}
           />
-          <button onClick={handleReplySubmit} className={`text-[12px] font-bold px-3 py-1 rounded-[4px] transition-colors ${replyText.trim() ? 'bg-discord-blue text-white' : 'bg-discord-sidebar text-discord-text-muted opacity-50 cursor-not-allowed'}`}>등록</button>
-        </div>
+          
+          <div className={`
+            md:static md:flex md:ml-14 md:mt-1 md:bg-discord-server-list md:rounded-[8px] md:border md:border-black/10 md:shadow-inner md:p-2 md:z-auto md:animate-none
+            fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-3 animate-in slide-in-from-bottom duration-300
+          `}>
+            <input 
+              type="text" 
+              value={replyText} 
+              onChange={(e) => setReplyInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleReplySubmit()}
+              autoFocus
+              placeholder="답글 남기기..." 
+              className="flex-1 bg-transparent border-none outline-none text-[16px] md:text-[13px] text-discord-text-normal placeholder:text-discord-text-muted"
+            />
+            <button 
+              onClick={handleReplySubmit} 
+              className={`
+                flex items-center justify-center transition-colors cursor-pointer 
+                md:text-[12px] md:font-bold md:px-3 md:py-1 md:rounded-[4px] md:w-auto md:h-auto md:bg-discord-blue md:shadow-none
+                w-10 h-10 rounded-full bg-discord-blue text-white shadow-lg
+                ${replyText.trim() ? 'opacity-100' : 'opacity-50 cursor-not-allowed'}
+              `}
+            >
+              <svg className="w-5 h-5 md:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 6 22 2"></polygon>
+              </svg>
+              <span className="hidden md:inline">등록</span>
+            </button>
+          </div>
+          {/* Placeholder to keep space in the list when input is fixed */}
+          <div className="h-10 mt-1 md:hidden" />
+        </>
       )}
     </div>
   );
