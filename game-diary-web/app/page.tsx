@@ -363,6 +363,35 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
   }
   myServerImage = myServerImage || session?.user?.image;
 
+  // 📱 모바일 키보드 대응: VisualViewport API를 사용하여 키보드 높이만큼 입력창을 올림
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv || window.innerWidth >= 768) return;
+
+    const handleViewportChange = () => {
+      if (isFocused && containerRef.current) {
+        // 비주얼 뷰포트의 하단 여백을 계산하여 입력창의 bottom 위치를 조정
+        // iOS Safari 등에서 툴바와 키보드 높이를 정확히 반영함
+        const offset = window.innerHeight - vv.height - vv.offsetTop;
+        containerRef.current.style.bottom = `${Math.max(0, offset)}px`;
+      } else if (containerRef.current) {
+        containerRef.current.style.bottom = '0px';
+      }
+    };
+
+    vv.addEventListener('resize', handleViewportChange);
+    vv.addEventListener('scroll', handleViewportChange);
+    
+    // 키보드가 올라오는 시점에는 약간의 지연이 필요할 수 있음
+    const timer = setTimeout(handleViewportChange, 100);
+
+    return () => {
+      clearTimeout(timer);
+      vv.removeEventListener('resize', handleViewportChange);
+      vv.removeEventListener('scroll', handleViewportChange);
+    };
+  }, [isFocused]);
+
   useEffect(() => {
     if (isFocused && window.innerWidth < 768 && rootRef?.current) {
       // 입력창 활성화 시 해당 게임 섹션 전체를 최상단으로 올려 다음 게임이 안 보이게 함
@@ -417,8 +446,8 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
 
       {/* Input UI */}
       <div ref={containerRef} className={`
-        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
-        md:!static md:!mt-3 md:!flex md:!items-center md:!gap-2 md:!p-1.5 md:!bg-[#383A40] md:!rounded-[6px] md:!h-[42px] md:!shadow-none md:!border-none md:!z-auto md:!animate-none
+        ${isFocused ? 'fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-2 animate-in slide-in-from-bottom duration-300 transition-[bottom] ease-out' : 'mt-3 flex items-center gap-2 p-1.5 bg-[#383A40] rounded-[6px] group/input font-sans relative h-[42px]'}
+        md:!static md:!mt-3 md:!flex md:!items-center md:!gap-2 md:!p-1.5 md:!bg-[#383A40] md:!rounded-[6px] md:!h-[42px] md:!shadow-none md:!border-none md:!z-auto md:!animate-none md:!transition-none
       `}>
         <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-discord-server-list font-sans hidden sm:block">
           <img src={myServerImage || ""} alt="" className="w-full h-full object-cover" />
