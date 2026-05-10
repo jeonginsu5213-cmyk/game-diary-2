@@ -372,9 +372,9 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
       if (isFocused && containerRef.current) {
         // 비주얼 뷰포트의 하단 여백을 계산하여 입력창의 위치를 조정
         // bottom 대신 padding-bottom을 사용하여 입력창 배경색이 키보드 아래까지 채워지도록 함 (치마 효과)
-        // 툴바 등에 가려지지 않도록 12px의 추가 여유 공간을 부여
+        // 툴바 등에 가려지지 않도록 20px의 추가 여유 공간을 부여
         const offset = window.innerHeight - vv.height - vv.offsetTop;
-        containerRef.current.style.paddingBottom = `${Math.max(0, offset) + 12}px`;
+        containerRef.current.style.paddingBottom = `${Math.max(0, offset) + 20}px`;
         containerRef.current.style.bottom = '0px';
       } else if (containerRef.current) {
         containerRef.current.style.paddingBottom = '0px';
