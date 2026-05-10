@@ -332,7 +332,7 @@ const ScreenshotSlider = ({ screenshots, data, sessionId, onImageClick, onFileSe
   );
 };
 
-const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
+const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: any) => {
   const { data: session }: any = useSession();
   const [text, setText] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -364,13 +364,13 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
   myServerImage = myServerImage || session?.user?.image;
 
   useEffect(() => {
-    if (isFocused && window.innerWidth < 768 && containerRef.current) {
-      // 입력창이 활성화되면 해당 위치로 부드럽게 스크롤 (댓글창 상단이 보이도록)
+    if (isFocused && window.innerWidth < 768 && rootRef?.current) {
+      // 입력창 활성화 시 해당 게임 섹션 전체를 최상단으로 올려 다음 게임이 안 보이게 함
       setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);
     }
-  }, [isFocused]);
+  }, [isFocused, rootRef]);
 
   const handleSubmit = async (isChecklist = false) => {
     const finalChecklist = isChecklist || isChecklistMode;
@@ -467,6 +467,7 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions }: any) => {
 const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddReaction, handleAddReply, onImageClick, onFileSelect, allSessions }: any) => {
   const [isTimeExpanded, setIsTimeExpanded] = useState(false);
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
+  const gameRowRef = useRef<HTMLDivElement>(null);
   const gameShots = (data.unclassifiedScreenshots || []).filter((s: any) => s.gameTitle === game.title);
 
   const handleDeleteComment = async (commentIdx: number) => {
@@ -496,7 +497,7 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
   const hasMoreComments = sortedComments.length > 10;
 
   return (
-    <div key={gameIdx} className="bg-black/5 rounded-[6px] border border-white/5 border-l-2 border-l-discord-blue font-sans overflow-hidden mb-4 last:mb-0">
+    <div ref={gameRowRef} key={gameIdx} className="bg-black/5 rounded-[6px] border border-white/5 border-l-2 border-l-discord-blue font-sans overflow-hidden mb-4 last:mb-0">
       <div className="p-3 md:p-4 pb-0">
         {/* Mobile Header */}
         <div className="md:hidden flex items-start justify-between gap-2 mb-3">
@@ -587,7 +588,7 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
               />
             );
           })}
-          <GameCommentInput sessionId={sessionId} gameTitle={game.title} data={data} allSessions={allSessions} />
+          <GameCommentInput sessionId={sessionId} gameTitle={game.title} data={data} allSessions={allSessions} rootRef={gameRowRef} />
         </div>
       </div>
     </div>
