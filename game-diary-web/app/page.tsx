@@ -597,8 +597,8 @@ const GameRecordRow = ({ game, gameIdx, data, sessionId, playersSet, handleAddRe
         <div className={`border-t border-white/5 mt-2 pt-2 ${gameShots.length === 0 ? 'hidden md:block' : ''}`} />
         <ScreenshotSlider screenshots={gameShots} data={data} sessionId={sessionId} onImageClick={onImageClick} onFileSelect={(file: File) => onFileSelect(file, game.title)} allSessions={allSessions} />
       </div>
-      <div className="bg-black/20 px-3 py-2 md:px-4 md:py-2.5 border-t border-white/5">
-        <p ref={headerRef} className="text-[10px] font-black text-discord-text-muted uppercase tracking-wider mb-2 scroll-mt-[env(safe-area-inset-top)+64px] md:scroll-mt-20">우리들의 하소연</p>
+      <div ref={headerRef} className="bg-black/20 px-3 py-2 md:px-4 md:py-2.5 border-t border-white/5 scroll-mt-[env(safe-area-inset-top)+100px] md:scroll-mt-24">
+        <p className="text-[10px] font-black text-discord-text-muted uppercase tracking-wider mb-2">우리들의 하소연</p>
         <div className="space-y-0 font-sans">
           {hasMoreComments && !isCommentsExpanded && (
             <button onClick={() => setIsCommentsExpanded(true)} className="w-full py-1.5 mb-3 text-[11px] font-bold text-discord-blue hover:underline bg-discord-blue/5 rounded transition-all cursor-pointer border border-discord-blue/10">이전 댓글 {sortedComments.length - 10}개 더보기</button>
