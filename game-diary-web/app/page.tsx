@@ -337,7 +337,6 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
   const [text, setText] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [isChecklistMode, setIsChecklistMode] = useState(false);
-  const longPressTimer = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const myId = session?.user?.id;
 
@@ -371,7 +370,6 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
     const handleViewportChange = () => {
       if (isFocused && containerRef.current) {
         // 비주얼 뷰포트의 하단 여백을 계산하여 입력창의 위치를 조정
-        // bottom 대신 padding-bottom을 사용하여 입력창 배경색이 키보드 아래까지 채워지도록 함 (치마 효과)
         // 툴바 등에 가려지지 않도록 60px의 확실한 여유 공간을 부여
         const offset = window.innerHeight - vv.height - vv.offsetTop;
         containerRef.current.style.paddingBottom = `${Math.max(0, offset) + 60}px`;
@@ -430,11 +428,6 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
 
   const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(false); } };
 
-  const handleLongPress = () => {
-    if (window.navigator.vibrate) window.navigator.vibrate(50);
-    setIsChecklistMode(prev => !prev);
-  };
-
   if (!session) return null;
 
   return (
@@ -473,21 +466,30 @@ const GameCommentInput = ({ sessionId, gameTitle, data, allSessions, rootRef }: 
             <button onClick={() => handleSubmit(true)} className={`text-[11px] font-bold px-3 py-1.5 rounded-[3px] transition-all cursor-pointer border ${text.trim() ? 'bg-discord-blue/10 border-discord-blue text-discord-blue hover:bg-discord-blue hover:text-white' : 'bg-discord-sidebar border-transparent text-discord-text-muted opacity-50'}`}>체크리스트</button>
             <button onClick={() => handleSubmit(false)} className={`text-[11px] font-bold px-4 py-1.5 rounded-[3px] transition-colors cursor-pointer ${text.trim() ? 'bg-discord-blue text-white' : 'bg-discord-sidebar text-discord-text-muted hover:text-white hover:bg-white/10 opacity-50'}`}>등록</button>
           </div>
-          {(isFocused || text.trim()) && (
-            <button 
-              onClick={() => handleSubmit(false)} 
-              onTouchStart={() => { longPressTimer.current = setTimeout(handleLongPress, 600); }}
-              onTouchEnd={() => { if(longPressTimer.current) clearTimeout(longPressTimer.current); }}
-              onMouseDown={() => { longPressTimer.current = setTimeout(handleLongPress, 600); }}
-              onMouseUp={() => { if(longPressTimer.current) clearTimeout(longPressTimer.current); }}
-              className={`md:hidden flex items-center justify-center transition-all cursor-pointer w-10 h-10 rounded-full shadow-lg ${isChecklistMode ? 'bg-[#F2A359] text-white ring-2 ring-[#F2A359]/30' : 'bg-discord-blue text-white'}`}
-            >
-              {isChecklistMode ? (
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8m-3 0h6m-8 0c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2M12 12v9" /></svg>
-              ) : (
+          {text.trim() && (
+            <div className="md:hidden flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
+              {/* 📱 체크리스트 핀 토글 버튼 */}
+              <button 
+                onClick={(e) => { 
+                  e.preventDefault();
+                  if (window.navigator.vibrate) window.navigator.vibrate(20); 
+                  setIsChecklistMode(!isChecklistMode); 
+                }}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isChecklistMode ? 'bg-[#F2A359] text-white shadow-[0_0_15px_rgba(242,163,89,0.4)]' : 'bg-[#404249] text-discord-text-muted hover:bg-[#4E5058]'}`}
+                title="체크리스트로 등록"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 4h6M12 4v9M7 13h10l-2 2H9l-2-2zM12 15v5" />
+                </svg>
+              </button>
+              {/* 📱 전송 버튼 */}
+              <button 
+                onClick={() => handleSubmit(false)} 
+                className="w-10 h-10 rounded-full bg-discord-blue text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 6 22 2"></polygon></svg>
-              )}
-            </button>
+              </button>
+            </div>
           )}
         </div>
       </div>
