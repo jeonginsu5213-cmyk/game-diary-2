@@ -397,15 +397,21 @@ client.on('messageCreate', async (m) => {
         if (activeGameTitle !== "미지정" && s.gameLogs[activeGameTitle]) {
             let text = m.content.trim();
             let isChecklist = false;
+            let isReplacement = false;
             
             if (text.startsWith('메모)')) {
                 isChecklist = true;
                 text = text.replace(/^메모\)\s*/, '');
 
-                // 1인 1메모 유지를 위해 기존 체크리스트 삭제
-                s.gameLogs[activeGameTitle].comments = s.gameLogs[activeGameTitle].comments.filter(
-                    c => !(c.userId === m.author.id && c.isChecklist)
+                // 1인 1메모 유지를 위해 기존 체크리스트 확인 및 삭제
+                const existingIndex = s.gameLogs[activeGameTitle].comments.findIndex(
+                    c => c.userId === m.author.id && c.isChecklist
                 );
+                
+                if (existingIndex !== -1) {
+                    isReplacement = true;
+                    s.gameLogs[activeGameTitle].comments.splice(existingIndex, 1);
+                }
             }
 
             s.gameLogs[activeGameTitle].comments.push({
@@ -413,7 +419,12 @@ client.on('messageCreate', async (m) => {
                 image: m.author.displayAvatarURL({ format: 'png', size: 128 }),
                 text: text, isChecklist: isChecklist, createdAt: new Date().toISOString(), reactions: {}, replies: []
             });
-            m.react(isChecklist ? '📌' : '💬');
+
+            if (isChecklist) {
+                m.react(isReplacement ? '🔄' : '📌');
+            } else {
+                m.react('💬');
+            }
         }
     }
     if (m.attachments.size > 0) {
