@@ -13,6 +13,15 @@ const {
     EmbedBuilder,
     MessageFlags
 } = require('discord.js');
+const { 
+    joinVoiceChannel, 
+    createAudioPlayer, 
+    createAudioResource, 
+    AudioPlayerStatus, 
+    VoiceConnectionStatus,
+    entersState
+} = require('@discordjs/voice');
+const googleTTS = require('google-tts-api');
 const admin = require('firebase-admin');
 const path = require('path');
 
@@ -58,6 +67,35 @@ const client = new Client({
 });
 
 const activeSessions = new Map();
+
+// 🎙️ TTS 재생 함수
+async function playTTS(channel, text) {
+    try {
+        const url = googleTTS.getAudioUrl(text, { lang: 'ko', slow: false, host: 'https://translate.google.com' });
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(url);
+
+        connection.subscribe(player);
+        player.play(resource);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            setTimeout(() => connection.destroy(), 1000);
+        });
+
+        player.on('error', error => {
+            console.error('TTS 재생 중 오류:', error);
+            connection.destroy();
+        });
+    } catch (e) {
+        console.error('TTS 처리 실패:', e);
+    }
+}
 
 // 🌟 [최종 확인된 수동 매칭 리스트]
 const MANUAL_GAME_MAP = {
@@ -146,6 +184,13 @@ async function updateGameLog(session, userId, activity) {
                                     await logChannel.send({ 
                                         content: `💡 **${originalName}**을(를) 다시 시작하셨네요! 과거의 내가 남겨둔 메모가 있어요.\n\n${checklistText}`
                                     });
+
+                                    // 🎙️ 음성 채널에 TTS로 읽어주기
+                                    const voiceChannel = guild.members.cache.get(userId)?.voice.channel;
+                                    if (voiceChannel) {
+                                        const ttsContent = `${originalName}을 다시 시작하셨네요. 지난번에 남기신 메모를 읽어드릴게요. ${checklists.map(c => c.text).join('. ')}`;
+                                        await playTTS(voiceChannel, ttsContent.substring(0, 200)); // 200자 제한
+                                    }
                                 }
                             }
                             break;
@@ -350,12 +395,20 @@ client.on('messageCreate', async (m) => {
     }
     if (m.attachments.size === 0 && m.content.trim()) {
         if (activeGameTitle !== "미지정" && s.gameLogs[activeGameTitle]) {
+            let text = m.content.trim();
+            let isChecklist = false;
+            
+            if (text.startsWith('메모)')) {
+                isChecklist = true;
+                text = text.replace(/^메모\)\s*/, '');
+            }
+
             s.gameLogs[activeGameTitle].comments.push({
                 userId: m.author.id, user: m.member.displayName,
                 image: m.author.displayAvatarURL({ format: 'png', size: 128 }),
-                text: m.content.trim(), createdAt: new Date().toISOString(), reactions: {}, replies: []
+                text: text, isChecklist: isChecklist, createdAt: new Date().toISOString(), reactions: {}, replies: []
             });
-            m.react('💬');
+            m.react(isChecklist ? '📌' : '💬');
         }
     }
     if (m.attachments.size > 0) {
