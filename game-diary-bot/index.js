@@ -401,6 +401,11 @@ client.on('messageCreate', async (m) => {
             if (text.startsWith('메모)')) {
                 isChecklist = true;
                 text = text.replace(/^메모\)\s*/, '');
+
+                // 1인 1메모 유지를 위해 기존 체크리스트 삭제
+                s.gameLogs[activeGameTitle].comments = s.gameLogs[activeGameTitle].comments.filter(
+                    c => !(c.userId === m.author.id && c.isChecklist)
+                );
             }
 
             s.gameLogs[activeGameTitle].comments.push({
