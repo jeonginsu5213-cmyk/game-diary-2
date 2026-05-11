@@ -75,6 +75,16 @@ function findSessionByUserId(userId) {
     return null;
 }
 
+// ⏱️ 게임 플레이 시간 누적 계산 (중복 합산 방지: 실제 흘러간 시간 기준)
+function accumulateGamePlayTime(gameLog) {
+    const now = Date.now();
+    const activePlayers = Object.values(gameLog.activeStartTime || {}).filter(t => t !== null).length;
+    if (activePlayers > 0 && gameLog.lastActiveUpdateTime) {
+        gameLog.totalPlayTime += (now - gameLog.lastActiveUpdateTime);
+    }
+    gameLog.lastActiveUpdateTime = now;
+}
+
 async function updateGameLog(session, userId, activity) {
     if (!activity || activity.type !== 0) return;
 
@@ -107,7 +117,8 @@ async function updateGameLog(session, userId, activity) {
     if (!session.gameLogs[originalName]) {
         session.gameLogs[originalName] = { 
             totalPlayTime: 0, playerPlayTimes: {}, players: new Set(), activeStartTime: {}, iconURL: iconURL, comments: [],
-            startTime: Date.now(), endTime: Date.now()
+            startTime: Date.now(), endTime: Date.now(),
+            lastActiveUpdateTime: Date.now()
         };
 
         if (!session.announcedChecklists?.has(originalName)) {
@@ -148,6 +159,7 @@ async function updateGameLog(session, userId, activity) {
     }
 
     if (!session.gameLogs[originalName].activeStartTime[userId]) {
+        accumulateGamePlayTime(session.gameLogs[originalName]);
         session.gameLogs[originalName].activeStartTime[userId] = Date.now();
         session.gameLogs[originalName].players.add(userId);
         session.gameLogs[originalName].endTime = Date.now();
@@ -240,13 +252,14 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             }
 
             for (const gameName of Object.keys(session.gameLogs)) {
-                if (session.gameLogs[gameName].activeStartTime[userId]) {
-                    const startTime = session.gameLogs[gameName].activeStartTime[userId];
+                const gameLog = session.gameLogs[gameName];
+                if (gameLog.activeStartTime[userId]) {
+                    accumulateGamePlayTime(gameLog);
+                    const startTime = gameLog.activeStartTime[userId];
                     const duration = Date.now() - startTime;
-                    session.gameLogs[gameName].totalPlayTime += duration;
-                    if (!session.gameLogs[gameName].playerPlayTimes) session.gameLogs[gameName].playerPlayTimes = {};
-                    session.gameLogs[gameName].playerPlayTimes[userId] = (session.gameLogs[gameName].playerPlayTimes[userId] || 0) + duration;
-                    session.gameLogs[gameName].activeStartTime[userId] = null;
+                    if (!gameLog.playerPlayTimes) gameLog.playerPlayTimes = {};
+                    gameLog.playerPlayTimes[userId] = (gameLog.playerPlayTimes[userId] || 0) + duration;
+                    gameLog.activeStartTime[userId] = null;
                 }
             }
             if (oldState.channel.members.filter(m => !m.user.bot).size === 0) {
@@ -367,15 +380,16 @@ client.on('presenceUpdate', async (o, n) => {
     const oldG = o?.activities.find(a => a.type === 0);
     const newG = n.activities.find(a => a.type === 0);
     if (oldG && (!newG || oldG.name !== newG.name)) {
-        if (s.gameLogs[oldG.name]) {
-            const startTime = s.gameLogs[oldG.name].activeStartTime[n.userId];
+        const gameLog = s.gameLogs[oldG.name];
+        if (gameLog) {
+            const startTime = gameLog.activeStartTime[n.userId];
             if (startTime) {
+                accumulateGamePlayTime(gameLog);
                 const duration = Date.now() - startTime;
-                s.gameLogs[oldG.name].totalPlayTime += duration;
-                if (!s.gameLogs[oldG.name].playerPlayTimes) s.gameLogs[oldG.name].playerPlayTimes = {};
-                s.gameLogs[oldG.name].playerPlayTimes[n.userId] = (s.gameLogs[oldG.name].playerPlayTimes[n.userId] || 0) + duration;
-                s.gameLogs[oldG.name].activeStartTime[n.userId] = null;
-                s.gameLogs[oldG.name].endTime = Date.now();
+                if (!gameLog.playerPlayTimes) gameLog.playerPlayTimes = {};
+                gameLog.playerPlayTimes[n.userId] = (gameLog.playerPlayTimes[n.userId] || 0) + duration;
+                gameLog.activeStartTime[n.userId] = null;
+                gameLog.endTime = Date.now();
             }
         }
     }
