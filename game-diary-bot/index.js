@@ -19,11 +19,24 @@ const {
     createAudioResource, 
     AudioPlayerStatus, 
     VoiceConnectionStatus,
-    entersState
+    entersState,
+    StreamType
 } = require('@discordjs/voice');
 const googleTTS = require('google-tts-api');
 const admin = require('firebase-admin');
 const path = require('path');
+const https = require('https');
+
+// FFMPEG 경로 설정 (ffmpeg-static 활용)
+try {
+    const ffmpegPath = require('ffmpeg-static');
+    if (ffmpegPath) {
+        process.env.FFMPEG_PATH = ffmpegPath;
+        console.log(`[System] FFMPEG 경로 설정됨: ${ffmpegPath}`);
+    }
+} catch (e) {
+    console.error("[System] ffmpeg-static 로드 실패:", e.message);
+}
 
 // ☁️ 클라우드 배포 대응: 환경 변수에서 서비스 계정 키를 읽거나 로컬 파일을 읽음
 let serviceAccount;
@@ -70,30 +83,77 @@ const activeSessions = new Map();
 
 // 🎙️ TTS 재생 함수
 async function playTTS(channel, text) {
+    if (!channel) return;
+    
     try {
-        const url = googleTTS.getAudioUrl(text, { lang: 'ko', slow: false, host: 'https://translate.google.com' });
+        console.log(`[TTS] 재생 요청: "${text.substring(0, 30)}..."`);
+        const url = googleTTS.getAudioUrl(text, { 
+            lang: 'ko', 
+            slow: false, 
+            host: 'https://translate.google.com' 
+        });
+        
         const connection = joinVoiceChannel({
             channelId: channel.id,
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,
         });
 
-        const player = createAudioPlayer();
-        const resource = createAudioResource(url);
+        // 연결 준비 대기
+        try {
+            await entersState(connection, VoiceConnectionStatus.Ready, 5000);
+            console.log(`[TTS] 연결 성공: ${channel.name}`);
+        } catch (error) {
+            console.error('[TTS] 연결 실패 (시간초과):', error);
+            connection.destroy();
+            return;
+        }
 
-        connection.subscribe(player);
-        player.play(resource);
+        const player = createAudioPlayer();
+        
+        // 스트림을 통해 리소스 생성 (URL 직접 전달보다 안정적)
+        https.get(url, (res) => {
+            if (res.statusCode !== 200) {
+                console.error(`[TTS] HTTP 오류: ${res.statusCode}`);
+                connection.destroy();
+                return;
+            }
+
+            const resource = createAudioResource(res, {
+                inputType: StreamType.Arbitrary,
+                inlineVolume: true
+            });
+            
+            if (resource.volume) resource.volume.setVolume(0.8);
+
+            connection.subscribe(player);
+            player.play(resource);
+            console.log('[TTS] 데이터 수신 및 재생 시작');
+        }).on('error', (err) => {
+            console.error('[TTS] 스트림 요청 오류:', err);
+            connection.destroy();
+        });
+
+        player.on(AudioPlayerStatus.Playing, () => {
+            console.log('[TTS] 소리 출력 중...');
+        });
 
         player.on(AudioPlayerStatus.Idle, () => {
-            setTimeout(() => connection.destroy(), 1000);
+            console.log('[TTS] 재생 완료');
+            setTimeout(() => {
+                if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
+                    connection.destroy();
+                }
+            }, 1000);
         });
 
         player.on('error', error => {
-            console.error('TTS 재생 중 오류:', error);
+            console.error('[TTS] 플레이어 에러:', error.message);
             connection.destroy();
         });
+
     } catch (e) {
-        console.error('TTS 처리 실패:', e);
+        console.error('[TTS] 예외 발생:', e);
     }
 }
 
