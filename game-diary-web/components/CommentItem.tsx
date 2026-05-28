@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import ReactionPicker from './ReactionPicker';
 import Link from 'next/link';
+import { ArrowUp, Pin } from 'lucide-react';
 
 interface CommentItemProps {
   comment: any;
   onAddReaction: (emoji: string) => void;
   onAddReactionReply?: (replyIdx: number, emoji: string) => void;
   onAddReply: (text: string) => void;
+  onToggleChecklist?: () => void;
   onDelete?: () => void;
   onDeleteReply?: (replyIdx: number) => void;
   isReply?: boolean;
@@ -20,23 +22,13 @@ const formatCommentDate = (isoString?: string) => {
   if (!isoString) return "";
   const date = new Date(isoString);
   if (isNaN(date.getTime())) return "";
-  
   const now = new Date();
   const isSameDay = now.getFullYear() === date.getFullYear() && 
                     now.getMonth() === date.getMonth() && 
                     now.getDate() === date.getDate();
   
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const isYesterday = yesterday.getFullYear() === date.getFullYear() && 
-                      yesterday.getMonth() === date.getMonth() && 
-                      yesterday.getDate() === date.getDate();
-
-  const timeStr = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-  if (isSameDay) return `오늘 ${timeStr}`;
-  if (isYesterday) return `어제 ${timeStr}`;
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}.`;
+  if (isSameDay) return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 };
 
 export default function CommentItem({ 
@@ -44,6 +36,7 @@ export default function CommentItem({
   onAddReaction, 
   onAddReactionReply,
   onAddReply, 
+  onToggleChecklist,
   onDelete, 
   onDeleteReply,
   isReply = false,
@@ -52,8 +45,22 @@ export default function CommentItem({
   const { data: session }: any = useSession();
   const [showPicker, setShowPicker] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [replyText, setReplyInput] = useState("");
+  const replyInputRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (replyInputRef.current && !replyInputRef.current.contains(event.target as Node)) {
+        setShowReplyInput(false);
+      }
+    }
+    if (showReplyInput) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showReplyInput]);
 
   const handleReplySubmit = () => {
     if (!replyText.trim()) return;
@@ -67,73 +74,62 @@ export default function CommentItem({
   const isChecklist = comment.isChecklist;
 
   return (
-    <div className={`flex flex-col group ${isReply ? 'ml-10 mt-1' : 'mt-4'}`}>
-      <div className={`flex items-start gap-4 p-1 rounded-md transition-colors hover:bg-black/10 relative ${isChecklist ? 'bg-discord-blue/10' : ''}`}>
-        <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0 mt-0.5">
-          <div className={`${isReply ? 'w-6 h-6' : 'w-10 h-10'} rounded-full overflow-hidden bg-discord-server-list`}>
-            <img src={comment.image || ""} alt="" className="w-full h-full object-cover" />
+    <div className={`flex flex-col ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
+      <div 
+        onMouseLeave={() => setShowPicker(false)}
+        className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 relative ${isChecklist ? 'bg-primary/5 border border-primary/10' : 'bg-transparent border border-transparent'}`}
+      >
+        {/* Avatar - Slightly larger than sidebar, but still compact */}
+        <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-background border border-border/50 flex items-center justify-center shadow-sm transition-transform hover:scale-105">
+            {comment.image ? (
+              <img src={comment.image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary uppercase">
+                {comment.user?.charAt(0)}
+              </div>
+            )}
           </div>
         </Link>
+
         <div className="flex flex-col flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="hover:underline flex items-center gap-1.5 min-w-0">
-                <span className={`font-bold text-[14px] leading-tight truncate ${isReply ? 'text-discord-text-muted' : 'text-white'}`}>{comment.user}</span>
-                {isChecklist && <span className="text-[9px] text-discord-blue font-black uppercase tracking-tighter shrink-0">Checklist</span>}
-              </Link>
-              <span className="text-[10px] text-discord-text-muted font-medium shrink-0 md:hidden mt-0.5">{formatCommentDate(comment.createdAt)}</span>
-            </div>
-
-            {/* Mobile Expandable Action Bar */}
-            <div className="md:hidden flex items-center justify-end relative h-6 min-w-[24px]">
-              {showMobileMenu ? (
-                <div className="absolute right-0 z-30 flex items-center gap-0.5 bg-[#2B2D31] rounded-full pl-2 pr-1 py-0.5 border border-white/5 shadow-xl animate-in slide-in-from-right-4 fade-in duration-200 whitespace-nowrap">
-                  <button onClick={() => { setShowPicker(!showPicker); setShowMobileMenu(false); }} className="text-discord-text-muted hover:text-white p-1.5 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  </button>
-                  {!isReply && (
-                    <button onClick={() => { setShowReplyInput(true); setShowMobileMenu(false); }} className="text-discord-text-muted hover:text-white p-1.5 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                    </button>
-                  )}
-                  {isAuthor && (
-                    <button onClick={() => { setShowMobileMenu(false); if(window.confirm('정말로 삭제하시겠습니까?')) onDelete?.(); }} className="text-discord-text-muted hover:text-red-400 p-1.5 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                  )}
-                  <div className="w-px h-3 bg-white/10 mx-1" />
-                  <button onClick={() => setShowMobileMenu(false)} className="text-discord-text-muted p-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg></button>
-                </div>
-              ) : (
-                <button onClick={() => setShowMobileMenu(true)} className="text-discord-text-muted hover:text-white p-1 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
-                </button>
-              )}
-            </div>
+          {/* Header Line */}
+          <div className="flex items-baseline gap-2 mb-0.5 min-w-0">
+            <span className={`text-[12px] tracking-tight truncate ${selectedId === comment.id ? 'font-black' : 'font-bold'} ${isReply ? 'text-muted-foreground' : 'text-foreground'}`}>
+              {comment.user}
+            </span>
+            {isChecklist && <span className="text-[8px] text-primary font-black uppercase tracking-tighter opacity-70">Check</span>}
+            <span className="text-[9px] font-mono tracking-tighter opacity-30 shrink-0">
+              {formatCommentDate(comment.createdAt)}
+            </span>
           </div>
           
+          {/* Content Line */}
           <div className="flex items-baseline gap-2">
-            <p className="text-[14px] leading-snug break-words text-discord-text-normal flex-1">{comment.text}</p>
+            <p className="text-[12px] leading-snug break-words text-foreground/80 flex-1">{comment.text}</p>
           </div>
 
-          <span className="hidden md:inline-block text-[10px] text-discord-text-muted font-medium mt-0.5">{formatCommentDate(comment.createdAt)}</span>
-          
+          {/* Reactions Row */}
           {comment.reactions && Object.keys(comment.reactions).length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
+            <div className="flex flex-wrap gap-1 mt-1.5">
               {Object.entries(comment.reactions).map(([emoji, users]: [string, any]) => {
                 const hasReacted = myId && users.includes(myId);
+                const reactorNames = users.map((uid: string) => displayNames[uid] || "알 수 없음").join(", ");
                 return (
-                  <div key={emoji} className="relative group/emoji">
+                  <div key={emoji} className="relative group/reaction">
                     <button
                       onClick={() => onAddReaction(emoji)}
-                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[12px] font-bold transition-all cursor-pointer border ${hasReacted ? 'bg-discord-blue/10 border-discord-blue text-discord-blue' : 'bg-[#2B2D31] border-transparent text-discord-text-muted hover:border-discord-text-muted/30'}`}
+                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${hasReacted ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-muted border-transparent text-muted-foreground hover:border-border'}`}
                     >
                       <span>{emoji}</span>
-                      <span className={hasReacted ? 'text-discord-blue' : 'text-discord-text-normal'}>{users.length}</span>
+                      <span>{users.length}</span>
                     </button>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-[10px] font-bold rounded shadow-xl opacity-0 group-hover/emoji:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                      {users.map((uid: string) => displayNames[uid] || uid).join(', ')}
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black" />
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 opacity-0 group-hover/reaction:opacity-100 pointer-events-none transition-all duration-200 transform translate-y-1 group-hover/reaction:translate-y-0 z-30">
+                      <div className="bg-foreground/90 text-background text-[9px] px-2 py-1 rounded-lg whitespace-nowrap shadow-xl backdrop-blur-md font-bold border border-white/10">
+                        {reactorNames}
+                      </div>
+                      <div className="w-1.5 h-1.5 bg-foreground/90 rotate-45 absolute -bottom-0.5 left-1/2 -translate-x-1/2" />
                     </div>
                   </div>
                 );
@@ -141,15 +137,36 @@ export default function CommentItem({
             </div>
           )}
 
-          {/* Desktop Hover Action Bar */}
-          <div className="hidden md:group-hover:flex absolute -top-4 right-2 items-center bg-discord-sidebar border border-black/20 rounded-[4px] overflow-hidden shadow-lg z-10">
-            <button onClick={() => setShowPicker(!showPicker)} className="p-1.5 hover:bg-white/10 text-discord-text-muted hover:text-white transition-colors cursor-pointer" title="반응 추가"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button>
-            {!isReply && <button onClick={() => setShowReplyInput(!showReplyInput)} className="p-1.5 hover:bg-white/10 text-discord-text-muted hover:text-white transition-colors cursor-pointer" title="답글"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg></button>}
-            {isAuthor && <button onClick={() => { if(window.confirm('정말로 삭제하시겠습니까?')) onDelete?.(); }} className="p-1.5 hover:bg-red-500/20 text-discord-text-muted hover:text-red-400 transition-colors cursor-pointer" title="삭제"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>}
+          {/* Action Bar (Hover Only) */}
+          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 absolute right-2 -top-2.5 transition-opacity z-10">
+            <button onClick={() => setShowPicker(!showPicker)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </button>
+            {!isReply && (
+              <button onClick={() => setShowReplyInput(!showReplyInput)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+              </button>
+            )}
+            {isAuthor && (
+              <>
+                {!isReply && (
+                  <button 
+                    onClick={onToggleChecklist} 
+                    className={`w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm transition-colors ${isChecklist ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                    title={isChecklist ? "고정 해제" : "상단 고정 (체크리스트)"}
+                  >
+                    <Pin className={`w-3 h-3 transition-transform ${isChecklist ? 'rotate-45' : ''}`} strokeWidth={3} />
+                  </button>
+                )}
+                <button onClick={() => { if(window.confirm('삭제할까요?')) onDelete?.(); }} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-destructive transition-colors">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </>
+            )}
           </div>
 
           {showPicker && (
-            <div className="absolute z-20 mt-8 right-0">
+            <div className="absolute z-50 mt-2 right-0 origin-top-right">
               <ReactionPicker onSelect={(emoji) => { onAddReaction(emoji); setShowPicker(false); }} onClose={() => setShowPicker(false)} />
             </div>
           )}
@@ -158,7 +175,7 @@ export default function CommentItem({
 
       {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
-        <div className="space-y-0.5">
+        <div className="space-y-0.5 border-l border-border/50 ml-3.5 pl-2">
           {comment.replies.map((reply: any, idx: number) => (
             <CommentItem 
               key={idx} 
@@ -173,48 +190,33 @@ export default function CommentItem({
         </div>
       )}
 
-      {/* Reply Input (Keyboard Attached Style on Mobile) */}
+      {/* Reply Input */}
       {showReplyInput && (
-        <>
-          {/* Mobile Backdrop */}
-          <div 
-            className="fixed inset-0 z-[190] bg-black/60 md:hidden animate-in fade-in duration-300" 
-            onClick={() => setShowReplyInput(false)}
+        <div ref={replyInputRef} className="ml-7 mt-1 mb-3 flex items-center gap-2 bg-white/40 p-1.5 rounded-none border border-border/50 focus-within:border-primary/30 transition-all">
+          <input 
+            type="text" 
+            value={replyText} 
+            onChange={(e) => setReplyInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleReplySubmit()}
+            autoFocus
+            placeholder="답글 남기기..." 
+            className="flex-1 bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 px-1 font-medium"
           />
-          
-          <div className={`
-            md:static md:flex md:ml-14 md:mt-1 md:bg-discord-server-list md:rounded-[8px] md:border md:border-black/10 md:shadow-inner md:p-2 md:z-auto md:animate-none
-            fixed bottom-0 left-0 right-0 z-[200] bg-[#313338] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.5)] flex items-center gap-3 animate-in slide-in-from-bottom duration-300
-          `}>
-            <input 
-              type="text" 
-              value={replyText} 
-              onChange={(e) => setReplyInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleReplySubmit()}
-              autoFocus
-              placeholder="답글 남기기..." 
-              className="flex-1 bg-transparent border-none outline-none text-[16px] md:text-[13px] text-discord-text-normal placeholder:text-discord-text-muted"
-            />
-            <button 
-              onClick={handleReplySubmit} 
-              className={`
-                flex items-center justify-center transition-colors cursor-pointer 
-                md:text-[12px] md:font-bold md:px-3 md:py-1 md:rounded-[4px] md:w-auto md:h-auto md:bg-discord-blue md:shadow-none
-                w-10 h-10 rounded-full bg-discord-blue text-white shadow-lg
-                ${replyText.trim() ? 'opacity-100' : 'opacity-50 cursor-not-allowed'}
-              `}
-            >
-              <svg className="w-5 h-5 md:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 6 22 2"></polygon>
-              </svg>
-              <span className="hidden md:inline">등록</span>
-            </button>
-          </div>
-          {/* Placeholder to keep space in the list when input is fixed */}
-          <div className="h-10 mt-1 md:hidden" />
-        </>
+          <button 
+            onClick={handleReplySubmit} 
+            disabled={!replyText.trim()}
+            className={`w-6 h-6 flex items-center justify-center rounded-full transition-all shrink-0 ${replyText.trim() ? 'bg-primary text-white shadow-sm hover:scale-105 active:scale-95' : 'bg-muted text-muted-foreground/30 cursor-not-allowed'} mr-0.5`}
+            title="보내기"
+          >
+            <ArrowUp className="w-3.5 h-3.5" strokeWidth={3} />
+          </button>
+        </div>
       )}
+
+
     </div>
   );
 }
+
+// Dummy selectedId for internal logic consistency with sidebar style
+const selectedId = ""; 

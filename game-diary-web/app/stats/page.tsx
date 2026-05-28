@@ -1,32 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { db } from "../../src/lib/firebase"; 
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { supabase } from "../../src/lib/supabase"; 
 import Link from 'next/link';
-
-/**
- * 헬퍼: 분 단위를 시간/분 텍스트로 변환
- */
-const formatDurationText = (minutes: number) => {
-  if (minutes < 60) return `${minutes}분`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
-};
+import { formatDurationText } from "../../src/lib/utils";
 
 export default function StatsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, "sessions"), orderBy("startTime", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setSessions(list);
+    async function fetchStats() {
+      // 세션과 연결된 게임 기록들을 한꺼번에 가져옵니다.
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*, session_games(*)');
+
+      if (error) {
+        console.error('Error fetching stats:', error);
+      } else {
+        setSessions(data || []);
+      }
       setLoading(false);
-    });
-    return () => unsubscribe();
+    }
+
+    fetchStats();
   }, []);
 
   // 📊 통계 데이터 계산
@@ -36,20 +34,20 @@ export default function StatsPage() {
     const dailyActivity: { [date: string]: number } = {};
 
     sessions.forEach(s => {
-      totalMinutes += (s.totalDurationMin || 0);
+      totalMinutes += (s.total_duration_min || 0);
       
       // 게임별 시간 합산
-      (s.games || []).forEach((g: any) => {
+      (s.session_games || []).forEach((g: any) => {
         if (!gamePlayTimes[g.title]) {
-          gamePlayTimes[g.title] = { time: 0, icon: g.iconURL };
+          gamePlayTimes[g.title] = { time: 0, icon: g.icon_url };
         }
-        gamePlayTimes[g.title].time += (g.playTimeMin || 0);
+        gamePlayTimes[g.title].time += (g.play_time_min || 0);
       });
 
       // 날짜별 활동 (Heatmap용)
-      if (s.startTime?.seconds) {
-        const date = new Date(s.startTime.seconds * 1000).toISOString().split('T')[0];
-        dailyActivity[date] = (dailyActivity[date] || 0) + (s.totalDurationMin || 0);
+      if (s.start_time) {
+        const date = new Date(s.start_time).toISOString().split('T')[0];
+        dailyActivity[date] = (dailyActivity[date] || 0) + (s.total_duration_min || 0);
       }
     });
 
@@ -58,10 +56,10 @@ export default function StatsPage() {
       .sort((a, b) => b.time - a.time)
       .slice(0, 5);
 
-    return { totalMinutes, topGames, dailyActivity };
+    return { totalMinutes, topGames, dailyActivity, gamePlayTimes };
   };
 
-  const { totalMinutes, topGames, dailyActivity } = calculateStats();
+  const { totalMinutes, topGames, dailyActivity, gamePlayTimes } = calculateStats();
 
   // 🔥 히트맵 데이터 생성 (최근 90일)
   const generateHeatmap = () => {
@@ -115,7 +113,7 @@ export default function StatsPage() {
             </div>
             <div className="bg-discord-card p-8 rounded-[8px] border border-black/20 flex flex-col items-center text-center shadow-lg">
               <span className="text-[11px] font-black text-discord-text-muted uppercase tracking-wider mb-2 font-sans">플레이한 게임 종류</span>
-              <span className="text-4xl font-bold text-white font-sans">{Object.keys(topGames).length > 5 ? '5+' : Object.keys(topGames).length}종</span>
+              <span className="text-4xl font-bold text-white font-sans">{Object.keys(gamePlayTimes).length}종</span>
             </div>
           </div>
 

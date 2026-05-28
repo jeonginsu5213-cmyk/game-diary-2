@@ -1,22 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, use } from 'react';
-import { db } from "../../../src/lib/firebase"; 
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { supabase } from "../../../src/lib/supabase"; 
 import Link from 'next/link';
-
-const formatDurationText = (minutes: number) => {
-  if (minutes < 60) return `${minutes}분`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
-};
-
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-};
+import { formatDurationText, formatDate } from "../../../src/lib/utils";
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: userId } = use(params);
@@ -24,19 +11,43 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "sessions"), 
-      where("participants", "array-contains", userId),
-      orderBy("startTime", "desc")
-    );
+    async function fetchProfileData() {
+      // 1. 유저가 속한 세션 ID들을 먼저 찾습니다.
+      const { data: userSessions, error: pError } = await supabase
+        .from('session_participants')
+        .select('session_id')
+        .eq('user_id', userId);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setSessions(list);
+      if (pError || !userSessions || userSessions.length === 0) {
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
+      const sessionIds = userSessions.map((p: any) => p.session_id);
+
+      // 2. 찾아낸 세션 ID들로 상세 정보를 가져옵니다.
+      const { data, error } = await supabase
+        .from('sessions')
+        .select(`
+          *,
+          session_games (
+            *,
+            session_game_players (*)
+          )
+        `)
+        .in('id', sessionIds)
+        .order('start_time', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else {
+        setSessions(data || []);
+      }
       setLoading(false);
-    });
+    }
 
-    return () => unsubscribe();
+    fetchProfileData();
   }, [userId]);
 
   const calculateUserStats = () => {
@@ -47,15 +58,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     let latestImage = "";
 
     sessions.forEach((s, idx) => {
-      // 가장 최근 세션에서 이름과 사진 추출
-      if (idx === 0) {
-        latestName = s.displayNames?.[userId] || "알 수 없는 유저";
-        latestImage = s.profileImages?.[userId] || "";
-      }
-
-      // 개인 플레이 시간 합산
-      (s.games || []).forEach((g: any) => {
-        const userTime = g.playerPlayTimes?.[userId] || 0;
+      // 개인 플레이 시간 합산 (session_game_players 테이블 활용)
+      (s.session_games || []).forEach((g: any) => {
+        const playerRecord = (g.session_game_players || []).find((p: any) => p.user_id === userId);
+        const userTime = playerRecord ? playerRecord.play_time_min : 0;
+        
         totalMinutes += userTime;
         if (userTime > 0) {
           gamePlayTimes[g.title] = (gamePlayTimes[g.title] || 0) + userTime;
@@ -63,9 +70,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       });
 
       // 날짜별 활동
-      if (s.startTime?.seconds) {
-        const date = new Date(s.startTime.seconds * 1000).toISOString().split('T')[0];
-        const userDayTime = (s.games || []).reduce((acc: number, g: any) => acc + (g.playerPlayTimes?.[userId] || 0), 0);
+      if (s.start_time) {
+        const date = new Date(s.start_time).toISOString().split('T')[0];
+        const userDayTime = (s.session_games || []).reduce((acc: number, g: any) => {
+          const p = (g.session_game_players || []).find((pr: any) => pr.user_id === userId);
+          return acc + (p ? p.play_time_min : 0);
+        }, 0);
         dailyActivity[date] = (dailyActivity[date] || 0) + userDayTime;
       }
     });
@@ -75,10 +85,22 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       .sort((a, b) => b.time - a.time)
       .slice(0, 5);
 
-    return { totalMinutes, topGames, dailyActivity, latestName, latestImage };
+    return { totalMinutes, topGames, dailyActivity };
   };
 
-  const { totalMinutes, topGames, dailyActivity, latestName, latestImage } = calculateUserStats();
+  const { totalMinutes, topGames, dailyActivity } = calculateUserStats();
+
+  // 프로필 정보는 세션 데이터에서 가져오기 어려울 수 있으므로 별도 쿼리 (또는 첫 세션에서 유추)
+  // 여기서는 세션 데이터의 displayNames 맵이 Supabase profiles 테이블로 이전되었으므로 이를 활용합니다.
+  const [profile, setProfile] = useState<{display_name: string, avatar_url: string} | null>(null);
+  
+  useEffect(() => {
+    async function fetchUserInfo() {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (data) setProfile(data);
+    }
+    fetchUserInfo();
+  }, [userId]);
 
   const generateHeatmap = () => {
     const cells = [];
@@ -117,11 +139,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {/* 유저 헤더 */}
           <section className="flex flex-col md:flex-row items-center gap-8 bg-discord-card p-10 rounded-[8px] border border-black/20 shadow-xl relative overflow-hidden">
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-discord-card shadow-2xl shrink-0 z-10 relative">
-              <img src={latestImage || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className="w-full h-full object-cover" />
+              <img src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className="w-full h-full object-cover" />
               <div className="absolute bottom-2 right-2 w-6 h-6 bg-discord-success border-4 border-discord-card rounded-full" />
             </div>
             <div className="flex flex-col items-center md:items-start text-center md:text-left z-10">
-              <h1 className="text-4xl font-bold text-white tracking-tight mb-2 font-sans">{latestName}님</h1>
+              <h1 className="text-4xl font-bold text-white tracking-tight mb-2 font-sans">{profile?.display_name || '알 수 없는 유저'}님</h1>
               <p className="text-discord-text-muted font-bold mb-6 font-sans">총 {sessions.length}편의 게임 일기에 함께했습니다.</p>
               <div className="flex gap-4 font-sans">
                 <div className="bg-black/20 px-6 py-3 rounded-[8px] border border-white/5 flex flex-col font-sans">
@@ -191,12 +213,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <h3 className="text-xl font-bold text-white px-2 font-sans">참여한 일기 타임라인</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
               {sessions.map(s => (
-                <Link key={s.id} href={`/?id=${s.id}`} className="group bg-discord-card p-6 rounded-[8px] border border-black/20 hover:border-discord-blue transition-all shadow-lg font-sans">
+                <Link key={s.id} href={`/diary?id=${s.id}`} className="group bg-discord-card p-6 rounded-[8px] border border-black/20 hover:border-discord-blue transition-all shadow-lg font-sans">
                   <div className="flex items-start justify-between gap-4 font-sans">
                     <div className="flex flex-col min-w-0 font-sans">
-                      <span className="text-[10px] font-black text-discord-text-muted uppercase mb-1 font-sans">{formatDate(s.startTime?.seconds ? new Date(s.startTime.seconds * 1000).toLocaleDateString() : "")}</span>
-                      <h4 className="text-lg font-bold text-white tracking-tight truncate group-hover:text-discord-blue transition-colors font-sans">{s.sessionTitle}</h4>
-                      <p className="text-xs font-bold text-discord-text-muted mt-1 font-sans">{s.games?.length || 0}개의 게임 플레이</p>
+                      <span className="text-[10px] font-black text-discord-text-muted uppercase mb-1 font-sans">{s.start_time ? formatDate(s.start_time) : ""}</span>
+                      <h4 className="text-lg font-bold text-white tracking-tight truncate group-hover:text-discord-blue transition-colors font-sans">{s.title}</h4>
+                      <p className="text-xs font-bold text-discord-text-muted mt-1 font-sans">{s.session_games?.length || 0}개의 게임 플레이</p>
                     </div>
                     <div className="bg-discord-sidebar px-3 py-1.5 rounded-[4px] border border-black/20 font-bold text-[10px] text-discord-text-muted group-hover:bg-discord-blue group-hover:text-white transition-colors uppercase font-sans shrink-0">
                       View Diary

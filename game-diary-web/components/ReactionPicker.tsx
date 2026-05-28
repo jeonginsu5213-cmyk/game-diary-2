@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
-const EMOJIS = ["👍", "❤️", "😂", "🔥", "🎮", "💩", "😮"];
+const EMOJIS = ["👍", "❤️", "🔥", "🎮", "😮", "😂", "😢"];
 
 interface ReactionPickerProps {
   onSelect: (emoji: string) => void;
@@ -10,20 +11,40 @@ interface ReactionPickerProps {
 }
 
 export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
   return (
-    <div className="flex items-center gap-1 p-1.5 bg-[#1E1F22] border border-white/10 rounded-full shadow-2xl animate-in fade-in zoom-in-95 duration-100">
-      {EMOJIS.map((emoji) => (
-        <button
+    <motion.div 
+      ref={pickerRef}
+      initial={{ opacity: 0, scale: 0.9, y: 5 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="flex items-center gap-1 p-1.5 bg-card/95 backdrop-blur-xl border border-border rounded-full shadow-xl"
+    >
+      {EMOJIS.map((emoji, index) => (
+        <motion.button
           key={emoji}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.03 }}
           onClick={() => {
             onSelect(emoji);
             onClose();
           }}
-          className="w-8 h-8 flex items-center justify-center text-lg hover:bg-white/10 rounded-full transition-colors cursor-pointer active:scale-90"
+          className="w-8 h-8 flex items-center justify-center text-[18px] hover:bg-primary/10 rounded-full transition-all cursor-pointer active:scale-90 hover:scale-110"
         >
           {emoji}
-        </button>
+        </motion.button>
       ))}
-    </div>
+    </motion.div>
   );
 }

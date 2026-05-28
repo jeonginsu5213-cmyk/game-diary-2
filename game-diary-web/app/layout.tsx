@@ -35,10 +35,9 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="h-full flex bg-discord-server-list overflow-hidden">
+      <body className="h-full flex bg-background text-foreground overflow-hidden font-sans text-foreground">
         <SessionProviderWrapper>
-          <SidebarNav />
-          <main className="flex-1 flex flex-col bg-discord-main-content min-w-0">
+          <main className="flex-1 flex flex-col min-w-0 relative overflow-y-auto">
             {children}
           </main>
         </SessionProviderWrapper>
