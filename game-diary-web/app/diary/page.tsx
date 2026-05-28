@@ -82,12 +82,22 @@ function HomeContent() {
 
   // 1. Core Data Fetching
   const fetchData = async () => {
+    console.log("Fetching data from Supabase...");
     const { data, error } = await supabase
       .from('sessions')
       .select('*, session_games(*, comments(*), session_game_players(*)), screenshots(*), session_participants(*)')
       .order('start_time', { ascending: false });
 
-    if (!error && data) setSessions(data);
+    if (error) {
+      console.error("Supabase fetching error:", error.message, error.details, error.hint);
+      setLoading(false);
+      return;
+    }
+
+    if (data) {
+      console.log("Data fetched successfully:", data.length, "sessions found.");
+      setSessions(data);
+    }
     setLoading(false);
   };
 
