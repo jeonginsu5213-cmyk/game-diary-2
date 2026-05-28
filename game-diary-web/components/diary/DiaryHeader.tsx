@@ -18,69 +18,6 @@ interface DiaryHeaderProps {
   viewMode: 'list' | 'diary';
 }
 
-const AnimatedAvatar = ({ 
-  p, 
-  profile, 
-  index, 
-  total, 
-  isHovered, 
-  onHover, 
-  onLeave 
-}: any) => {
-  return (
-    <div
-      className="relative flex items-center justify-center"
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-      style={{
-        marginLeft: index === 0 ? 0 : "-0.6rem",
-        zIndex: isHovered ? 50 : total - index,
-      }}
-    >
-      <AnimatePresence mode="popLayout">
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              transition: { type: "spring", stiffness: 200, damping: 20 },
-            }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="absolute top-10 whitespace-nowrap flex flex-col items-center justify-center rounded-xl bg-card border border-border/50 shadow-2xl shadow-black/10 px-4 py-2.5 z-[100] min-w-max backdrop-blur-md"
-          >
-            <div className="font-black text-foreground text-[13px] flex items-center gap-1.5 mb-0.5">
-              {profile?.display_name || 'Anonymous'}
-              {isObserver && (
-                <span className="h-4 text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1.5 rounded-md flex items-center justify-center">
-                  <span className="translate-y-[0.5px]">관전</span>
-                </span>
-              )}
-            </div>
-            <div className="text-[11px] text-muted-foreground font-black font-mono tracking-tight opacity-70">
-              {formatDurationText(p.duration_min)}
-            </div>
-            {/* Arrow Pointer */}
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-card border-l border-t border-border/50 rotate-45" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.div
-        whileHover={{ scale: 1.1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      >
-        <img 
-          src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-          className="w-7 h-7 rounded-full border-2 border-card shadow-sm" 
-          alt="" 
-        />
-      </motion.div>
-    </div>
-  );
-};
-
 const DiaryHeader: React.FC<DiaryHeaderProps> = ({
   current,
   profiles,

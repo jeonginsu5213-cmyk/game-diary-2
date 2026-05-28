@@ -66,12 +66,10 @@ function HomeContent() {
 
     onSelect();
     uncatCarouselApi.on("select", onSelect);
-    uncatCarouselApi.on("reSelect", onSelect);
     uncatCarouselApi.on("scroll", onSelect); // Update while dragging too
 
     return () => {
       uncatCarouselApi.off("select", onSelect);
-      uncatCarouselApi.off("reSelect", onSelect);
       uncatCarouselApi.off("scroll", onSelect);
     };
   }, [uncatCarouselApi]);
@@ -614,7 +612,6 @@ function HomeContent() {
                               )}
                             </div>
                           ),
-                          colSpan: 2,
                         },
                         // Right Card: Dedicated Comments Section (1 col)
                         {
@@ -663,7 +660,7 @@ function HomeContent() {
           <div className="absolute bottom-8 right-8 z-40">
             <Drawer 
               open={!!isUncatDrawerOpen} 
-              onOpenChange={(details: { open: boolean }) => setIsUncatDrawerOpen(details.open)}
+              onOpenChange={(open: boolean) => setIsUncatDrawerOpen(open)}
             >
               <div className="relative group">
                 <button 

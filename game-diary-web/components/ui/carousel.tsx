@@ -111,7 +111,6 @@ const Carousel = React.forwardRef<
       }
 
       onSelect(api)
-      api.on("reSelect", onSelect)
       api.on("select", onSelect)
 
       return () => {
