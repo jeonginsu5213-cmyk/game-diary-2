@@ -83,6 +83,14 @@ function HomeContent() {
   // 1. Core Data Fetching
   const fetchData = async () => {
     console.log("Fetching data from Supabase...");
+    
+    // Safety Check: Verify supabase object
+    if (!supabase || !(supabase as any).supabaseUrl) {
+      console.error("❌ Supabase client is not properly initialized!", supabase);
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('sessions')
       .select('*, session_games(*, comments(*), session_game_players(*)), screenshots(*), session_participants(*)')
