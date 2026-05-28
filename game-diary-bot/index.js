@@ -24,8 +24,16 @@ const {
 } = require('@discordjs/voice');
 const googleTTS = require('google-tts-api');
 const admin = require('firebase-admin');
+const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
+
+// Supabase 초기화
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 // FFMPEG 경로 설정 (ffmpeg-static 활용)
 try {
@@ -225,32 +233,38 @@ async function updateGameLog(session, userId, activity) {
             
             (async () => {
                 try {
-                    const snapshot = await db.collection('sessions')
-                        .where('startTime', '<', admin.firestore.Timestamp.fromMillis(session.startTime))
-                        .orderBy('startTime', 'desc')
-                        .limit(10)
-                        .get();
+                    // Supabase에서 과거 체크리스트 조회
+                    const { data: prevGames, error: fetchError } = await supabase
+                        .from('session_games')
+                        .select('*, comments(*), sessions!inner(start_time, guild_name)')
+                        .eq('title', originalName)
+                        .lt('sessions.start_time', new Date(session.startTime).toISOString())
+                        .order('created_at', { ascending: false })
+                        .limit(5);
 
-                    for (const doc of snapshot.docs) {
-                        const prevData = doc.data();
-                        const prevGame = prevData.games?.find(g => g.title === originalName);
-                        if (prevGame) {
-                            const checklists = prevGame.comments?.filter(c => c.isChecklist);
-                            if (checklists && checklists.length > 0) {
-                                const guild = client.guilds.cache.find(g => g.name === prevData.guildName) || Array.from(client.guilds.cache.values())[0];
-                                const logChannel = guild?.channels.cache.find(c => c.name === '일기장');
-                                if (logChannel) {
-                                    const checklistText = checklists.map(c => `💬 **${c.user}** : ${c.text}`).join('\n');
-                                    await logChannel.send({ 
-                                        content: `💡 **${originalName}**을(를) 다시 시작하셨네요! 과거의 내가 남겨둔 메모가 있어요.\n\n${checklistText}`
-                                    });
+                    if (fetchError) throw fetchError;
 
-                                    // 🎙️ 음성 채널에 TTS로 읽어주기
-                                    const voiceChannel = guild.members.cache.get(userId)?.voice.channel;
-                                    if (voiceChannel) {
-                                        const ttsContent = `${originalName}을 다시 시작하셨네요. 지난번에 남기신 메모를 읽어드릴게요. ${checklists.map(c => c.text).join('. ')}`;
-                                        await playTTS(voiceChannel, ttsContent.substring(0, 200)); // 200자 제한
-                                    }
+                    for (const game of prevGames) {
+                        const checklists = game.comments?.filter(c => c.is_checklist);
+                        if (checklists && checklists.length > 0) {
+                            const guild = client.guilds.cache.find(g => g.name === game.sessions.guild_name) || Array.from(client.guilds.cache.values())[0];
+                            const logChannel = guild?.channels.cache.find(c => c.name === '일기장');
+                            if (logChannel) {
+                                // 프로필 정보를 가져오기 위해 닉네임 조회
+                                const { data: profiles } = await supabase.from('profiles').select('id, display_name');
+                                const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.display_name]));
+
+                                const checklistText = checklists.map(c => `💬 **${profileMap[c.user_id] || c.user_id}** : ${c.content}`).join('\n');
+                                
+                                await logChannel.send({ 
+                                    content: `💡 **${originalName}**을(를) 다시 시작하셨네요! 과거의 내가 남겨둔 메모가 있어요.\n\n${checklistText}`
+                                });
+
+                                // 🎙️ 음성 채널에 TTS로 읽어주기
+                                const voiceChannel = guild.members.cache.get(userId)?.voice.channel;
+                                if (voiceChannel) {
+                                    const ttsContent = `${originalName}을 다시 시작하셨네요. 지난번에 남기신 메모를 읽어드릴게요. ${checklists.map(c => c.content).join('. ')}`;
+                                    await playTTS(voiceChannel, ttsContent.substring(0, 200)); // 200자 제한
                                 }
                             }
                             break;
@@ -269,6 +283,120 @@ async function updateGameLog(session, userId, activity) {
         session.gameLogs[originalName].players.add(userId);
         session.gameLogs[originalName].endTime = Date.now();
         console.log(`✅ [기록 시작] ${originalName}`);
+    }
+}
+
+/**
+ * Supabase에 세션 정보를 정규화하여 저장
+ */
+async function saveSessionToSupabase(session, endTime) {
+    const sessionId = crypto.randomUUID?.() || crypto.randomBytes(16).toString('hex');
+    const guildName = session.guildName || 'Unknown Server';
+    
+    console.log(`[Supabase] 세션 저장 시작: ${sessionId}`);
+
+    try {
+        // 1. 프로필 및 서버 프로필 업데이트
+        for (const [uid, name] of session.displayNames) {
+            await supabase.from('profiles').upsert({
+                id: uid,
+                display_name: name,
+                avatar_url: session.profileImages.get(uid) || null,
+                updated_at: new Date().toISOString()
+            });
+            await supabase.from('server_profiles').upsert({
+                user_id: uid,
+                guild_name: guildName,
+                nickname: name,
+                avatar_url: session.profileImages.get(uid) || null
+            });
+        }
+
+        // 2. 세션 삽입
+        const { error: sessionError } = await supabase.from('sessions').insert({
+            id: sessionId,
+            start_time: new Date(session.startTime).toISOString(),
+            end_time: new Date(endTime).toISOString(),
+            channel_name: session.channelName,
+            title: session.sessionTitle,
+            guild_name: guildName,
+            guild_icon: session.guildIcon,
+            total_duration_min: Math.floor((endTime - session.startTime) / 1000 / 60)
+        });
+        if (sessionError) throw sessionError;
+
+        // 3. 참여자 정보 삽입
+        for (const [uid, logs] of Object.entries(session.participantLogs)) {
+            let totalMs = 0;
+            logs.forEach(log => {
+                const start = log.joinTime.toMillis ? log.joinTime.toMillis() : new Date(log.joinTime).getTime();
+                const end = log.leaveTime?.toMillis ? log.leaveTime.toMillis() : (log.leaveTime ? new Date(log.leaveTime).getTime() : endTime);
+                totalMs += (end - start);
+            });
+            await supabase.from('session_participants').insert({
+                session_id: sessionId,
+                user_id: uid,
+                duration_min: Math.max(1, Math.round(totalMs / 60000))
+            });
+        }
+
+        // 4. 게임, 플레이어, 댓글 삽입
+        for (const [name, data] of Object.entries(session.gameLogs)) {
+            const { data: insertedGame, error: gameError } = await supabase.from('session_games').insert({
+                session_id: sessionId,
+                title: name,
+                icon_url: data.iconURL,
+                play_time_min: Math.floor(data.totalPlayTime / 1000 / 60),
+                start_time: new Date(data.startTime).toISOString(),
+                end_time: new Date(data.endTime || endTime).toISOString()
+            }).select().single();
+
+            if (gameError) {
+                console.error(`[Supabase] 게임 저장 실패 (${name}):`, gameError);
+                continue;
+            }
+
+            // 플레이어별 시간
+            for (const [uid, ms] of Object.entries(data.playerPlayTimes || {})) {
+                await supabase.from('session_game_players').insert({
+                    game_id: insertedGame.id,
+                    user_id: uid,
+                    play_time_min: Math.floor(ms / 1000 / 60)
+                });
+            }
+
+            // 댓글
+            for (const comment of data.comments) {
+                await supabase.from('comments').insert({
+                    game_id: insertedGame.id,
+                    user_id: comment.userId,
+                    content: comment.text,
+                    is_checklist: comment.isChecklist,
+                    created_at: comment.createdAt,
+                    reactions: comment.reactions || {},
+                    replies: comment.replies || []
+                });
+            }
+        }
+
+        // 5. 스크린샷 삽입
+        for (const shot of session.pendingScreenshots) {
+            const uploaderId = Array.from(session.displayNames.keys()).find(uid => session.displayNames.get(uid) === shot.user) || shot.user;
+            await supabase.from('screenshots').insert({
+                session_id: sessionId,
+                game_title: shot.gameTitle,
+                url: shot.url,
+                uploader_id: uploaderId,
+                comment: shot.comment,
+                created_at: new Date().toISOString()
+            });
+        }
+
+        console.log(`[Supabase] 세션 저장 완료: ${sessionId}`);
+        return sessionId;
+    } catch (e) {
+        console.error("[Supabase] 세션 저장 중 오류 발생:", e);
+        return null;
     }
 }
 
@@ -312,6 +440,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         const channelId = newState.channel.id;
         if (!activeSessions.has(channelId)) {
             const session = {
+                guildName: newState.guild.name, guildIcon: newState.guild.iconURL({ format: 'png', size: 512 }),
                 channelName: newState.channel.name, sessionTitle: "오늘의 게임일기", startTime: Date.now(),
                 participants: new Set([userId]), displayNames: new Map([[userId, member.displayName]]), profileImages: new Map([[userId, member.user.displayAvatarURL({ format: 'png', size: 256 })]]),
                 gameLogs: {}, participantLogs: {}, pendingScreenshots: [], controlMessage: null 
@@ -369,6 +498,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             }
             if (oldState.channel.members.filter(m => !m.user.bot).size === 0) {
                 const endTime = Date.now();
+                
+                // Supabase에 먼저 저장 시도
+                const supabaseId = await saveSessionToSupabase(session, endTime);
+
                 const diaryData = {
                     guildName: oldState.guild.name, guildIcon: oldState.guild.iconURL({ format: 'png', size: 512 }),
                     channelName: session.channelName, sessionTitle: session.sessionTitle,
@@ -387,6 +520,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 };
                 try {
                     const docRef = await db.collection('sessions').add(diaryData);
+                    const finalId = supabaseId || docRef.id; // Supabase ID 우선 사용
+
                     if (session.controlMessage) { 
                         try { 
                             const msgs = await session.controlMessage.channel.messages.fetch({ limit: 10 });
@@ -399,11 +534,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     if (logChannel) {
                         const embed = new EmbedBuilder()
                             .setColor(0x1A1D1F)
-                            .setDescription(`📖 [여기를 눌러 발행된 일기를 확인하세요!](https://game-diary-2.vercel.app?id=${docRef.id})`)
+                            .setDescription(`📖 [여기를 눌러 발행된 일기를 확인하세요!](https://game-diary-2.vercel.app?id=${finalId})`)
                             .addFields({ name: '⏱️ 총 시간', value: `${diaryData.totalDurationMin}분`, inline: true })
                             .setTimestamp();
                         const row = new ActionRowBuilder().addComponents(
-                            new ButtonBuilder().setLabel('일기 확인하기').setStyle(ButtonStyle.Link).setURL(`https://game-diary-2.vercel.app?id=${docRef.id}`)
+                            new ButtonBuilder().setLabel('일기 확인하기').setStyle(ButtonStyle.Link).setURL(`https://game-diary-2.vercel.app?id=${finalId}`)
                         );
                         await logChannel.send({ content: `✅ **[${session.sessionTitle}]** 기록 완료!`, embeds: [embed], components: [row] });
                     }
@@ -463,7 +598,6 @@ client.on('messageCreate', async (m) => {
                 isChecklist = true;
                 text = text.replace(/^메모\)\s*/, '');
 
-                // 1인 1메모 유지를 위해 기존 체크리스트 확인 및 삭제
                 const existingIndex = s.gameLogs[activeGameTitle].comments.findIndex(
                     c => c.userId === m.author.id && c.isChecklist
                 );
@@ -491,10 +625,26 @@ client.on('messageCreate', async (m) => {
         for (const a of m.attachments.values()) {
             if (a.contentType?.startsWith('image/')) {
                 try {
-                    const f = bucket.file(`screenshots/${Date.now()}_${a.name}`);
-                    await f.save(Buffer.from(await (await fetch(a.url)).arrayBuffer()), { contentType: a.contentType });
+                    const buffer = Buffer.from(await (await fetch(a.url)).arrayBuffer());
+                    const fileName = `${Date.now()}_${a.name}`;
+                    
+                    // Firebase (Legacy)
+                    const f = bucket.file(`screenshots/${fileName}`);
+                    await f.save(buffer, { contentType: a.contentType });
                     await f.makePublic();
-                    s.pendingScreenshots.push({ url: f.publicUrl(), user: m.member.displayName, comment: m.content || "", gameTitle: activeGameTitle });
+                    
+                    // Supabase (New)
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('screenshots')
+                        .upload(`shots/${fileName}`, buffer, { contentType: a.contentType });
+                    
+                    let finalUrl = f.publicUrl();
+                    if (!uploadError) {
+                        const { data: publicUrlData } = supabase.storage.from('screenshots').getPublicUrl(`shots/${fileName}`);
+                        finalUrl = publicUrlData.publicUrl;
+                    }
+
+                    s.pendingScreenshots.push({ url: finalUrl, user: m.member.displayName, comment: m.content || "", gameTitle: activeGameTitle });
                     m.react('✅');
                 } catch (e) { console.error("이미지 업로드 실패:", e); }
             }
