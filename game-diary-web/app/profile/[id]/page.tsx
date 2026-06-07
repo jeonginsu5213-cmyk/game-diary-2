@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from 'react';
 import { supabase } from "../../../src/lib/supabase"; 
 import Link from 'next/link';
-import { formatDurationText, formatDate } from "../../../src/lib/utils";
+import { formatDurationText, formatDate, maskNickname } from "../../../src/lib/utils";
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: userId } = use(params);
@@ -92,7 +92,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   // 프로필 정보는 세션 데이터에서 가져오기 어려울 수 있으므로 별도 쿼리 (또는 첫 세션에서 유추)
   // 여기서는 세션 데이터의 displayNames 맵이 Supabase profiles 테이블로 이전되었으므로 이를 활용합니다.
-  const [profile, setProfile] = useState<{display_name: string, avatar_url: string} | null>(null);
+  const [profile, setProfile] = useState<{display_name: string, avatar_url: string, has_logged_in?: boolean} | null>(null);
   
   useEffect(() => {
     async function fetchUserInfo() {
@@ -139,11 +139,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {/* 유저 헤더 */}
           <section className="flex flex-col md:flex-row items-center gap-8 bg-discord-card p-10 rounded-[8px] border border-black/20 shadow-xl relative overflow-hidden">
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-discord-card shadow-2xl shrink-0 z-10 relative">
-              <img src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className="w-full h-full object-cover" />
+              <img src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className={`w-full h-full object-cover ${!profile?.has_logged_in ? 'blur-xs' : ''}`} />
               <div className="absolute bottom-2 right-2 w-6 h-6 bg-discord-success border-4 border-discord-card rounded-full" />
             </div>
             <div className="flex flex-col items-center md:items-start text-center md:text-left z-10">
-              <h1 className="text-4xl font-bold text-white tracking-tight mb-2 font-sans">{profile?.display_name || '알 수 없는 유저'}님</h1>
+              <h1 className="text-4xl font-bold text-white tracking-tight mb-2 font-sans">
+                {profile?.has_logged_in 
+                  ? (profile?.display_name || '알 수 없는 유저') 
+                  : maskNickname(profile?.display_name || '알 수 없는 유저')}님
+              </h1>
               <p className="text-discord-text-muted font-bold mb-6 font-sans">총 {sessions.length}편의 게임 일기에 함께했습니다.</p>
               <div className="flex gap-4 font-sans">
                 <div className="bg-black/20 px-6 py-3 rounded-[8px] border border-white/5 flex flex-col font-sans">

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageCircleMore, FolderInput, Download, Trash2, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/src/lib/supabase";
-import { cn } from "@/src/lib/utils";
+import { cn, maskNickname } from "@/src/lib/utils";
 
 interface ScreenshotItemProps {
   shot: any;
@@ -21,6 +22,7 @@ interface ScreenshotItemProps {
   positionHint?: 'left' | 'right' | 'center';
   isNew?: boolean;
   isDrawer?: boolean;
+  onMoveClick?: (shot: any) => void;
 }
 
 const ScreenshotItem = ({
@@ -37,9 +39,43 @@ const ScreenshotItem = ({
   handleImageDelete,
   fetchData,
   positionHint = 'center',
-  isDrawer = false
+  isDrawer = false,
+  onMoveClick
 }: ScreenshotItemProps) => {
   const [isActionsHovered, setIsActionsHovered] = useState(false);
+  const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  const updateCoords = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      if (isDrawer) {
+        setCoords({
+          bottom: window.innerHeight - rect.top + 6,
+          left: rect.right - 192,
+        });
+      } else {
+        setCoords({
+          top: rect.bottom + 6,
+          left: rect.right - 192,
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (activeMoveShotId === shot.id) {
+      updateCoords();
+      window.addEventListener('resize', updateCoords);
+      window.addEventListener('scroll', updateCoords, true);
+      return () => {
+        window.removeEventListener('resize', updateCoords);
+        window.removeEventListener('scroll', updateCoords, true);
+      };
+    } else {
+      setCoords(null);
+    }
+  }, [activeMoveShotId, shot.id]);
 
   return (
     <motion.div 
@@ -74,8 +110,26 @@ const ScreenshotItem = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent p-2.5 flex flex-col justify-end pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2 text-white">
-              <img src={profiles[shot.uploader_id]?.avatar_url} className="w-4 h-4 rounded-full border border-white/20 shadow-sm" alt="" />
-              <span className="text-[10px] font-bold truncate opacity-90">{profiles[shot.uploader_id]?.display_name}</span>
+            {(() => {
+              const uploaderProfile = profiles?.[shot.uploader_id];
+              const hasLoggedIn = !!uploaderProfile?.has_logged_in;
+              const displayName = hasLoggedIn 
+                ? (uploaderProfile?.display_name || 'Anonymous') 
+                : maskNickname(uploaderProfile?.display_name || 'Anonymous');
+              return (
+                <>
+                  <img 
+                    src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`} 
+                    className={cn(
+                      "w-4 h-4 rounded-full border border-white/20 shadow-sm object-cover",
+                      !hasLoggedIn && "blur-xs"
+                    )} 
+                    alt="" 
+                  />
+                  <span className="text-[10px] font-bold truncate opacity-90">{displayName}</span>
+                </>
+              );
+            })()}
             </div>
             {shot.comment && (
               <div className="w-5 h-5 rounded-lg bg-primary/90 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/10">
@@ -108,55 +162,20 @@ const ScreenshotItem = ({
       >
         <div className="relative">
           <button 
-            onClick={(e) => { e.stopPropagation(); setActiveMoveShotId(activeMoveShotId === shot.id ? null : shot.id); }}
+            ref={buttonRef}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (onMoveClick) {
+                onMoveClick(shot);
+              } else {
+                setActiveMoveShotId(activeMoveShotId === shot.id ? null : shot.id); 
+              }
+            }}
             className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all backdrop-blur-md border ${activeMoveShotId === shot.id ? 'bg-primary text-white border-primary shadow-lg' : 'bg-black/40 text-white/80 border-white/10 hover:bg-black/60 hover:text-white'}`}
             title="이미지 이동"
           >
             <FolderInput className="w-3.5 h-3.5" />
           </button>
-          
-          <AnimatePresence>
-            {activeMoveShotId === shot.id && (
-              <motion.div
-                initial={{ opacity: 0, y: isDrawer ? 4 : -4, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: isDrawer ? 4 : -4, scale: 0.95 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-                className={cn(
-                  "absolute right-0 z-50 w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl",
-                  isDrawer ? "bottom-full mb-1.5" : "top-full mt-1.5"
-                )}
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="p-1 flex flex-col">
-                  <button 
-                    onClick={() => {
-                      supabase.from('screenshots').update({ game_title: null }).eq('id', shot.id).then(() => { fetchData(); setActiveMoveShotId(null); });
-                    }}
-                    className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 ${!shot.game_title ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-                  >
-                    <FolderInput className="w-3.5 h-3.5 shrink-0 opacity-50" /> 분류되지 않은 순간들
-                  </button>
-                  {current.session_games?.map((g: any) => (
-                    <button 
-                      key={g.id}
-                      onClick={() => {
-                        supabase.from('screenshots').update({ game_title: g.title }).eq('id', shot.id).then(() => { fetchData(); setActiveMoveShotId(null); });
-                      }}
-                      className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 ${shot.game_title === g.title ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-                    >
-                      {g.icon_url ? (
-                        <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
-                      ) : (
-                        <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />
-                      )}
-                      <span className="truncate">{g.title}</span>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         <button 
@@ -177,6 +196,54 @@ const ScreenshotItem = ({
           </button>
         )}
       </div>
+
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {activeMoveShotId === shot.id && coords && (
+            <motion.div
+              initial={{ opacity: 0, y: isDrawer ? 4 : -4, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: isDrawer ? 4 : -4, scale: 0.95 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="fixed z-[350] w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl"
+              style={{
+                left: `${coords.left}px`,
+                top: coords.top !== undefined ? `${coords.top}px` : undefined,
+                bottom: coords.bottom !== undefined ? `${coords.bottom}px` : undefined,
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-1 flex flex-col">
+                <button 
+                  onClick={() => {
+                    supabase.from('screenshots').update({ game_title: null }).eq('id', shot.id).then(() => { fetchData(); setActiveMoveShotId(null); });
+                  }}
+                  className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 ${!shot.game_title ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                >
+                  <FolderInput className="w-3.5 h-3.5 shrink-0 opacity-50" /> 분류되지 않은 순간들
+                </button>
+                {current.session_games?.map((g: any) => (
+                  <button 
+                    key={g.id}
+                    onClick={() => {
+                      supabase.from('screenshots').update({ game_title: g.title }).eq('id', shot.id).then(() => { fetchData(); setActiveMoveShotId(null); });
+                    }}
+                    className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 ${shot.game_title === g.title ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                  >
+                    {g.icon_url ? (
+                      <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
+                    ) : (
+                      <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />
+                    )}
+                    <span className="truncate">{g.title}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 };

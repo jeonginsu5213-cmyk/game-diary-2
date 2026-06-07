@@ -33,6 +33,23 @@ const handler = NextAuth({
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
+    async signIn({ user }: any) {
+      if (user?.id) {
+        const { supabase } = require("@/src/lib/supabase");
+        try {
+          await supabase.from('profiles').upsert({
+            id: user.id,
+            display_name: user.name,
+            avatar_url: user.image,
+            has_logged_in: true,
+            updated_at: new Date().toISOString()
+          });
+        } catch (e) {
+          console.error("Failed to update profile login status in Supabase:", e);
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }: any) {
       if (user) {
         token.id = user.id;

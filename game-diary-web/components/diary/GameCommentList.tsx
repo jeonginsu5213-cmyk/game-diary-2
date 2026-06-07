@@ -53,6 +53,7 @@ const GameCommentList = ({
             key={c.id} 
             comment={{ ...c, userId: c.user_id, text: c.content, isChecklist: c.is_checklist, user: profiles[c.user_id]?.display_name || c.user_id, image: profiles[c.user_id]?.avatar_url, createdAt: c.created_at, reactions: c.reactions || {}, replies: c.replies || [] }}
             displayNames={displayNamesMap}
+            profiles={profiles}
             onAddReaction={(emoji: string) => handleAddReaction(c.id, emoji)}
             onAddReply={(text: string) => handleAddReply(c.id, text)}
             onToggleChecklist={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}

@@ -8,6 +8,7 @@ interface LightboxProps {
   uploader?: {
     name: string;
     avatar?: string;
+    isBlurred?: boolean;
   };
   comment?: string;
 }
@@ -57,7 +58,7 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
                   <img 
                     src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
                     alt="" 
-                    className="w-8 h-8 rounded-full border border-white/20 shadow-lg"
+                    className={`w-8 h-8 rounded-full border border-white/20 shadow-lg ${uploader.isBlurred ? 'blur-xs' : ''}`}
                   />
                   <span className="text-sm font-black text-white whitespace-nowrap">{uploader.name}</span>
                 </div>

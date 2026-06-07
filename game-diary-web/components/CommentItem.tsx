@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import ReactionPicker from './ReactionPicker';
 import Link from 'next/link';
 import { ArrowUp, Pin } from 'lucide-react';
+import { cn, maskNickname } from "@/src/lib/utils";
 
 interface CommentItemProps {
   comment: any;
@@ -16,6 +17,7 @@ interface CommentItemProps {
   onDeleteReply?: (replyIdx: number) => void;
   isReply?: boolean;
   displayNames?: { [userId: string]: string };
+  profiles?: any;
 }
 
 const formatCommentDate = (isoString?: string) => {
@@ -40,7 +42,8 @@ export default function CommentItem({
   onDelete, 
   onDeleteReply,
   isReply = false,
-  displayNames = {} 
+  displayNames = {},
+  profiles = {}
 }: CommentItemProps) {
   const { data: session }: any = useSession();
   const [showPicker, setShowPicker] = useState(false);
@@ -73,6 +76,12 @@ export default function CommentItem({
   const isAuthor = myId && comment.userId === myId;
   const isChecklist = comment.isChecklist;
 
+  const uploaderProfile = profiles?.[comment.userId];
+  const hasLoggedIn = !!uploaderProfile?.has_logged_in;
+  const displayName = hasLoggedIn 
+    ? (comment.user || 'Anonymous') 
+    : maskNickname(comment.user || 'Anonymous');
+
   return (
     <div className={`flex flex-col ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
       <div 
@@ -83,10 +92,14 @@ export default function CommentItem({
         <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
           <div className="w-8 h-8 rounded-full overflow-hidden bg-background border border-border/50 flex items-center justify-center shadow-sm transition-transform hover:scale-105">
             {comment.image ? (
-              <img src={comment.image} alt="" className="w-full h-full object-cover" />
+              <img 
+                src={comment.image} 
+                className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs")} 
+                alt="" 
+              />
             ) : (
               <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary uppercase">
-                {comment.user?.charAt(0)}
+                {displayName.charAt(0)}
               </div>
             )}
           </div>
@@ -96,7 +109,7 @@ export default function CommentItem({
           {/* Header Line */}
           <div className="flex items-baseline gap-2 mb-0.5 min-w-0">
             <span className={`text-[12px] tracking-tight truncate ${selectedId === comment.id ? 'font-black' : 'font-bold'} ${isReply ? 'text-muted-foreground' : 'text-foreground'}`}>
-              {comment.user}
+              {displayName}
             </span>
             {isChecklist && <span className="text-[8px] text-primary font-black uppercase tracking-tighter opacity-70">Check</span>}
             <span className="text-[9px] font-mono tracking-tighter opacity-30 shrink-0">
@@ -114,7 +127,12 @@ export default function CommentItem({
             <div className="flex flex-wrap gap-1 mt-1.5">
               {Object.entries(comment.reactions).map(([emoji, users]: [string, any]) => {
                 const hasReacted = myId && users.includes(myId);
-                const reactorNames = users.map((uid: string) => displayNames[uid] || "알 수 없음").join(", ");
+                const reactorNames = users.map((uid: string) => {
+                  const p = profiles?.[uid];
+                  const reactorHasLoggedIn = !!p?.has_logged_in;
+                  const name = p?.display_name || displayNames[uid] || "알 수 없음";
+                  return reactorHasLoggedIn ? name : maskNickname(name);
+                }).join(", ");
                 return (
                   <div key={emoji} className="relative group/reaction">
                     <button
@@ -185,6 +203,7 @@ export default function CommentItem({
               onDelete={() => onDeleteReply?.(idx)} 
               isReply 
               displayNames={displayNames}
+              profiles={profiles}
             />
           ))}
         </div>

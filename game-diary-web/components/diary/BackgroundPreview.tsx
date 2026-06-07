@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn, maskNickname } from "@/src/lib/utils";
 
 interface BackgroundPreviewProps {
   hoveredShot: any | null;
@@ -36,16 +37,28 @@ export default function BackgroundPreview({ hoveredShot, profiles }: BackgroundP
           </div>
 
           <div className="p-4 bg-card flex items-center gap-4 border-t border-border/30">
-            <div className="flex items-center gap-3 shrink-0 border-r border-border/30 pr-4">
-              <img 
-                src={profiles[activeShot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
-                className="w-9 h-9 rounded-full border border-border shadow-sm" 
-                alt="" 
-              />
-              <span className="text-[13px] font-black text-foreground truncate max-w-[120px]">
-                {profiles[activeShot.uploader_id]?.display_name}
-              </span>
-            </div>
+            {(() => {
+              const uploaderProfile = profiles?.[activeShot.uploader_id];
+              const hasLoggedIn = !!uploaderProfile?.has_logged_in;
+              const displayName = hasLoggedIn 
+                ? (uploaderProfile?.display_name || 'Anonymous') 
+                : maskNickname(uploaderProfile?.display_name || 'Anonymous');
+              return (
+                <div className="flex items-center gap-3 shrink-0 border-r border-border/30 pr-4">
+                  <img 
+                    src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
+                    className={cn(
+                      "w-9 h-9 rounded-full border border-border shadow-sm object-cover",
+                      !hasLoggedIn && "blur-xs"
+                    )} 
+                    alt="" 
+                  />
+                  <span className="text-[13px] font-black text-foreground truncate max-w-[120px]">
+                    {displayName}
+                  </span>
+                </div>
+              );
+            })()}
 
             {activeShot.comment ? (
               <p className="text-foreground/80 text-[13px] font-bold leading-tight line-clamp-2 italic flex-1">

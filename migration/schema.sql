@@ -9,6 +9,7 @@ create table if not exists public.profiles (
   id text primary key, -- Discord User ID
   display_name text,
   avatar_url text,
+  has_logged_in boolean default false,
   updated_at timestamptz default now(),
   created_at timestamptz default now()
 );

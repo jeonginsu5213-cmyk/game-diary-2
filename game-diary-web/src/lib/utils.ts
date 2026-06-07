@@ -61,3 +61,13 @@ export const getObjectParticle = (word: string) => {
   if (lastChar < 0xAC00 || lastChar > 0xD7A3) return "를"; // 한글이 아닐 경우 기본값
   return (lastChar - 0xAC00) % 28 > 0 ? "을" : "를";
 };
+
+/**
+ * 닉네임 마스킹 처리 (첫 글자만 노출하고 나머지는 * 처리)
+ */
+export function maskNickname(name: string): string {
+  if (!name) return "";
+  const firstChar = name.charAt(0);
+  const maskedLength = name.length - 1;
+  return firstChar + "*".repeat(maskedLength > 0 ? maskedLength : 0);
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { cn, maskNickname } from "@/src/lib/utils";
 
 export default function FloatingScreenshotPreview({ hoveredShot, profiles }: { hoveredShot: any | null, profiles: any }) {
   const [activeShot, setActiveShot] = useState<any | null>(null);
@@ -65,16 +66,28 @@ export default function FloatingScreenshotPreview({ hoveredShot, profiles }: { h
           </div>
           
           <div className="p-3 bg-card flex items-center gap-3 border-t border-border">
-            <div className="flex items-center gap-2 shrink-0 border-r border-border pr-3">
-              <img 
-                src={profiles[activeShot.uploader_id]?.avatar_url} 
-                className="w-6 h-6 rounded-full border border-border shadow-sm" 
-                alt="" 
-              />
-              <span className="text-[11px] font-black text-foreground truncate max-w-[80px]">
-                {profiles[activeShot.uploader_id]?.display_name}
-              </span>
-            </div>
+            {(() => {
+              const uploaderProfile = profiles?.[activeShot.uploader_id];
+              const hasLoggedIn = !!uploaderProfile?.has_logged_in;
+              const displayName = hasLoggedIn 
+                ? (uploaderProfile?.display_name || 'Anonymous') 
+                : maskNickname(uploaderProfile?.display_name || 'Anonymous');
+              return (
+                <div className="flex items-center gap-2 shrink-0 border-r border-border pr-3">
+                  <img 
+                    src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
+                    className={cn(
+                      "w-6 h-6 rounded-full border border-border shadow-sm object-cover",
+                      !hasLoggedIn && "blur-xs"
+                    )} 
+                    alt="" 
+                  />
+                  <span className="text-[11px] font-black text-foreground truncate max-w-[80px]">
+                    {displayName}
+                  </span>
+                </div>
+              );
+            })()}
             
             {activeShot.comment ? (
               <p className="text-foreground/80 text-[12px] font-bold leading-tight line-clamp-2 italic flex-1">

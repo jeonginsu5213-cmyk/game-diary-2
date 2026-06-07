@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/src/lib/supabase"; 
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Lightbox from '@/components/Lightbox';
 import CommentItem from '@/components/CommentItem';
-import { formatDurationText, formatDate, formatTime, getObjectParticle } from "@/src/lib/utils";
+import { formatDurationText, formatDate, formatTime, getObjectParticle, maskNickname } from "@/src/lib/utils";
 import DiarySidebar from '@/components/diary/DiarySidebar';
 import DiaryHeader from '@/components/diary/DiaryHeader';
 import { BentoGrid, BentoItem } from '@/components/diary/BentoGrid';
@@ -32,7 +32,16 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 // --- Main Content Component ---
 
 function HomeContent() {
-  const { data: session }: any = useSession();
+  const { data: session, status }: any = useSession();
+  const router = useRouter();
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace('/auth/signin');
+    }
+  }, [status, router]);
+
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,8 +138,34 @@ function HomeContent() {
     fetchProfiles();
   }, [sessions]);
 
+  const filteredSessions = useMemo(() => {
+    return sessions.filter(s => {
+      const matchesSearch = (s.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesUser = session?.user?.id 
+        ? s.session_participants?.some((p: any) => p.user_id === session.user.id)
+        : false;
+      return matchesSearch && matchesUser;
+    });
+  }, [sessions, searchTerm, session]);
+
+  const sortedSessions = useMemo(() => {
+    return [...filteredSessions].sort((a, b) => {
+      if (sortBy === 'playtime') {
+        return (b.total_duration_min || 0) - (a.total_duration_min || 0);
+      }
+      const timeA = new Date(a.start_time).getTime();
+      const timeB = new Date(b.start_time).getTime();
+      return sortBy === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+  }, [filteredSessions, sortBy]);
+
+  const paginatedSessions = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedSessions.slice(start, start + pageSize);
+  }, [sortedSessions, currentPage]);
+
   const current = useMemo(() => {
-    const s = sessions.find(s => s.id === selectedId) || sessions[0];
+    const s = sortedSessions.find(s => s.id === selectedId) || sortedSessions[0];
     if (s) {
       s.session_games?.forEach((g: any) => {
         g.comments?.sort((a: any, b: any) => {
@@ -141,7 +176,7 @@ function HomeContent() {
       });
     }
     return s;
-  }, [sessions, selectedId]);
+  }, [sortedSessions, selectedId]);
 
   // 3. Dependent Side Effects (Placed AFTER 'current' definition)
   
@@ -186,9 +221,9 @@ function HomeContent() {
   useEffect(() => {
     if (loading) return;
     const urlId = searchParams?.get('id');
-    if (urlId && sessions.some(s => s.id === urlId)) setSelectedId(urlId);
-    else if (sessions.length > 0 && !selectedId) setSelectedId(sessions[0].id);
-  }, [sessions, loading, searchParams, selectedId]);
+    if (urlId && sortedSessions.some(s => s.id === urlId)) setSelectedId(urlId);
+    else if (sortedSessions.length > 0 && !selectedId) setSelectedId(sortedSessions[0].id);
+  }, [sortedSessions, loading, searchParams, selectedId]);
 
   useEffect(() => { if (current) setNewTitle(current.title); }, [current]);
 
@@ -311,22 +346,7 @@ function HomeContent() {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
   };
 
-  const filteredSessions = sessions.filter(s => (s.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
-  const sortedSessions = useMemo(() => {
-    return [...filteredSessions].sort((a, b) => {
-      if (sortBy === 'playtime') {
-        return (b.total_duration_min || 0) - (a.total_duration_min || 0);
-      }
-      const timeA = new Date(a.start_time).getTime();
-      const timeB = new Date(b.start_time).getTime();
-      return sortBy === 'desc' ? timeB - timeA : timeA - timeB;
-    });
-  }, [filteredSessions, sortBy]);
 
-  const paginatedSessions = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return sortedSessions.slice(start, start + pageSize);
-  }, [sortedSessions, currentPage]);
 
   const displayNamesMap = Object.keys(profiles).reduce((acc: any, k) => ({...acc, [k]: profiles[k].display_name}), {});
 
@@ -370,28 +390,30 @@ function HomeContent() {
         <div className="h-8 flex items-center justify-end px-5 shrink-0">
           <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
         </div>
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-1 space-y-1">
-          {paginatedSessions.map(s => (
-            <button 
-              key={s.id} 
-              onClick={() => handleDiarySelect(s.id)} 
-              className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2.5 transition-all duration-200 ${selectedId === s.id ? 'bg-muted/80 text-foreground' : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-            >
-              <div className="w-5 h-5 rounded-md overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-sm">
-                {s.guild_icon ? (
-                  <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[9px] font-black text-primary">
-                    {s.guild_name?.charAt(0) || 'G'}
-                  </div>
-                )}
-              </div>
-              <span className={`text-[12px] truncate tracking-tight transition-all flex-1 ${selectedId === s.id ? 'font-black' : 'font-medium'}`}>{s.title}</span>
-              <span className={`text-[9px] font-mono tracking-tighter opacity-30 shrink-0`}>
-                {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
-              </span>
-            </button>
-          ))}
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-1">
+          <div className="space-y-1 min-h-[396px]">
+            {paginatedSessions.map(s => (
+              <button 
+                key={s.id} 
+                onClick={() => handleDiarySelect(s.id)} 
+                className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2.5 transition-all duration-200 ${selectedId === s.id ? 'bg-muted/80 text-foreground' : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+              >
+                <div className="w-5 h-5 rounded-md overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-sm">
+                  {s.guild_icon ? (
+                    <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[9px] font-black text-primary">
+                      {s.guild_name?.charAt(0) || 'G'}
+                    </div>
+                  )}
+                </div>
+                <span className={`text-[12px] truncate tracking-tight transition-all flex-1 ${selectedId === s.id ? 'font-black' : 'font-medium'}`}>{s.title}</span>
+                <span className={`text-[9px] font-mono tracking-tighter opacity-30 shrink-0`}>
+                  {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                </span>
+              </button>
+            ))}
+          </div>
 
           <SidebarPagination 
             totalCount={sortedSessions.length} 
@@ -429,7 +451,7 @@ function HomeContent() {
         />
 
         <div className="flex-1 overflow-y-auto scrollbar-hide">
-          <div className="w-full">
+          <div className="w-full pb-72">
             {current ? (
               <div className="w-full">
                 
@@ -484,10 +506,14 @@ function HomeContent() {
                                             <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                               <img 
                                                 src={profiles[p.user_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                                                className="w-4 h-4 rounded-full shrink-0" 
+                                                className={`w-4 h-4 rounded-full shrink-0 ${!profiles[p.user_id]?.has_logged_in ? 'blur-xs' : ''}`} 
                                                 alt="" 
                                               />
-                                              <span className="text-[10px] font-bold text-foreground truncate">{profiles[p.user_id]?.display_name}</span>
+                                              <span className="text-[10px] font-bold text-foreground truncate">
+                                                {profiles[p.user_id]?.has_logged_in 
+                                                  ? (profiles[p.user_id]?.display_name || '알 수 없음') 
+                                                  : maskNickname(profiles[p.user_id]?.display_name || '알 수 없음')}
+                                              </span>
                                             </div>
                                             <span className="text-[9px] font-black text-primary/60 shrink-0 whitespace-nowrap">{formatDurationText(p.play_time_min)}</span>
                                           </div>
@@ -803,8 +829,11 @@ function HomeContent() {
         <Lightbox 
           imageUrl={activeShot.url} 
           uploader={{
-            name: profiles[activeShot.uploader_id]?.display_name || activeShot.uploader_id,
-            avatar: profiles[activeShot.uploader_id]?.avatar_url
+            name: profiles[activeShot.uploader_id]?.has_logged_in
+              ? (profiles[activeShot.uploader_id]?.display_name || activeShot.uploader_id)
+              : maskNickname(profiles[activeShot.uploader_id]?.display_name || activeShot.uploader_id),
+            avatar: profiles[activeShot.uploader_id]?.avatar_url,
+            isBlurred: !profiles[activeShot.uploader_id]?.has_logged_in
           }}
           comment={activeShot.comment}
           onClose={() => setActiveShot(null)} 

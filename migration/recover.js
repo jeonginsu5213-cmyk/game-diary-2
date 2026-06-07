@@ -15,19 +15,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-async function migrate() {
-  console.log('🚀 데이터 무결성 복구 및 정밀 마이그레이션 시작 (Robust 버전)...');
+async function recoverRecent() {
+  console.log('🚀 최근 누락된 데이터 복구 시작 (5월 27일 이후)...');
 
   try {
-    const sessionsSnapshot = await db.collection('sessions').get();
-    console.log(`📊 발견된 세션: ${sessionsSnapshot.size}개`);
+    // 2026년 5월 27일 00:00:00 KST (또는 서버 시간에 맞춰 적절히 설정)
+    // Timestamp 생성 (초, 나노초)
+    const targetDate = new Date('2026-05-27T00:00:00Z'); 
+    const targetTimestamp = admin.firestore.Timestamp.fromDate(targetDate);
+
+    // 5월 27일 이후의 데이터만 가져오기
+    const sessionsSnapshot = await db.collection('sessions')
+        .where('startTime', '>=', targetTimestamp)
+        .get();
+
+    console.log(`📊 5월 27일 이후 작성된 세션: ${sessionsSnapshot.size}개 발견`);
 
     for (const doc of sessionsSnapshot.docs) {
       const data = doc.data();
       const sessionId = doc.id;
       const guildName = data.guildName || 'Unknown Server';
 
-      console.log(`\n--- 세션 처리 중: ${data.sessionTitle || sessionId} (${guildName}) ---`);
+      console.log(`\n--- 복구 중: ${data.sessionTitle || sessionId} (${guildName}) ---`);
 
       // 1. 유저 프로필 및 서버별 프로필 처리
       const displayNames = data.displayNames || {};
@@ -202,10 +211,10 @@ async function migrate() {
       }
     }
 
-    console.log('\n✨ 데이터 통합 복구 및 마이그레이션이 완료되었습니다.');
+    console.log('\n✨ 최근 누락된 데이터 복구가 완료되었습니다.');
   } catch (error) {
     console.error('❌ 오류 발생:', error);
   }
 }
 
-migrate();
+recoverRecent();

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { cn, formatDate, formatDurationText, formatTime } from "../../src/lib/utils";
+import { cn, formatDate, formatDurationText, formatTime, maskNickname } from "../../src/lib/utils";
 import { Clock, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -66,6 +66,10 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                   const isObserver = !playedUsersSet.has(p.user_id);
                   const isHovered = hoveredMemberId === p.user_id;
                   const profile = profiles?.[p.user_id];
+                  const hasLoggedIn = !!profile?.has_logged_in;
+                  const displayName = hasLoggedIn 
+                    ? (profile?.display_name || 'Anonymous') 
+                    : maskNickname(profile?.display_name || 'Anonymous');
                   
                   return (
                     <div
@@ -92,7 +96,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                             className="absolute top-10 whitespace-nowrap flex flex-col items-center justify-center rounded-xl bg-card/90 border border-border shadow-2xl px-4 py-2.5 z-[110] min-w-max backdrop-blur-2xl"
                           >
                             <div className="font-black text-foreground text-[13px] flex items-center gap-1.5 mb-0.5">
-                              {profile?.display_name || 'Anonymous'}
+                              {displayName}
                               {isObserver && (
                                 <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
                                   관전
@@ -116,7 +120,8 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                           src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
                           className={cn(
                             "w-7 h-7 rounded-full border-2 transition-all duration-300 object-cover",
-                            isHovered ? "border-primary shadow-lg shadow-primary/20" : "border-card shadow-sm"
+                            isHovered ? "border-primary shadow-lg shadow-primary/20" : "border-card shadow-sm",
+                            !hasLoggedIn && "blur-xs"
                           )} 
                           alt="" 
                         />
