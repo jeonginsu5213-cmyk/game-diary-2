@@ -28,6 +28,7 @@ import BackgroundPreview from '@/components/diary/BackgroundPreview';
 import { Drawer, DrawerPopup, DrawerHeader, DrawerTitle, DrawerDescription, DrawerPanel, DrawerTrigger, DrawerClose, Button } from '@/components/diary/Drawer';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarousel';
 
 // --- Main Content Component ---
 
@@ -567,7 +568,8 @@ function HomeContent() {
                               </div>
 
                               <div className="flex-1">
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {/* Desktop Grid View */}
+                                <div className="hidden md:grid grid-cols-3 gap-3">
                                   {(() => {
                                     const SHOTS_PER_PAGE = 5;
                                     const currentPage = normalizedScreenshotPages[game.id] || 1;
@@ -600,10 +602,29 @@ function HomeContent() {
                                     );
                                   })()}
                                 </div>
+
+                                {/* Mobile Carousel View */}
+                                <div className="block md:hidden">
+                                  <MobileScreenshotCarousel
+                                    gameShots={gameShots}
+                                    profiles={profiles}
+                                    current={current}
+                                    session={session}
+                                    newShotId={newShotId}
+                                    activeMoveShotId={activeMoveShotId}
+                                    setActiveMoveShotId={setActiveMoveShotId}
+                                    setActiveShot={setActiveShot}
+                                    setHoveredShot={setHoveredShot}
+                                    handleDownload={handleDownload}
+                                    handleImageDelete={handleImageDelete}
+                                    fetchData={fetchData}
+                                    onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })}
+                                  />
+                                </div>
                               </div>
                                 
                               {gameShots.length > 5 && (
-                                <div className="flex justify-end mt-auto pt-6">
+                                <div className="hidden md:flex justify-end mt-auto pt-6">
                                   <Pagination.Root
                                     count={gameShots.length + 1}
                                     pageSize={5}
