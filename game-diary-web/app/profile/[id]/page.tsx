@@ -139,7 +139,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {/* 유저 헤더 */}
           <section className="flex flex-col md:flex-row items-center gap-8 bg-discord-card p-10 rounded-[8px] border border-black/20 shadow-xl relative overflow-hidden">
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-discord-card shadow-2xl shrink-0 z-10 relative">
-              <img src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className={`w-full h-full object-cover ${!profile?.has_logged_in ? 'blur-xs' : ''}`} />
+              <img src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}`} alt="" className={`w-full h-full object-cover ${!profile?.has_logged_in ? 'blur-xs scale-110' : ''}`} />
               <div className="absolute bottom-2 right-2 w-6 h-6 bg-discord-success border-4 border-discord-card rounded-full" />
             </div>
             <div className="flex flex-col items-center md:items-start text-center md:text-left z-10">

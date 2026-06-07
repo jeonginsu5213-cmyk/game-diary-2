@@ -94,7 +94,7 @@ export default function CommentItem({
             {comment.image ? (
               <img 
                 src={comment.image} 
-                className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs")} 
+                className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs scale-110")} 
                 alt="" 
               />
             ) : (

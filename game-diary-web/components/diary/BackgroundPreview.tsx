@@ -45,14 +45,16 @@ export default function BackgroundPreview({ hoveredShot, profiles }: BackgroundP
                 : maskNickname(uploaderProfile?.display_name || 'Anonymous');
               return (
                 <div className="flex items-center gap-3 shrink-0 border-r border-border/30 pr-4">
-                  <img 
-                    src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
-                    className={cn(
-                      "w-9 h-9 rounded-full border border-border shadow-sm object-cover",
-                      !hasLoggedIn && "blur-xs"
-                    )} 
-                    alt="" 
-                  />
+                  <div className="w-9 h-9 rounded-full overflow-hidden border border-border shadow-sm shrink-0">
+                    <img 
+                      src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
+                      className={cn(
+                        "w-full h-full object-cover",
+                        !hasLoggedIn && "blur-xs scale-110"
+                      )} 
+                      alt="" 
+                    />
+                  </div>
                   <span className="text-[13px] font-black text-foreground truncate max-w-[120px]">
                     {displayName}
                   </span>

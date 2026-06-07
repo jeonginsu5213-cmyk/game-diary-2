@@ -26,13 +26,13 @@ interface BentoGridProps {
 
 function BentoGrid({ items }: BentoGridProps) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 w-full items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 p-3 md:p-6 w-full items-stretch">
             {items.map((item, index) => (
                 <div
                     key={index}
                     className={cn(
                         "group/card relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-full min-h-0",
-                        item.isCommentSection ? "pt-6 px-4 pb-4" : "p-6",
+                        item.isCommentSection ? "pt-5 px-3 pb-3 md:pt-6 md:px-4 md:pb-4" : "p-4 md:p-6",
                         "border border-border/50 bg-card/50 backdrop-blur-sm",
                         "hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.02)]",
                         item.colSpan === 2 ? "md:col-span-2" : "md:col-span-1",

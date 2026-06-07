@@ -55,11 +55,13 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
             <div className="mt-6 w-full flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500">
               {uploader && (
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <img 
-                    src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
-                    alt="" 
-                    className={`w-8 h-8 rounded-full border border-white/20 shadow-lg ${uploader.isBlurred ? 'blur-xs' : ''}`}
-                  />
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0">
+                    <img 
+                      src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
+                      alt="" 
+                      className={`w-full h-full object-cover ${uploader.isBlurred ? 'blur-xs scale-110' : ''}`}
+                    />
+                  </div>
                   <span className="text-sm font-black text-white whitespace-nowrap">{uploader.name}</span>
                 </div>
               )}

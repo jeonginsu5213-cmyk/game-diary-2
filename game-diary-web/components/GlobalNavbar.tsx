@@ -77,7 +77,7 @@ export default function GlobalNavbar() {
           isScrolled && "shadow-[0_12px_40px_rgba(0,0,0,0.12)] border-primary/10"
         )}>
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group transition-transform active:scale-95">
+          <Link href="/?landing=true" className="flex items-center gap-2.5 group transition-transform active:scale-95">
             <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:rotate-6">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -90,7 +90,7 @@ export default function GlobalNavbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-10">
-            <NavLink href="/" active={pathname === "/"}>홈</NavLink>
+            <NavLink href="/?landing=true" active={pathname === "/"}>홈</NavLink>
             <NavLink href="/diary" active={pathname.startsWith("/diary")}>일기장</NavLink>
             <NavLink href="/stats" active={pathname === "/stats"}>통계</NavLink>
           </div>
@@ -139,7 +139,7 @@ export default function GlobalNavbar() {
               className="md:hidden absolute top-full left-4 right-4 mt-2 p-6 bg-popover border border-border shadow-2xl rounded-3xl space-y-6 z-[90]"
             >
               <div className="flex flex-col gap-4 text-center">
-                <NavLink href="/" active={pathname === "/"}>홈</NavLink>
+                <NavLink href="/?landing=true" active={pathname === "/"}>홈</NavLink>
                 <NavLink href="/diary" active={pathname.startsWith("/diary")}>일기장</NavLink>
                 <NavLink href="/stats" active={pathname === "/stats"}>통계</NavLink>
               </div>

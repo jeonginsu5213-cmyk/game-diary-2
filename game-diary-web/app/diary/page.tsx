@@ -88,6 +88,15 @@ function HomeContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const searchParams = useSearchParams();
   const pageSize = 10;
+  const viewParam = searchParams?.get('view');
+
+  useEffect(() => {
+    if (viewParam === 'diary') {
+      setViewMode('diary');
+    } else if (viewParam === 'list') {
+      setViewMode('list');
+    }
+  }, [viewParam]);
 
   // 1. Core Data Fetching
   const fetchData = async () => {
@@ -239,7 +248,9 @@ function HomeContent() {
 
   const handleDiarySelect = (id: string) => {
     setSelectedId(id);
-    if (window.innerWidth < 768) setViewMode('diary');
+    if (window.innerWidth < 768) {
+      router.push(`/diary?id=${id}&view=diary`);
+    }
   };
 
   const handleAddReaction = async (commentId: string, emoji: string) => {
@@ -358,11 +369,13 @@ function HomeContent() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20">
+    <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className="w-[312px] bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0">
+      <aside className={`md:w-[312px] w-full bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-all duration-200 ${
+        viewMode === 'list' ? 'flex' : 'hidden md:flex'
+      }`}>
         <div className="h-16 flex items-center px-4 border-b border-border shrink-0">
-          <Link href="/" className="flex items-center gap-2 group transition-all">
+          <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -436,7 +449,9 @@ function HomeContent() {
       </aside>
 
       {/* 3. Main Content Area */}
-      <section className="flex-1 flex flex-col min-w-0 transition-all relative h-full bg-background">
+      <section className={`flex-1 flex flex-col min-w-0 transition-all relative h-full bg-background ${
+        viewMode === 'diary' ? 'flex' : 'hidden md:flex'
+      }`}>
         <DiaryHeader 
           current={{ ...current, sessionTitle: current?.title, date: current?.start_time }}
           profiles={profiles}
@@ -504,11 +519,13 @@ function HomeContent() {
                                         .map((p: any) => (
                                           <div key={p.user_id} className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors gap-4">
                                             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                              <img 
-                                                src={profiles[p.user_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                                                className={`w-4 h-4 rounded-full shrink-0 ${!profiles[p.user_id]?.has_logged_in ? 'blur-xs' : ''}`} 
-                                                alt="" 
-                                              />
+                                              <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-border/30">
+                                                <img 
+                                                  src={profiles[p.user_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                                  className={`w-full h-full object-cover ${!profiles[p.user_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`} 
+                                                  alt="" 
+                                                />
+                                              </div>
                                               <span className="text-[10px] font-bold text-foreground truncate">
                                                 {profiles[p.user_id]?.has_logged_in 
                                                   ? (profiles[p.user_id]?.display_name || '알 수 없음') 

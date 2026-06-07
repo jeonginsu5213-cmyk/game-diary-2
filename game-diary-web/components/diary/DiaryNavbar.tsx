@@ -19,7 +19,7 @@ const DiaryNavbar: React.FC<DiaryNavbarProps> = ({ session }) => {
         className="pointer-events-auto"
       >
         <Link 
-          href="/" 
+          href="/?landing=true" 
           className="flex items-center gap-3 px-5 py-2.5 bg-card/80 backdrop-blur-2xl border border-border shadow-xl rounded-2xl hover:shadow-2xl hover:border-primary/30 transition-all group"
         >
           <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">

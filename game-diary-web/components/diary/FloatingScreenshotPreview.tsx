@@ -74,14 +74,16 @@ export default function FloatingScreenshotPreview({ hoveredShot, profiles }: { h
                 : maskNickname(uploaderProfile?.display_name || 'Anonymous');
               return (
                 <div className="flex items-center gap-2 shrink-0 border-r border-border pr-3">
-                  <img 
-                    src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
-                    className={cn(
-                      "w-6 h-6 rounded-full border border-border shadow-sm object-cover",
-                      !hasLoggedIn && "blur-xs"
-                    )} 
-                    alt="" 
-                  />
+                  <div className="w-6 h-6 rounded-full overflow-hidden border border-border shadow-sm shrink-0">
+                    <img 
+                      src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
+                      className={cn(
+                        "w-full h-full object-cover",
+                        !hasLoggedIn && "blur-xs scale-110"
+                      )} 
+                      alt="" 
+                    />
+                  </div>
                   <span className="text-[11px] font-black text-foreground truncate max-w-[80px]">
                     {displayName}
                   </span>

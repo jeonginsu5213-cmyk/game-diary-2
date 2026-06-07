@@ -118,14 +118,16 @@ const ScreenshotItem = ({
                 : maskNickname(uploaderProfile?.display_name || 'Anonymous');
               return (
                 <>
-                  <img 
-                    src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`} 
-                    className={cn(
-                      "w-4 h-4 rounded-full border border-white/20 shadow-sm object-cover",
-                      !hasLoggedIn && "blur-xs"
-                    )} 
-                    alt="" 
-                  />
+                  <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 shadow-sm shrink-0">
+                    <img 
+                      src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`} 
+                      className={cn(
+                        "w-full h-full object-cover",
+                        !hasLoggedIn && "blur-xs scale-110"
+                      )} 
+                      alt="" 
+                    />
+                  </div>
                   <span className="text-[10px] font-bold truncate opacity-90">{displayName}</span>
                 </>
               );

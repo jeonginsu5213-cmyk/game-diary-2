@@ -55,7 +55,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
   const remainingCount = sortedParticipants.length - maxVisible;
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-card/70 backdrop-blur-xl sticky top-0 z-30">
+    <header className="h-16 flex items-center justify-between px-3 md:px-6 border-b border-border bg-card/70 backdrop-blur-xl sticky top-0 z-30">
       <div className="flex items-center gap-6 min-w-0 flex-1">
         {/* 1. Members & Title Section */}
         <div className="flex items-center gap-4 min-w-0">
@@ -115,13 +115,16 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                       <motion.div
                         animate={isHovered ? { scale: 1.15 } : { scale: 1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                        className={cn(
+                          "w-7 h-7 rounded-full border-2 overflow-hidden transition-all duration-300 shrink-0",
+                          isHovered ? "border-primary shadow-lg shadow-primary/20" : "border-card shadow-sm"
+                        )}
                       >
                         <img 
                           src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
                           className={cn(
-                            "w-7 h-7 rounded-full border-2 transition-all duration-300 object-cover",
-                            isHovered ? "border-primary shadow-lg shadow-primary/20" : "border-card shadow-sm",
-                            !hasLoggedIn && "blur-xs"
+                            "w-full h-full object-cover",
+                            !hasLoggedIn && "blur-xs scale-110"
                           )} 
                           alt="" 
                         />
