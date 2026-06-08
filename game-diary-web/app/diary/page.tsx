@@ -41,7 +41,7 @@ function HomeContent() {
     if (checklistComments.length === 0) return null;
     
     return (
-      <div className="mb-4 space-y-1.5 px-0 animate-in fade-in duration-300">
+      <div className="mb-0 space-y-1.5 px-0 animate-in fade-in duration-300">
         {checklistComments.map((c: any) => {
           const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
           const displayName = hasLoggedIn 
