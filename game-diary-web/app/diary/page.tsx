@@ -545,7 +545,7 @@ function HomeContent() {
                           colSpan: 2,
                           content: (
                             <div className="flex flex-col h-[450px]">
-                              <div className="flex items-center mb-4 pl-2">
+                              <div className="flex items-center mb-2 pl-[6px]">
                                 <motion.div 
                                   whileHover="hover"
                                   className="flex items-center gap-1 group/label cursor-pointer select-none"
