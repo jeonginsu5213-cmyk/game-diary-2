@@ -41,7 +41,7 @@ const DiarySidebar: React.FC<DiarySidebarProps> = ({
               placeholder="검색어를 입력하세요..." 
               value={searchTerm} 
               onChange={(e) => onSearchChange(e.target.value)} 
-              className="w-full bg-card/40 border border-border/50 rounded-xl px-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/40" 
+              className="w-full bg-card/40 border border-border/50 rounded-xl px-4 py-2.5 text-[16px] md:text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/40" 
             />
           </div>
         </div>

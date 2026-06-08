@@ -219,7 +219,7 @@ export default function CommentItem({
             onKeyDown={(e) => e.key === 'Enter' && handleReplySubmit()}
             autoFocus
             placeholder="답글 남기기..." 
-            className="flex-1 bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 px-1 font-medium"
+            className="flex-1 bg-transparent border-none outline-none text-[16px] md:text-[12px] text-foreground placeholder:text-muted-foreground/40 px-1 font-medium"
           />
           <button 
             onClick={handleReplySubmit} 
