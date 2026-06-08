@@ -4,8 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import ReactionPicker from './ReactionPicker';
 import Link from 'next/link';
-import { ArrowUp, Pin } from 'lucide-react';
+import { ArrowUp, Pin, CornerUpLeft } from 'lucide-react';
 import { cn, maskNickname } from "@/src/lib/utils";
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 
 interface CommentItemProps {
   comment: any;
@@ -50,6 +51,10 @@ export default function CommentItem({
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyInput] = useState("");
   const replyInputRef = useRef<HTMLDivElement>(null);
+  
+  const x = useMotionValue(0);
+  const iconScale = useTransform(x, [0, 50], [0.6, 1.15]);
+  const iconOpacity = useTransform(x, [0, 40], [0, 1]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -84,111 +89,138 @@ export default function CommentItem({
 
   return (
     <div className={`flex flex-col ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
-      <div 
-        onMouseLeave={() => setShowPicker(false)}
-        className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 relative ${isChecklist ? 'bg-primary/5 border border-primary/10' : 'bg-transparent border border-transparent'}`}
-      >
-        {/* Avatar - Slightly larger than sidebar, but still compact */}
-        <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-background border border-border/50 flex items-center justify-center shadow-sm transition-transform hover:scale-105">
-            {comment.image ? (
-              <img 
-                src={comment.image} 
-                className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs scale-110")} 
-                alt="" 
-              />
-            ) : (
-              <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary uppercase">
-                {displayName.charAt(0)}
+      <div className="relative overflow-hidden rounded-lg">
+        {/* Swipe Reply Icon Background */}
+        {!isReply && (
+          <div className="absolute inset-y-0 left-0 w-24 flex items-center pl-3 pointer-events-none z-0">
+            <motion.div 
+              style={{ scale: iconScale, opacity: iconOpacity }}
+              className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary"
+            >
+              <CornerUpLeft className="w-3.5 h-3.5" strokeWidth={3} />
+            </motion.div>
+          </div>
+        )}
+
+        <motion.div 
+          drag={!isReply ? "x" : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={{ left: 0, right: 0.6 }}
+          style={{ x }}
+          onDragEnd={(event, info) => {
+            if (!isReply && x.get() > 50) {
+              setShowReplyInput(true);
+              setTimeout(() => {
+                const input = replyInputRef.current?.querySelector('input');
+                if (input) input.focus();
+              }, 100);
+            }
+          }}
+          onMouseLeave={() => setShowPicker(false)}
+          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 relative z-10 ${isChecklist ? 'bg-primary/5 border border-primary/10' : 'bg-transparent border border-transparent'}`}
+        >
+          {/* Avatar - Slightly larger than sidebar, but still compact */}
+          <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-background border border-border/50 flex items-center justify-center shadow-sm transition-transform hover:scale-105">
+              {comment.image ? (
+                <img 
+                  src={comment.image} 
+                  className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs scale-110")} 
+                  alt="" 
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary uppercase">
+                  {displayName.charAt(0)}
+                </div>
+              )}
+            </div>
+          </Link>
+
+          <div className="flex flex-col flex-1 min-w-0">
+            {/* Header Line */}
+            <div className="flex items-baseline gap-2 mb-0.5 min-w-0">
+              <span className={`text-[12px] tracking-tight truncate ${selectedId === comment.id ? 'font-black' : 'font-bold'} ${isReply ? 'text-muted-foreground' : 'text-foreground'}`}>
+                {displayName}
+              </span>
+              {isChecklist && <span className="text-[8px] text-primary font-black uppercase tracking-tighter opacity-70">Check</span>}
+              <span className="text-[9px] font-mono tracking-tighter opacity-30 shrink-0">
+                {formatCommentDate(comment.createdAt)}
+              </span>
+            </div>
+            
+            {/* Content Line */}
+            <div className="flex items-baseline gap-2">
+              <p className="text-[12px] leading-snug break-words text-foreground/80 flex-1">{comment.text}</p>
+            </div>
+
+            {/* Reactions Row */}
+            {comment.reactions && Object.keys(comment.reactions).length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {Object.entries(comment.reactions).map(([emoji, users]: [string, any]) => {
+                  const hasReacted = myId && users.includes(myId);
+                  const reactorNames = users.map((uid: string) => {
+                    const p = profiles?.[uid];
+                    const reactorHasLoggedIn = !!p?.has_logged_in;
+                    const name = p?.display_name || displayNames[uid] || "알 수 없음";
+                    return reactorHasLoggedIn ? name : maskNickname(name);
+                  }).join(", ");
+                  return (
+                    <div key={emoji} className="relative group/reaction">
+                      <button
+                        onClick={() => onAddReaction(emoji)}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${hasReacted ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-muted border-transparent text-muted-foreground hover:border-border'}`}
+                      >
+                        <span>{emoji}</span>
+                        <span>{users.length}</span>
+                      </button>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 opacity-0 group-hover/reaction:opacity-100 pointer-events-none transition-all duration-200 transform translate-y-1 group-hover/reaction:translate-y-0 z-30">
+                        <div className="bg-foreground/90 text-background text-[9px] px-2 py-1 rounded-lg whitespace-nowrap shadow-xl backdrop-blur-md font-bold border border-white/10">
+                          {reactorNames}
+                        </div>
+                        <div className="w-1.5 h-1.5 bg-foreground/90 rotate-45 absolute -bottom-0.5 left-1/2 -translate-x-1/2" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Action Bar (Hover Only) */}
+            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 absolute right-2 -top-2.5 transition-opacity z-10">
+              <button onClick={() => setShowPicker(!showPicker)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </button>
+              {!isReply && (
+                <button onClick={() => setShowReplyInput(!showReplyInput)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                </button>
+              )}
+              {isAuthor && (
+                <>
+                  {!isReply && (
+                    <button 
+                      onClick={onToggleChecklist} 
+                      className={`w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm transition-colors ${isChecklist ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                      title={isChecklist ? "고정 해제" : "상단 고정 (체크리스트)"}
+                    >
+                      <Pin className={`w-3 h-3 transition-transform ${isChecklist ? 'rotate-45' : ''}`} strokeWidth={3} />
+                    </button>
+                  )}
+                  <button onClick={() => { if(window.confirm('삭제할까요?')) onDelete?.(); }} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-destructive transition-colors">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {showPicker && (
+              <div className="absolute z-50 mt-2 right-0 origin-top-right">
+                <ReactionPicker onSelect={(emoji) => { onAddReaction(emoji); setShowPicker(false); }} onClose={() => setShowPicker(false)} />
               </div>
             )}
           </div>
-        </Link>
-
-        <div className="flex flex-col flex-1 min-w-0">
-          {/* Header Line */}
-          <div className="flex items-baseline gap-2 mb-0.5 min-w-0">
-            <span className={`text-[12px] tracking-tight truncate ${selectedId === comment.id ? 'font-black' : 'font-bold'} ${isReply ? 'text-muted-foreground' : 'text-foreground'}`}>
-              {displayName}
-            </span>
-            {isChecklist && <span className="text-[8px] text-primary font-black uppercase tracking-tighter opacity-70">Check</span>}
-            <span className="text-[9px] font-mono tracking-tighter opacity-30 shrink-0">
-              {formatCommentDate(comment.createdAt)}
-            </span>
-          </div>
-          
-          {/* Content Line */}
-          <div className="flex items-baseline gap-2">
-            <p className="text-[12px] leading-snug break-words text-foreground/80 flex-1">{comment.text}</p>
-          </div>
-
-          {/* Reactions Row */}
-          {comment.reactions && Object.keys(comment.reactions).length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {Object.entries(comment.reactions).map(([emoji, users]: [string, any]) => {
-                const hasReacted = myId && users.includes(myId);
-                const reactorNames = users.map((uid: string) => {
-                  const p = profiles?.[uid];
-                  const reactorHasLoggedIn = !!p?.has_logged_in;
-                  const name = p?.display_name || displayNames[uid] || "알 수 없음";
-                  return reactorHasLoggedIn ? name : maskNickname(name);
-                }).join(", ");
-                return (
-                  <div key={emoji} className="relative group/reaction">
-                    <button
-                      onClick={() => onAddReaction(emoji)}
-                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${hasReacted ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-muted border-transparent text-muted-foreground hover:border-border'}`}
-                    >
-                      <span>{emoji}</span>
-                      <span>{users.length}</span>
-                    </button>
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 opacity-0 group-hover/reaction:opacity-100 pointer-events-none transition-all duration-200 transform translate-y-1 group-hover/reaction:translate-y-0 z-30">
-                      <div className="bg-foreground/90 text-background text-[9px] px-2 py-1 rounded-lg whitespace-nowrap shadow-xl backdrop-blur-md font-bold border border-white/10">
-                        {reactorNames}
-                      </div>
-                      <div className="w-1.5 h-1.5 bg-foreground/90 rotate-45 absolute -bottom-0.5 left-1/2 -translate-x-1/2" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Action Bar (Hover Only) */}
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 absolute right-2 -top-2.5 transition-opacity z-10">
-            <button onClick={() => setShowPicker(!showPicker)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </button>
-            {!isReply && (
-              <button onClick={() => setShowReplyInput(!showReplyInput)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-              </button>
-            )}
-            {isAuthor && (
-              <>
-                {!isReply && (
-                  <button 
-                    onClick={onToggleChecklist} 
-                    className={`w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm transition-colors ${isChecklist ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
-                    title={isChecklist ? "고정 해제" : "상단 고정 (체크리스트)"}
-                  >
-                    <Pin className={`w-3 h-3 transition-transform ${isChecklist ? 'rotate-45' : ''}`} strokeWidth={3} />
-                  </button>
-                )}
-                <button onClick={() => { if(window.confirm('삭제할까요?')) onDelete?.(); }} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-destructive transition-colors">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-              </>
-            )}
-          </div>
-
-          {showPicker && (
-            <div className="absolute z-50 mt-2 right-0 origin-top-right">
-              <ReactionPicker onSelect={(emoji) => { onAddReaction(emoji); setShowPicker(false); }} onClose={() => setShowPicker(false)} />
-            </div>
-          )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Nested Replies */}
