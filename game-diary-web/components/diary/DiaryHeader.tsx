@@ -141,38 +141,41 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
             </div>
           )}
 
-          <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[200px] sm:max-w-[300px] md:max-w-[400px] pl-1.5 md:pl-0">
-            {isEditingTitle ? (
-              <input 
-                type="text" 
-                value={tempTitle} 
-                onChange={(e) => onTitleChange(e.target.value)} 
-                onKeyDown={(e) => e.key === 'Enter' && onTitleUpdate()} 
-                onBlur={onTitleUpdate} 
-                autoFocus 
-                className="bg-background text-foreground font-black text-lg outline-none px-3 py-1 rounded-lg border border-primary/50 w-full transition-all focus:ring-4 focus:ring-primary/10 translate-y-[1px]" 
-              />
-            ) : (
-              <h2 
-                className="text-foreground font-black text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px]" 
-                onClick={onTitleClick}
-              >
-                {current?.sessionTitle || '기록을 선택해주세요'}
-                <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </h2>
+          {/* Title & Date Wrapper */}
+          <div className="flex flex-col min-w-0 justify-center gap-0.5 pl-1.5 md:pl-0">
+            {/* Title */}
+            <div className="relative flex items-center gap-3 min-w-0 max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
+              {isEditingTitle ? (
+                <input 
+                  type="text" 
+                  value={tempTitle} 
+                  onChange={(e) => onTitleChange(e.target.value)} 
+                  onKeyDown={(e) => e.key === 'Enter' && onTitleUpdate()} 
+                  onBlur={onTitleUpdate} 
+                  autoFocus 
+                  className="bg-background text-foreground font-black text-lg outline-none px-3 py-1 rounded-lg border border-primary/50 w-full transition-all focus:ring-4 focus:ring-primary/10 translate-y-[1px]" 
+                />
+              ) : (
+                <h2 
+                  className="text-foreground font-black text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px]" 
+                  onClick={onTitleClick}
+                >
+                  {current?.sessionTitle || '기록을 선택해주세요'}
+                  <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </h2>
+              )}
+            </div>
+
+            {/* Date */}
+            {current && (
+              <div className="flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-muted-foreground/70 tracking-tight">
+                <Calendar className="w-2.5 h-2.5 opacity-50 text-foreground" />
+                <span className="font-mono translate-y-[0.5px]">{formatDate(current.date)}</span>
+              </div>
             )}
           </div>
-
-          {current && (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg border border-border/50 shrink-0">
-              <Calendar className="w-3 h-3 opacity-40 text-foreground" />
-              <span className="text-[11px] font-bold text-muted-foreground tabular-nums uppercase tracking-tight translate-y-[0.5px]">
-                {formatDate(current.date)}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
