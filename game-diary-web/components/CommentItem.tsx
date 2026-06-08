@@ -117,7 +117,13 @@ export default function CommentItem({
             }
           }}
           onMouseLeave={() => setShowPicker(false)}
-          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 relative z-10 ${isChecklist ? 'bg-primary/5 border border-primary/10' : 'bg-transparent border border-transparent'}`}
+          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 relative z-10 ${
+            showReplyInput 
+              ? 'bg-primary/5 border border-primary/25 shadow-sm shadow-primary/5' 
+              : isChecklist 
+                ? 'bg-primary/5 border border-primary/10' 
+                : 'bg-transparent border border-transparent'
+          }`}
         >
           {/* Avatar - Slightly larger than sidebar, but still compact */}
           <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
