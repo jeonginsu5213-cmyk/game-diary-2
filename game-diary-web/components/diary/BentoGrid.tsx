@@ -18,6 +18,7 @@ export interface BentoItem {
     colSpan?: number;
     hasPersistentHover?: boolean;
     isCommentSection?: boolean;
+    className?: string;
 }
 
 interface BentoGridProps {
@@ -36,7 +37,8 @@ function BentoGrid({ items }: BentoGridProps) {
                         "border border-border/50 bg-card/50 backdrop-blur-sm",
                         "hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.02)]",
                         item.colSpan === 2 ? "md:col-span-2" : "md:col-span-1",
-                        item.hasPersistentHover && "shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+                        item.hasPersistentHover && "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+                        item.className
                     )}
                 >
                     {/* Background Pattern (Subtle dots, static) */}

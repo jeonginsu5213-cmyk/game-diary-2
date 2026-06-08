@@ -544,7 +544,7 @@ function HomeContent() {
                           ),
                           colSpan: 2,
                           content: (
-                            <div className="flex flex-col h-[450px]">
+                            <div className="flex flex-col h-auto md:h-[450px]">
                               <div className="flex items-center mb-2 pl-[6px]">
                                 <motion.div 
                                   whileHover="hover"
@@ -692,6 +692,35 @@ function HomeContent() {
                                   </Pagination.Root>
                                 </div>
                               )}
+
+                              {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
+                              <div className="block md:hidden mt-6 pt-6 border-t border-border/40">
+                                <div className="flex items-center justify-between mb-4 pl-[6px]">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[12px] font-bold tracking-tight text-primary">
+                                      댓글
+                                    </span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/10">
+                                      {game.comments?.length || 0}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="relative flex flex-col h-[350px]">
+                                  <GameCommentList 
+                                    game={game}
+                                    profiles={profiles}
+                                    displayNamesMap={displayNamesMap}
+                                    handleAddReaction={handleAddReaction}
+                                    handleAddReply={handleAddReply}
+                                    handleToggleChecklist={handleToggleChecklist}
+                                    fetchData={fetchData}
+                                    className="h-full pb-16"
+                                  />
+                                  <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0">
+                                    <GameCommentInput gameId={game.id} gameTitle={game.title} onComplete={fetchData} />
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           ),
                         },
@@ -701,6 +730,7 @@ function HomeContent() {
                           status: <div className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-primary/5 text-primary border border-primary/10 hover:bg-primary/10 transition-colors">{game.comments?.length || 0}개의 의견</div>,
                           colSpan: 1,
                           isCommentSection: true,
+                          className: "hidden md:flex",
                           content: (
                             <div className="relative h-full min-h-[450px]">
                               {/* Scrollable Area: Strictly 450px */}
