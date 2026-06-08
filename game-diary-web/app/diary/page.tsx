@@ -41,7 +41,7 @@ function HomeContent() {
     if (checklistComments.length === 0) return null;
     
     return (
-      <div className="mb-4 -mx-4 md:-mx-6 border-y border-primary/10 bg-primary/5 divide-y divide-primary/10 animate-in fade-in duration-300">
+      <div className="mb-3 pb-2 border-b border-border/30 space-y-1 animate-in fade-in duration-300">
         {checklistComments.map((c: any) => {
           const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
           const displayName = hasLoggedIn 
@@ -51,7 +51,7 @@ function HomeContent() {
           return (
             <div 
               key={c.id} 
-              className="flex items-center justify-between gap-3 px-4 md:px-6 py-2 group animate-in fade-in duration-300"
+              className="flex items-center justify-between gap-3 px-0 py-1 group animate-in fade-in duration-300"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 {/* Avatar */}
@@ -95,7 +95,7 @@ function HomeContent() {
                 {/* Pin Toggle Button on the Right */}
                 <button 
                   onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
-                  className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
+                  className="w-5 h-5 rounded-md flex items-center justify-center text-primary hover:bg-primary/10 transition-colors shrink-0"
                   title="고정 해제"
                 >
                   <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
