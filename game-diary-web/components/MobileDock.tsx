@@ -39,7 +39,7 @@ function DockContent() {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border/30 rounded-t-[24px] w-full h-[76px] pb-safe flex items-center justify-around px-4 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] select-none">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border/30 rounded-t-[24px] w-full h-[88px] pb-safe flex items-start pt-3 justify-around px-4 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] select-none">
       {navItems.map((item) => (
         <Link
           key={item.href}
