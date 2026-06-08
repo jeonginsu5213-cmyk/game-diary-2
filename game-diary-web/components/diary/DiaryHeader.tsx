@@ -143,6 +143,14 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
 
           {/* Title & Date Wrapper */}
           <div className="flex flex-col min-w-0 justify-center gap-0.5 pl-1.5 md:pl-0">
+            {/* Date */}
+            {current && (
+              <div className="flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-muted-foreground/70 tracking-tight">
+                <Calendar className="w-2.5 h-2.5 opacity-50 text-foreground" />
+                <span className="font-mono translate-y-[0.5px]">{formatDate(current.date)}</span>
+              </div>
+            )}
+
             {/* Title */}
             <div className="relative flex items-center gap-3 min-w-0 max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
               {isEditingTitle ? (
@@ -167,14 +175,6 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                 </h2>
               )}
             </div>
-
-            {/* Date */}
-            {current && (
-              <div className="flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-muted-foreground/70 tracking-tight">
-                <Calendar className="w-2.5 h-2.5 opacity-50 text-foreground" />
-                <span className="font-mono translate-y-[0.5px]">{formatDate(current.date)}</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
