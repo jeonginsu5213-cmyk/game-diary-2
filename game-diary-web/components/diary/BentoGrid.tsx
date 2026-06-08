@@ -72,7 +72,7 @@ function BentoGrid({ items }: BentoGridProps) {
                                     {item.title}
                                 </h3>
 
-                                <div className="flex items-center gap-3 shrink-0">
+                                <div className="flex flex-col-reverse items-end gap-1 shrink-0 md:flex-row md:items-center md:gap-3">
                                     {item.meta && (
                                         <div className="text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider opacity-60 mt-1">
                                             {item.meta}
