@@ -603,7 +603,7 @@ function HomeContent() {
                                 alt="" 
                               />
                             </div>
-                            <span>{displayName}</span>
+                            <span className="translate-y-[1px]">{displayName}</span>
                             <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
                           </div>
                         );
