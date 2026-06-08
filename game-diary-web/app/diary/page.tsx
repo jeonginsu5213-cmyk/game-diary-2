@@ -69,7 +69,7 @@ function HomeContent() {
                   )}
                 </div>
 
-                <span className="text-[11px] font-medium text-foreground/90 break-words flex-1 leading-normal">
+                <span className="text-[11px] font-medium text-foreground/90 break-words flex-1 leading-normal translate-y-[1px]">
                   <span className="font-bold text-foreground mr-1.5">{displayName}:</span>
                   {c.content}
                 </span>
