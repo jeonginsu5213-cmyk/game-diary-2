@@ -60,7 +60,7 @@ function BentoGrid({ items }: BentoGridProps) {
                     />
 
                     <div className="relative flex flex-col h-full min-h-0 z-0">
-                        <div className={cn("flex items-start md:items-center gap-4 mb-4 shrink-0 min-h-[40px] pt-0.5 md:pt-0", item.isCommentSection && "px-2")}>
+                        <div className={cn("flex items-start md:items-center gap-4 mb-4 shrink-0 min-h-[40px] pt-1 md:pt-0", item.isCommentSection && "px-2")}>
                             {item.icon && (
                                 <div className="w-10 h-10 shrink-0 flex items-center justify-center transition-all duration-500">
                                     {item.icon}
@@ -70,7 +70,7 @@ function BentoGrid({ items }: BentoGridProps) {
                             <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
                                 <div className="flex items-start justify-between gap-4 md:flex-1 min-w-0">
                                     <div className="flex flex-col min-w-0">
-                                        <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-1.5 md:mt-1 leading-none">
+                                        <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-2 md:mt-1 leading-none">
                                             {item.title}
                                         </h3>
                                         {item.meta && (
@@ -80,7 +80,7 @@ function BentoGrid({ items }: BentoGridProps) {
                                         )}
                                     </div>
                                     {item.status && (
-                                        <div className="md:hidden shrink-0 flex items-center h-6 mt-1">
+                                        <div className="md:hidden shrink-0 flex items-center h-6 mt-2 md:mt-1">
                                             {item.status}
                                         </div>
                                     )}
