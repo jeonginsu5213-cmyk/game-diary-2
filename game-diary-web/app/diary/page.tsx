@@ -604,7 +604,7 @@ function HomeContent() {
                               />
                             </div>
                             <span>{displayName}</span>
-                            <span className="text-primary font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
+                            <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
                           </div>
                         );
                       })}
