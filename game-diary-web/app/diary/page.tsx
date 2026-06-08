@@ -51,11 +51,11 @@ function HomeContent() {
           return (
             <div 
               key={c.id} 
-              className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10 group animate-in fade-in duration-300"
+              className="flex items-start justify-between gap-3 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10 group animate-in fade-in duration-300"
             >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex items-start gap-2 min-w-0 flex-1">
                 {/* Avatar */}
-                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/30 shrink-0">
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/30 shrink-0 mt-0.5">
                   {profiles?.[c.user_id]?.avatar_url ? (
                     <img 
                       src={profiles[c.user_id].avatar_url} 
@@ -69,14 +69,14 @@ function HomeContent() {
                   )}
                 </div>
 
-                <span className="text-[11px] font-medium text-foreground/90 truncate flex-1 leading-none">
+                <span className="text-[11px] font-medium text-foreground/90 break-words flex-1 leading-normal pt-0.5">
                   <span className="font-bold text-foreground mr-1.5">{displayName}:</span>
                   {c.content}
                 </span>
               </div>
 
               {/* Right Actions */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 pt-0.5">
                 {/* Delete button */}
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
