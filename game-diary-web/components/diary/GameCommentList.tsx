@@ -45,8 +45,10 @@ const GameCommentList = ({
     }
   }, [game.comments?.length, game.comments]);
 
+  const hasScrollbarHide = className?.includes("scrollbar-hide");
+
   return (
-    <div ref={scrollRef} className={`flex-1 overflow-y-auto px-2 pt-3 space-y-1 custom-scrollbar scroll-smooth ${className}`}>
+    <div ref={scrollRef} className={`flex-1 overflow-y-auto px-2 pt-3 space-y-1 scroll-smooth ${hasScrollbarHide ? '' : 'custom-scrollbar'} ${className}`}>
       {game.comments?.length > 0 ? (
         game.comments.map((c: any) => (
           <CommentItem 

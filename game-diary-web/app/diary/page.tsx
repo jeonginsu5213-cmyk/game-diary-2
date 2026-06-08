@@ -712,7 +712,7 @@ function HomeContent() {
                                     handleAddReply={handleAddReply}
                                     handleToggleChecklist={handleToggleChecklist}
                                     fetchData={fetchData}
-                                    className="h-full pb-16"
+                                    className="h-full pb-16 scrollbar-hide"
                                   />
                                   <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0">
                                     <GameCommentInput gameId={game.id} gameTitle={game.title} onComplete={fetchData} />
