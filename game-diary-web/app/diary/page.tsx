@@ -12,7 +12,7 @@ import { formatDurationText, formatDate, formatTime, getObjectParticle, maskNick
 import DiarySidebar from '@/components/diary/DiarySidebar';
 import DiaryHeader from '@/components/diary/DiaryHeader';
 import { BentoGrid, BentoItem } from '@/components/diary/BentoGrid';
-import { Gamepad2, Camera, MessageCircleMore, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin } from 'lucide-react';
+import { Gamepad2, Camera, MessageCircleMore, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar } from 'lucide-react';
 import { Pagination } from "@ark-ui/react/pagination";
 import SidebarSortDropdown from '@/components/diary/SidebarSortDropdown';
 import SidebarPagination from '@/components/diary/SidebarPagination';
@@ -268,6 +268,13 @@ function HomeContent() {
     }
     return s;
   }, [sortedSessions, selectedId]);
+
+  const sortedParticipants = useMemo(() => {
+    if (!current?.session_participants) return [];
+    return [...current.session_participants].sort((a: any, b: any) => 
+      (b.duration_min || 0) - (a.duration_min || 0)
+    );
+  }, [current?.session_participants]);
 
   // 3. Dependent Side Effects (Placed AFTER 'current' definition)
   
@@ -565,7 +572,44 @@ function HomeContent() {
           <div className="w-full pb-72">
             {current ? (
               <div className="w-full">
-                
+                {/* Mobile-only Session Metadata Bar */}
+                <div className="md:hidden px-4 py-3.5 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 opacity-60 text-primary" />
+                      <span className="translate-y-[0.5px]">{formatDate(current.start_time || current.date)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 opacity-60 text-primary" />
+                      <span className="translate-y-[0.5px]">{formatTime(current.start_time)} — {formatTime(current.end_time)} ({formatDurationText(current.total_duration_min)})</span>
+                    </div>
+                  </div>
+                  {/* Participants Row */}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] font-black text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      {sortedParticipants.map((p: any) => {
+                        const profile = profiles?.[p.user_id];
+                        const hasLoggedIn = !!profile?.has_logged_in;
+                        const displayName = hasLoggedIn 
+                          ? (profile?.display_name || 'Anonymous') 
+                          : maskNickname(profile?.display_name || 'Anonymous');
+                        return (
+                          <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
+                            <img 
+                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                              className={`w-3.5 h-3.5 rounded-full object-cover shrink-0 ${!hasLoggedIn ? "blur-xs" : ""}`} 
+                              alt="" 
+                            />
+                            <span>{displayName}</span>
+                            <span className="text-muted-foreground/60 font-medium font-mono text-[9px]">({formatDurationText(p.duration_min || 0)})</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
                 {/* --- Bento Grid Start --- */}
                 <BentoGrid 
                   items={[

@@ -60,7 +60,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
         {/* 1. Members & Title Section */}
         <div className="flex items-center gap-4 min-w-0">
           {current && (
-            <div className="flex items-center shrink-0">
+            <div className="hidden md:flex items-center shrink-0">
               <div className="flex items-center">
                 {visibleParticipants.map((p: any, index: number) => {
                   const isObserver = !playedUsersSet.has(p.user_id);
@@ -141,7 +141,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
             </div>
           )}
 
-          <div className="relative flex items-center gap-3 min-w-0 max-w-[400px]">
+          <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
             {isEditingTitle ? (
               <input 
                 type="text" 
@@ -166,7 +166,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
           </div>
 
           {current && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg border border-border/50 shrink-0">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg border border-border/50 shrink-0">
               <Calendar className="w-3 h-3 opacity-40 text-foreground" />
               <span className="text-[11px] font-bold text-muted-foreground tabular-nums uppercase tracking-tight translate-y-[0.5px]">
                 {formatDate(current.date)}
@@ -178,7 +178,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
 
       <div className="flex items-center gap-4 shrink-0">
         {current && (
-          <div className="flex items-center gap-4 border-r border-border pr-4 mr-2">
+          <div className="hidden md:flex items-center gap-4 border-r border-border pr-4 mr-2">
             {/* Session Active Time (No Background) */}
             <div className="flex items-center gap-2 shrink-0">
               <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
