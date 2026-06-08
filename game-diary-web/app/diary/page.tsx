@@ -596,13 +596,15 @@ function HomeContent() {
                           : maskNickname(profile?.display_name || 'Anonymous');
                         return (
                           <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
-                            <img 
-                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                              className={`w-3.5 h-3.5 rounded-full object-cover shrink-0 ${!hasLoggedIn ? "blur-xs" : ""}`} 
-                              alt="" 
-                            />
+                            <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 isolate">
+                              <img 
+                                src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
+                                alt="" 
+                              />
+                            </div>
                             <span>{displayName}</span>
-                            <span className="text-muted-foreground/60 font-medium font-mono text-[9px]">({formatDurationText(p.duration_min || 0)})</span>
+                            <span className="text-primary font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
                           </div>
                         );
                       })}
@@ -659,7 +661,7 @@ function HomeContent() {
                                         .map((p: any) => (
                                           <div key={p.user_id} className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors gap-4">
                                             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                              <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-border/30">
+                                              <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-border/30 isolate">
                                                 <img 
                                                   src={profiles[p.user_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
                                                   className={`w-full h-full object-cover ${!profiles[p.user_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`} 

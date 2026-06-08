@@ -45,7 +45,7 @@ export default function BackgroundPreview({ hoveredShot, profiles }: BackgroundP
                 : maskNickname(uploaderProfile?.display_name || 'Anonymous');
               return (
                 <div className="flex items-center gap-3 shrink-0 border-r border-border/30 pr-4">
-                  <div className="w-9 h-9 rounded-full overflow-hidden border border-border shadow-sm shrink-0">
+                  <div className="w-9 h-9 rounded-full overflow-hidden border border-border shadow-sm shrink-0 isolate">
                     <img 
                       src={uploaderProfile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${activeShot.uploader_id}`} 
                       className={cn(

@@ -204,7 +204,7 @@ export default function CommentItem({
         >
           {/* Avatar - Slightly larger than sidebar, but still compact */}
           <Link href={comment.userId ? `/profile/${comment.userId}` : "#"} className="shrink-0">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-background border border-border/50 flex items-center justify-center shadow-sm transition-transform hover:scale-105">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-background border border-border/50 flex items-center justify-center shadow-sm transition-transform hover:scale-105 isolate">
               {comment.image ? (
                 <img 
                   src={comment.image} 

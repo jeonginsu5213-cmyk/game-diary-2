@@ -116,7 +116,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                         animate={isHovered ? { scale: 1.15 } : { scale: 1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
                         className={cn(
-                          "w-7 h-7 rounded-full border-2 overflow-hidden transition-all duration-300 shrink-0",
+                          "w-7 h-7 rounded-full border-2 overflow-hidden transition-all duration-300 shrink-0 isolate",
                           isHovered ? "border-primary shadow-lg shadow-primary/20" : "border-card shadow-sm"
                         )}
                       >

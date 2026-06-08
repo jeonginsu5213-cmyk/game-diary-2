@@ -55,7 +55,7 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
             <div className="mt-6 w-full flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500">
               {uploader && (
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0">
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0 isolate">
                     <img 
                       src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
                       alt="" 

@@ -80,7 +80,7 @@ export default function MobileScreenshotCarousel({
                 fetchData={fetchData}
               />
               <div className="mt-1.5 p-2 bg-card border-[0.5px] border-border/30 rounded-[6px] flex items-start gap-2.5 animate-in fade-in duration-300">
-                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0">
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
                   <img 
                     src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
                     alt=""
