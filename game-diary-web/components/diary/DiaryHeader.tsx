@@ -141,7 +141,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
             </div>
           )}
 
-          <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
+          <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[200px] sm:max-w-[300px] md:max-w-[400px] pl-1.5 md:pl-0">
             {isEditingTitle ? (
               <input 
                 type="text" 
