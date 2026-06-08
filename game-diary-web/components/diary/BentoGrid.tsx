@@ -70,7 +70,7 @@ function BentoGrid({ items }: BentoGridProps) {
                             <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
                                 <div className="flex items-start justify-between gap-4 md:flex-1 min-w-0">
                                     <div className="flex flex-col min-w-0">
-                                        <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-1 leading-none">
+                                        <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-1.5 md:mt-1 leading-none">
                                             {item.title}
                                         </h3>
                                         {item.meta && (
