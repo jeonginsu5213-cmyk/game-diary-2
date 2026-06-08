@@ -150,11 +150,11 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                 onKeyDown={(e) => e.key === 'Enter' && onTitleUpdate()} 
                 onBlur={onTitleUpdate} 
                 autoFocus 
-                className="bg-background text-foreground font-black text-lg outline-none px-3 py-1 rounded-lg border border-primary/50 w-full transition-all focus:ring-4 focus:ring-primary/10" 
+                className="bg-background text-foreground font-black text-lg outline-none px-3 py-1 rounded-lg border border-primary/50 w-full transition-all focus:ring-4 focus:ring-primary/10 translate-y-[1px]" 
               />
             ) : (
               <h2 
-                className="text-foreground font-black text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group" 
+                className="text-foreground font-black text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px]" 
                 onClick={onTitleClick}
               >
                 {current?.sessionTitle || '기록을 선택해주세요'}
