@@ -67,20 +67,26 @@ function BentoGrid({ items }: BentoGridProps) {
                                 </div>
                             )}
                             
-                            <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
-                                <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-1 leading-none">
-                                    {item.title}
-                                </h3>
-
-                                <div className="flex flex-col-reverse items-end gap-1 shrink-0 md:flex-row md:items-center md:gap-3">
+                            <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
+                                <div className="flex items-center justify-between gap-4 md:flex-1 min-w-0">
+                                    <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-1 leading-none">
+                                        {item.title}
+                                    </h3>
+                                    {item.status && (
+                                        <div className="md:hidden shrink-0 flex items-center h-6 mt-1">
+                                            {item.status}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
                                     {item.meta && (
                                         <div className="text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider opacity-60 mt-1">
                                             {item.meta}
                                         </div>
                                     )}
-
                                     {item.status && (
-                                        <div className="shrink-0 flex items-center h-6 mt-1">
+                                        <div className="hidden md:flex shrink-0 items-center h-6 mt-1">
                                             {item.status}
                                         </div>
                                     )}
