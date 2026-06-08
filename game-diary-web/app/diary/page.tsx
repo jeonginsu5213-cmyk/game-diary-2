@@ -42,11 +42,6 @@ function HomeContent() {
     
     return (
       <div className="mb-4 space-y-1.5 px-1 animate-in fade-in duration-300">
-        <div className="flex items-center gap-1.5 px-0.5 mb-1.5">
-          <span className="text-[9px] font-black text-primary/75 tracking-widest uppercase flex items-center gap-1">
-            <Pin className="w-2.5 h-2.5 rotate-45 text-primary" /> 고정 체크리스트
-          </span>
-        </div>
         <div className="space-y-1.5">
           {checklistComments.map((c: any) => {
             const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
@@ -57,20 +52,9 @@ function HomeContent() {
             return (
               <div 
                 key={c.id} 
-                className="flex items-center justify-between gap-3 px-2 py-1 rounded-lg bg-primary/5 border border-primary/10 group"
+                className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10 group animate-in fade-in duration-300"
               >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  {/* Checkbox to toggle checklist */}
-                  <button 
-                    onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
-                    className="w-4 h-4 rounded-md border border-primary/30 flex items-center justify-center bg-primary/10 text-primary shrink-0 hover:bg-primary/20 transition-colors"
-                    title="체크해제 (고정 해제)"
-                  >
-                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="4" viewBox="0 0 24 24">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </button>
-                  
                   {/* Avatar */}
                   <div className="w-5 h-5 rounded-full overflow-hidden border border-border/30 shrink-0">
                     {profiles?.[c.user_id]?.avatar_url ? (
@@ -92,18 +76,30 @@ function HomeContent() {
                   </span>
                 </div>
 
-                {/* Delete button */}
-                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Right Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Delete button */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={async () => { 
+                        if (window.confirm("삭제할까요?")) { 
+                          await supabase.from('comments').delete().eq('id', c.id); 
+                          fetchData(); 
+                        } 
+                      }}
+                      className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
+                    >
+                      삭제
+                    </button>
+                  </div>
+
+                  {/* Pin Toggle Button on the Right */}
                   <button 
-                    onClick={async () => { 
-                      if (window.confirm("삭제할까요?")) { 
-                        await supabase.from('comments').delete().eq('id', c.id); 
-                        fetchData(); 
-                      } 
-                    }}
-                    className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
+                    onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
+                    className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
+                    title="고정 해제"
                   >
-                    삭제
+                    <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
                   </button>
                 </div>
               </div>
