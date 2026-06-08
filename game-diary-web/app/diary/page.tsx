@@ -787,7 +787,7 @@ function HomeContent() {
                                     fetchData={fetchData}
                                     className="h-full pb-16 scrollbar-hide"
                                   />
-                                  <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0 bg-card pt-2">
+                                  <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0 bg-card">
                                     <GameCommentInput gameId={game.id} gameTitle={game.title} onComplete={fetchData} />
                                   </div>
                                 </div>
@@ -819,7 +819,7 @@ function HomeContent() {
                                 />
                               </div>
                               {/* Fixed Bottom Input: Flush to card edges */}
-                              <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0 bg-card/90 backdrop-blur-sm pt-2">
+                              <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0 bg-card/90 backdrop-blur-sm">
                                 <GameCommentInput gameId={game.id} gameTitle={game.title} onComplete={fetchData} />
                               </div>
                             </div>
