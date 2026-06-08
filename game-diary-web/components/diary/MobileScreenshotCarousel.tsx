@@ -77,29 +77,29 @@ export default function MobileScreenshotCarousel({
                 handleImageDelete={handleImageDelete}
                 fetchData={fetchData}
               />
-              {shot.comment && (
-                <div className="mt-3 px-1.5 flex items-start gap-2 animate-in fade-in duration-300">
-                  <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0">
-                    <img 
-                      src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
-                      alt=""
-                      className={`w-full h-full object-cover ${!profiles?.[shot.uploader_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`}
-                    />
+              <div className="mt-3 px-1.5 flex items-start gap-2 animate-in fade-in duration-300">
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0">
+                  <img 
+                    src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
+                    alt=""
+                    className={`w-full h-full object-cover ${!profiles?.[shot.uploader_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-black text-foreground">
+                      {profiles?.[shot.uploader_id]?.has_logged_in 
+                        ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
+                        : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-foreground">
-                        {profiles?.[shot.uploader_id]?.has_logged_in 
-                          ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
-                          : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
-                      </span>
-                    </div>
+                  {shot.comment && (
                     <p className="text-[11px] font-medium text-muted-foreground/80 mt-0.5 leading-relaxed break-words">
                       {shot.comment}
                     </p>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
             </CarouselItem>
           ))}
           <CarouselItem className="pl-3 basis-full">
