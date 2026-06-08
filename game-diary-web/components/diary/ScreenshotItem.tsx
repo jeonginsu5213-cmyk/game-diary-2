@@ -107,7 +107,7 @@ const ScreenshotItem = ({
         />
         
         {/* Thumbnail Info (Uploader & Comment Icon) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent p-2.5 flex flex-col justify-end pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent p-2.5 flex flex-col justify-end pointer-events-none transition-opacity duration-300 group-hover:opacity-0 hidden md:flex">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2 text-white">
             {(() => {
