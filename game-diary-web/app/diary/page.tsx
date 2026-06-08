@@ -694,7 +694,7 @@ function HomeContent() {
                               )}
 
                               {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
-                              <div className="block md:hidden mt-6 pt-6 border-t border-border/40">
+                              <div className="block md:hidden mt-6 p-4 bg-muted/20 dark:bg-muted/5 border border-border/30 rounded-xl animate-in fade-in duration-300">
                                 <div className="flex items-center justify-between mb-4 pl-[2px] pr-[2px]">
                                   <h3 className="font-black text-foreground tracking-tight text-lg leading-none">
                                     댓글
@@ -703,7 +703,7 @@ function HomeContent() {
                                     {game.comments?.length || 0}개의 의견
                                   </div>
                                 </div>
-                                <div className="relative flex flex-col h-[350px]">
+                                <div className="relative flex flex-col h-[320px]">
                                   <GameCommentList 
                                     game={game}
                                     profiles={profiles}
