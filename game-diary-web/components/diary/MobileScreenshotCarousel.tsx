@@ -63,7 +63,7 @@ export default function MobileScreenshotCarousel({
         <CarouselContent className="-ml-3">
           {gameShots.map((shot) => (
             <CarouselItem key={shot.id} className="pl-3 basis-full">
-              <div className="bg-card border border-border/30 rounded-2xl p-1.5 flex flex-col shadow-sm">
+              <div className="bg-card border border-border/30 rounded-[6px] p-1.5 flex flex-col shadow-sm">
                 <ScreenshotItem
                   shot={shot}
                   profiles={profiles}
@@ -105,7 +105,7 @@ export default function MobileScreenshotCarousel({
             </CarouselItem>
           ))}
           <CarouselItem className="pl-3 basis-full">
-            <div className="bg-card border border-border/30 rounded-2xl p-1.5 flex flex-col shadow-sm">
+            <div className="bg-card border border-border/30 rounded-[6px] p-1.5 flex flex-col shadow-sm">
               <UploadPlaceholder onFileSelect={onFileSelect} />
             </div>
           </CarouselItem>
