@@ -12,7 +12,7 @@ import { formatDurationText, formatDate, formatTime, getObjectParticle, maskNick
 import DiarySidebar from '@/components/diary/DiarySidebar';
 import DiaryHeader from '@/components/diary/DiaryHeader';
 import { BentoGrid, BentoItem } from '@/components/diary/BentoGrid';
-import { Gamepad2, Camera, MessageCircleMore, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput } from 'lucide-react';
+import { Gamepad2, Camera, MessageCircleMore, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin } from 'lucide-react';
 import { Pagination } from "@ark-ui/react/pagination";
 import SidebarSortDropdown from '@/components/diary/SidebarSortDropdown';
 import SidebarPagination from '@/components/diary/SidebarPagination';
@@ -35,6 +35,84 @@ import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarouse
 function HomeContent() {
   const { data: session, status }: any = useSession();
   const router = useRouter();
+
+  const renderChecklist = (game: any) => {
+    const checklistComments = game.comments?.filter((c: any) => c.is_checklist) || [];
+    if (checklistComments.length === 0) return null;
+    
+    return (
+      <div className="mb-4 space-y-1.5 px-1 animate-in fade-in duration-300">
+        <div className="flex items-center gap-1.5 px-0.5 mb-1.5">
+          <span className="text-[9px] font-black text-primary/75 tracking-widest uppercase flex items-center gap-1">
+            <Pin className="w-2.5 h-2.5 rotate-45 text-primary" /> 고정 체크리스트
+          </span>
+        </div>
+        <div className="space-y-1.5">
+          {checklistComments.map((c: any) => {
+            const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
+            const displayName = hasLoggedIn 
+              ? (profiles?.[c.user_id]?.display_name || 'Anonymous') 
+              : maskNickname(profiles?.[c.user_id]?.display_name || 'Anonymous');
+            
+            return (
+              <div 
+                key={c.id} 
+                className="flex items-center justify-between gap-3 px-2 py-1 rounded-lg bg-primary/5 border border-primary/10 group"
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {/* Checkbox to toggle checklist */}
+                  <button 
+                    onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
+                    className="w-4 h-4 rounded-md border border-primary/30 flex items-center justify-center bg-primary/10 text-primary shrink-0 hover:bg-primary/20 transition-colors"
+                    title="체크해제 (고정 해제)"
+                  >
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="4" viewBox="0 0 24 24">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                  
+                  {/* Avatar */}
+                  <div className="w-5 h-5 rounded-full overflow-hidden border border-border/30 shrink-0">
+                    {profiles?.[c.user_id]?.avatar_url ? (
+                      <img 
+                        src={profiles[c.user_id].avatar_url} 
+                        className="w-full h-full object-cover" 
+                        alt="" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[8px] font-black text-primary uppercase">
+                        {displayName.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="text-[11px] font-medium text-foreground/90 truncate flex-1 leading-none">
+                    <span className="font-bold text-foreground mr-1.5">{displayName}:</span>
+                    {c.content}
+                  </span>
+                </div>
+
+                {/* Delete button */}
+                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={async () => { 
+                      if (window.confirm("삭제할까요?")) { 
+                        await supabase.from('comments').delete().eq('id', c.id); 
+                        fetchData(); 
+                      } 
+                    }}
+                    className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -703,6 +781,7 @@ function HomeContent() {
                                     {game.comments?.length || 0}개의 의견
                                   </div>
                                 </div>
+                                {renderChecklist(game)}
                                 <div className={`relative flex flex-col ${game.comments?.length > 5 ? "h-[320px]" : "h-auto"}`}>
                                   <GameCommentList 
                                     game={game}
@@ -731,6 +810,7 @@ function HomeContent() {
                           className: "hidden md:flex",
                           content: (
                             <div className="relative h-full min-h-[450px]">
+                              {renderChecklist(game)}
                               {/* Scrollable Area: Strictly 450px */}
                               <div className="h-[450px] overflow-hidden">
                                 <GameCommentList 
