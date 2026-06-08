@@ -152,7 +152,7 @@ const ScreenshotItem = ({
       )}
       
       <div 
-        className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-[-4px] group-hover:translate-y-0 z-40"
+        className="absolute top-2 right-2 flex gap-1.5 z-40 transition-all duration-300 opacity-100 translate-y-0 md:opacity-0 md:group-hover:opacity-100 md:translate-y-[-4px] md:group-hover:translate-y-0"
         onMouseEnter={() => {
           setIsActionsHovered(true);
           setHoveredShot(null);
