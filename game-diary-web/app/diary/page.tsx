@@ -41,71 +41,69 @@ function HomeContent() {
     if (checklistComments.length === 0) return null;
     
     return (
-      <div className="mb-4 space-y-1.5 px-1 animate-in fade-in duration-300">
-        <div className="space-y-1.5">
-          {checklistComments.map((c: any) => {
-            const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
-            const displayName = hasLoggedIn 
-              ? (profiles?.[c.user_id]?.display_name || 'Anonymous') 
-              : maskNickname(profiles?.[c.user_id]?.display_name || 'Anonymous');
-            
-            return (
-              <div 
-                key={c.id} 
-                className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10 group animate-in fade-in duration-300"
-              >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  {/* Avatar */}
-                  <div className="w-5 h-5 rounded-full overflow-hidden border border-border/30 shrink-0">
-                    {profiles?.[c.user_id]?.avatar_url ? (
-                      <img 
-                        src={profiles[c.user_id].avatar_url} 
-                        className="w-full h-full object-cover" 
-                        alt="" 
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[8px] font-black text-primary uppercase">
-                        {displayName.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-
-                  <span className="text-[11px] font-medium text-foreground/90 truncate flex-1 leading-none">
-                    <span className="font-bold text-foreground mr-1.5">{displayName}:</span>
-                    {c.content}
-                  </span>
+      <div className="mb-4 -mx-4 md:-mx-6 border-y border-primary/10 bg-primary/5 divide-y divide-primary/10 animate-in fade-in duration-300">
+        {checklistComments.map((c: any) => {
+          const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
+          const displayName = hasLoggedIn 
+            ? (profiles?.[c.user_id]?.display_name || 'Anonymous') 
+            : maskNickname(profiles?.[c.user_id]?.display_name || 'Anonymous');
+          
+          return (
+            <div 
+              key={c.id} 
+              className="flex items-center justify-between gap-3 px-4 md:px-6 py-2 group animate-in fade-in duration-300"
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                {/* Avatar */}
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/30 shrink-0">
+                  {profiles?.[c.user_id]?.avatar_url ? (
+                    <img 
+                      src={profiles[c.user_id].avatar_url} 
+                      className="w-full h-full object-cover" 
+                      alt="" 
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[8px] font-black text-primary uppercase">
+                      {displayName.charAt(0)}
+                    </div>
+                  )}
                 </div>
 
-                {/* Right Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {/* Delete button */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={async () => { 
-                        if (window.confirm("삭제할까요?")) { 
-                          await supabase.from('comments').delete().eq('id', c.id); 
-                          fetchData(); 
-                        } 
-                      }}
-                      className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
-                    >
-                      삭제
-                    </button>
-                  </div>
+                <span className="text-[11px] font-medium text-foreground/90 truncate flex-1 leading-none">
+                  <span className="font-bold text-foreground mr-1.5">{displayName}:</span>
+                  {c.content}
+                </span>
+              </div>
 
-                  {/* Pin Toggle Button on the Right */}
+              {/* Right Actions */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Delete button */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
-                    onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
-                    className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
-                    title="고정 해제"
+                    onClick={async () => { 
+                      if (window.confirm("삭제할까요?")) { 
+                        await supabase.from('comments').delete().eq('id', c.id); 
+                        fetchData(); 
+                      } 
+                    }}
+                    className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
                   >
-                    <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
+                    삭제
                   </button>
                 </div>
+
+                {/* Pin Toggle Button on the Right */}
+                <button 
+                  onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
+                  className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
+                  title="고정 해제"
+                >
+                  <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
+                </button>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
