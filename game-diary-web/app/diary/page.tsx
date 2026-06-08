@@ -353,7 +353,11 @@ function HomeContent() {
     if (!session) return alert("로그인이 필요합니다.");
     
     try {
-      if (!currentStatus) {
+      if (currentStatus) {
+        if (!window.confirm("체크리스트 설정을 해제하시겠습니까?")) {
+          return;
+        }
+      } else {
         // 고정하려는 경우: 1인당 1개 제한 체크
         const { data: existingPins } = await supabase
           .from('comments')
