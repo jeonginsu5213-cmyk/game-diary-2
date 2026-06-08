@@ -32,7 +32,7 @@ function BentoGrid({ items }: BentoGridProps) {
                 <div
                     key={index}
                     className={cn(
-                        "group/card relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-full min-h-0",
+                        "group/card relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-auto md:h-full min-h-0",
                         item.isCommentSection ? "pt-5 px-3 pb-3 md:pt-6 md:px-4 md:pb-4" : "p-4 md:p-6",
                         "border border-border/50 bg-card/50 backdrop-blur-sm",
                         "hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.02)]",
