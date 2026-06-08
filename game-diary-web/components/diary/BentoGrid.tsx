@@ -60,7 +60,7 @@ function BentoGrid({ items }: BentoGridProps) {
                     />
 
                     <div className="relative flex flex-col h-full min-h-0 z-0">
-                        <div className={cn("flex items-center gap-4 mb-4 shrink-0 min-h-[40px]", item.isCommentSection && "px-2")}>
+                        <div className={cn("flex items-start md:items-center gap-4 mb-4 shrink-0 min-h-[40px] pt-0.5 md:pt-0", item.isCommentSection && "px-2")}>
                             {item.icon && (
                                 <div className="w-10 h-10 shrink-0 flex items-center justify-center transition-all duration-500">
                                     {item.icon}
