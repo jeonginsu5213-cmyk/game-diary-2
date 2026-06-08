@@ -703,7 +703,7 @@ function HomeContent() {
                                     {game.comments?.length || 0}개의 의견
                                   </div>
                                 </div>
-                                <div className="relative flex flex-col h-[320px]">
+                                <div className={`relative flex flex-col ${game.comments?.length > 5 ? "h-[320px]" : "h-auto"}`}>
                                   <GameCommentList 
                                     game={game}
                                     profiles={profiles}
