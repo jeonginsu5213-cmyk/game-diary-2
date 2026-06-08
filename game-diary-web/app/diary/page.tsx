@@ -695,14 +695,12 @@ function HomeContent() {
 
                               {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
                               <div className="block md:hidden mt-6 pt-6 border-t border-border/40">
-                                <div className="flex items-center justify-between mb-4 pl-[6px]">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[12px] font-bold tracking-tight text-primary">
-                                      댓글
-                                    </span>
-                                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/10">
-                                      {game.comments?.length || 0}
-                                    </span>
+                                <div className="flex items-center justify-between mb-4 pl-[2px] pr-[2px]">
+                                  <h3 className="font-black text-foreground tracking-tight text-lg leading-none">
+                                    댓글
+                                  </h3>
+                                  <div className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-primary/5 text-primary border border-primary/10">
+                                    {game.comments?.length || 0}개의 의견
                                   </div>
                                 </div>
                                 <div className="relative flex flex-col h-[350px]">
