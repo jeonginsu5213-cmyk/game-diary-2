@@ -94,8 +94,8 @@ const ScreenshotItem = ({
       }}
     >
       <div 
-        className={`absolute inset-0 rounded-xl overflow-hidden border bg-card shadow-sm cursor-zoom-in transition-all duration-300 ${
-          isNew ? 'border-primary ring-4 ring-primary/20 border-2 z-20' : 'border-border/50'
+        className={`absolute inset-0 rounded-t-2xl rounded-b-none md:rounded-xl overflow-hidden border-none md:border bg-card shadow-sm cursor-zoom-in transition-all duration-300 ${
+          isNew ? 'border-primary ring-4 ring-primary/20 border-2 z-20' : 'md:border-border/50'
         }`} 
         style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
         onClick={() => setActiveShot(shot)}

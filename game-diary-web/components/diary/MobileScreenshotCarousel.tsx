@@ -63,7 +63,7 @@ export default function MobileScreenshotCarousel({
         <CarouselContent className="-ml-3">
           {gameShots.map((shot) => (
             <CarouselItem key={shot.id} className="pl-3 basis-full">
-              <div className="bg-card/60 border border-border/40 rounded-2xl p-2.5 flex flex-col shadow-sm">
+              <div className="bg-card/60 border border-border/40 rounded-2xl pt-0 px-0 pb-3 overflow-hidden flex flex-col shadow-sm">
                 <ScreenshotItem
                   shot={shot}
                   profiles={profiles}
@@ -78,7 +78,7 @@ export default function MobileScreenshotCarousel({
                   handleImageDelete={handleImageDelete}
                   fetchData={fetchData}
                 />
-                <div className="mt-3 px-1.5 flex items-start gap-2 animate-in fade-in duration-300">
+                <div className="mt-3 px-3 flex items-start gap-2 animate-in fade-in duration-300">
                   <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0">
                     <img 
                       src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
@@ -105,9 +105,9 @@ export default function MobileScreenshotCarousel({
             </CarouselItem>
           ))}
           <CarouselItem className="pl-3 basis-full">
-            <div className="bg-card/60 border border-border/40 rounded-2xl p-2.5 flex flex-col shadow-sm">
+            <div className="flex flex-col pb-3">
               <UploadPlaceholder onFileSelect={onFileSelect} />
-              <div className="mt-3 px-1.5 flex items-center justify-center min-h-[20px]">
+              <div className="mt-3 px-3 flex items-center justify-center min-h-[20px]">
                 <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">새 스크린샷 추가</span>
               </div>
             </div>
