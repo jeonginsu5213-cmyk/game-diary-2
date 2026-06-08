@@ -49,6 +49,7 @@ const GameCommentList = ({
   const hasScrollbarHide = className?.includes("scrollbar-hide");
 
   const normalComments = game.comments?.filter((c: any) => !c.is_checklist) || [];
+  const hasComments = game.comments && game.comments.length > 0;
 
   return (
     <div ref={scrollRef} className={`flex-1 overflow-y-auto px-0 pt-0 space-y-1 scroll-smooth ${hasScrollbarHide ? '' : 'custom-scrollbar'} ${className}`}>
@@ -65,12 +66,12 @@ const GameCommentList = ({
             onDelete={async () => { if(window.confirm("삭제할까요?")) { await supabase.from('comments').delete().eq('id', c.id); fetchData(); } }}
           />
         ))
-      ) : (
+      ) : !hasComments ? (
         <div className="h-full flex flex-col items-center justify-center text-muted-foreground/30 space-y-2 italic">
           <MessageCircleMore className="w-8 h-8 opacity-20" />
           <p className="text-xs font-bold">No stories shared yet.</p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
