@@ -166,7 +166,7 @@ function HomeContent() {
   useEffect(() => {
     if (viewParam === 'diary') {
       setViewMode('diary');
-    } else if (viewParam === 'list') {
+    } else {
       setViewMode('list');
     }
   }, [viewParam]);
@@ -322,6 +322,7 @@ function HomeContent() {
   const handleDiarySelect = (id: string) => {
     setSelectedId(id);
     if (window.innerWidth < 768) {
+      setViewMode('diary');
       router.push(`/diary?id=${id}&view=diary`);
     }
   };
