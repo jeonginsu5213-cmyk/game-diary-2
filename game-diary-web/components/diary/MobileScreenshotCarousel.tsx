@@ -44,16 +44,18 @@ export default function MobileScreenshotCarousel({
   useEffect(() => {
     if (!api) return;
 
-    setCount(api.scrollSnapList().length);
-    setCurrentSlide(api.selectedScrollSnap());
-
-    const onSelect = () => {
+    const updateStates = () => {
+      setCount(api.scrollSnapList().length);
       setCurrentSlide(api.selectedScrollSnap());
     };
 
-    api.on("select", onSelect);
+    updateStates();
+
+    api.on("select", updateStates);
+    api.on("reInit", updateStates);
     return () => {
-      api.off("select", onSelect);
+      api.off("select", updateStates);
+      api.off("reInit", updateStates);
     };
   }, [api, gameShots]);
 

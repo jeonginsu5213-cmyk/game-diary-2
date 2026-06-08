@@ -96,7 +96,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete }: any) => {
           value={text} 
           onChange={(e) => setText(e.target.value)} 
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit(false)}
-          placeholder={isChecklistMode ? "고정할 이야기 작성..." : `${gameTitle}에 대한 이야기 들려주기...`} 
+          placeholder={isChecklistMode ? "고정할 이야기 작성..." : "댓글을 남겨보세요."} 
           className="flex-1 min-w-0 bg-transparent border-none outline-none text-[16px] md:text-[14px] text-foreground placeholder:text-muted-foreground/40 px-1 font-sans font-medium" 
         />
         
