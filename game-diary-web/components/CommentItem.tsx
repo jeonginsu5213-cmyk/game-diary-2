@@ -106,10 +106,13 @@ export default function CommentItem({
 
   useEffect(() => {
     if (isActiveReply && itemRef.current) {
-      itemRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      });
+      const timer = setTimeout(() => {
+        itemRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }, 250);
+      return () => clearTimeout(timer);
     }
   }, [isActiveReply]);
 
@@ -163,11 +166,15 @@ export default function CommentItem({
           drag={!isReply ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={{ left: 0, right: 0.6 }}
+          dragTransition={{ bounceStiffness: 300, bounceDamping: 28 }}
           style={{ x }}
           onDragEnd={(event, info) => {
             if (!isReply && x.get() > 50) {
               if (window.innerWidth < 768) {
                 onMobileReply?.(comment.id, displayName);
+                if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+                  window.navigator.vibrate(30);
+                }
               } else {
                 setShowReplyInput(true);
                 setTimeout(() => {
@@ -185,7 +192,7 @@ export default function CommentItem({
           onMouseLeave={handleTouchEnd}
           onContextMenu={(e) => e.preventDefault()}
           onClickCapture={handleCardClick}
-          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 select-none relative z-10 ${
+          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-[background-color,border-color,box-shadow,opacity] duration-200 hover:bg-muted/50 select-none relative z-10 ${
             isPressing
               ? 'scale-[0.97] bg-primary/10 border border-primary/30 shadow-inner'
               : (showReplyInput || isActiveReply) 
@@ -408,9 +415,9 @@ export default function CommentItem({
               {/* Toggle Checklist (Only for root comments and if author) */}
               {!isReply && isAuthor && (
                 <button
-                  onClick={() => {
+                  onClick={async () => {
+                    await onToggleChecklist?.();
                     setIsMenuOpen(false);
-                    onToggleChecklist?.();
                   }}
                   className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold text-foreground/80 hover:bg-accent/40 transition-colors text-left font-sans"
                 >
@@ -422,11 +429,11 @@ export default function CommentItem({
               {/* Delete (Only if author) */}
               {isAuthor && (
                 <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
+                  onClick={async () => {
                     if (window.confirm('삭제할까요?')) {
-                      onDelete?.();
+                      await onDelete?.();
                     }
+                    setIsMenuOpen(false);
                   }}
                   className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold text-red-500 hover:bg-red-500/5 transition-colors text-left font-sans"
                 >

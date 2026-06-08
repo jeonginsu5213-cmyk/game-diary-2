@@ -359,6 +359,15 @@ function HomeContent() {
     fetchData();
   };
 
+  const handleDeleteReply = async (commentId: string, replyIdx: number) => {
+    if (!session) return alert("로그인이 필요합니다.");
+    const { data: comment } = await supabase.from('comments').select('replies').eq('id', commentId).single();
+    const replies = comment?.replies || [];
+    const newReplies = replies.filter((_: any, idx: number) => idx !== replyIdx);
+    await supabase.from('comments').update({ replies: newReplies }).eq('id', commentId);
+    fetchData();
+  };
+
   const handleToggleChecklist = async (commentId: string, currentStatus: boolean, gameId: string) => {
     if (!session) return alert("로그인이 필요합니다.");
     
@@ -802,6 +811,7 @@ function HomeContent() {
                                     className="flex-1 min-h-0 scrollbar-hide"
                                     onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
                                     activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
+                                    handleDeleteReply={handleDeleteReply}
                                   />
                                   <div className="mt-2 bg-card">
                                     <GameCommentInput 
@@ -839,6 +849,7 @@ function HomeContent() {
                                 className="flex-1 min-h-0"
                                 onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
                                 activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
+                                handleDeleteReply={handleDeleteReply}
                               />
                               {/* Fixed Bottom Input: Flush to card edges */}
                               <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
