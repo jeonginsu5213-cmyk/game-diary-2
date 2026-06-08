@@ -86,7 +86,7 @@ const ScreenshotItem = ({
       } : { opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="relative group aspect-video z-10 hover:z-30 transform-gpu"
-      onMouseEnter={() => !isActionsHovered && setHoveredShot({ ...shot, positionHint, isDrawer })}
+      onMouseEnter={() => typeof window !== 'undefined' && window.innerWidth >= 768 && !isActionsHovered && setHoveredShot({ ...shot, positionHint, isDrawer })}
       onMouseLeave={() => {
         setActiveMoveShotId(null);
         setHoveredShot(null);
