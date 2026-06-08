@@ -174,19 +174,21 @@ export function DrawerPopup({
   position: positionProp,
   variant = "default",
   showBar = false,
+  backdropClassName,
   ...props
 }: DrawerPrimitive.Popup.Props & {
   showCloseButton?: boolean;
   position?: DrawerPosition;
   variant?: "default" | "straight" | "inset";
   showBar?: boolean;
+  backdropClassName?: string;
 }): React.ReactElement {
   const { position: contextPosition } = useContext(DrawerContext);
   const position = positionProp ?? contextPosition;
 
   return (
     <DrawerPortal>
-      <DrawerBackdrop />
+      <DrawerBackdrop className={backdropClassName} />
       <DrawerViewport position={position} variant={variant}>
         <DrawerPrimitive.Popup
           className={cn(

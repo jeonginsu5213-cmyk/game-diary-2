@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from "next-auth/react";
 import { supabase } from "@/src/lib/supabase";
-import { ArrowUp, Pin } from 'lucide-react';
+import { ArrowUp, Pin, X } from 'lucide-react';
 
-const GameCommentInput = ({ gameId, gameTitle, onComplete }: any) => {
+const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancelReply, onAddReply }: any) => {
   const { data: session }: any = useSession();
   const [text, setText] = useState("");
   const [isChecklistMode, setIsChecklistMode] = useState(false);
@@ -16,12 +16,28 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete }: any) => {
     setText("");
     setIsChecklistMode(false);
   }, [gameId]);
+
+  // 답글 모드가 활성화될 때 체크리스트 모드 비활성화
+  React.useEffect(() => {
+    if (activeReply) {
+      setIsChecklistMode(false);
+    }
+  }, [activeReply]);
   
   const handleSubmit = async (isChecklist = false) => {
     const finalChecklist = isChecklist || isChecklistMode;
     if (!text.trim() || !session) return;
     
     try {
+      if (activeReply) {
+        if (onAddReply) {
+          await onAddReply(activeReply.commentId, text.trim());
+        }
+        setText("");
+        if (onCancelReply) onCancelReply();
+        return;
+      }
+
       if (finalChecklist) {
         // 1인당 1개의 고정메세지만 허용하는 로직
         const { data: existingPins } = await supabase
@@ -63,8 +79,28 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete }: any) => {
   if (!session) return null;
 
   return (
-    <div className={`flex flex-col w-full overflow-hidden transition-all duration-300 border ${isChecklistMode ? 'border-primary shadow-lg shadow-primary/10' : 'border-border shadow-sm'} rounded-xl focus-within:border-primary/50`}>
+    <div className={`flex flex-col w-full overflow-hidden transition-all duration-300 border ${activeReply ? 'border-primary/50 shadow-md shadow-primary/5' : isChecklistMode ? 'border-primary shadow-lg shadow-primary/10' : 'border-border shadow-sm'} rounded-xl focus-within:border-primary/50`}>
       <AnimatePresence initial={false}>
+        {activeReply && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden bg-muted/80 border-b border-border/50"
+          >
+            <div className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
+              <button 
+                onClick={onCancelReply}
+                className="w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/10 hover:bg-muted-foreground/20 text-muted-foreground transition-colors shrink-0"
+              >
+                <X className="w-3 h-3 stroke-[2.5]" />
+              </button>
+              <span className="text-[11px] font-bold leading-none">
+                {activeReply.userName}님에게 답장하는 중
+              </span>
+            </div>
+          </motion.div>
+        )}
         {isChecklistMode && (
           <motion.div 
             initial={{ height: 0, opacity: 0 }}
@@ -83,20 +119,22 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete }: any) => {
       </AnimatePresence>
 
       <div className="flex items-center gap-2 p-2 bg-card">
-        <button 
-          onClick={() => setIsChecklistMode(!isChecklistMode)}
-          className={`flex items-center justify-center transition-all duration-300 ${isChecklistMode ? 'text-primary' : 'text-muted-foreground/30 hover:text-muted-foreground'} shrink-0 ml-1`}
-          title={isChecklistMode ? "고정 해제" : "상단 고정 (체크리스트)"}
-        >
-          <Pin className={`w-4 h-4 transition-transform duration-300 ${isChecklistMode ? 'rotate-45' : ''}`} strokeWidth={isChecklistMode ? 3 : 2.5} />
-        </button>
+        {!activeReply && (
+          <button 
+            onClick={() => setIsChecklistMode(!isChecklistMode)}
+            className={`flex items-center justify-center transition-all duration-300 ${isChecklistMode ? 'text-primary' : 'text-muted-foreground/30 hover:text-muted-foreground'} shrink-0 ml-1`}
+            title={isChecklistMode ? "고정 해제" : "상단 고정 (체크리스트)"}
+          >
+            <Pin className={`w-4 h-4 transition-transform duration-300 ${isChecklistMode ? 'rotate-45' : ''}`} strokeWidth={isChecklistMode ? 3 : 2.5} />
+          </button>
+        )}
         
         <input 
           type="text" 
           value={text} 
           onChange={(e) => setText(e.target.value)} 
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit(false)}
-          placeholder={isChecklistMode ? "고정할 이야기 작성..." : "댓글을 남겨보세요."} 
+          placeholder={activeReply ? "답글 남기기..." : isChecklistMode ? "고정할 이야기 작성..." : "댓글을 남겨보세요."} 
           className="flex-1 min-w-0 bg-transparent border-none outline-none text-[16px] md:text-[14px] text-foreground placeholder:text-muted-foreground/40 px-1 font-sans font-medium" 
         />
         

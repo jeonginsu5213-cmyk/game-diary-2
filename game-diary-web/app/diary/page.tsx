@@ -135,6 +135,15 @@ function HomeContent() {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeReply, setActiveReply] = useState<{
+    gameId: string;
+    commentId: string;
+    userName: string;
+  } | null>(null);
+
+  useEffect(() => {
+    setActiveReply(null);
+  }, [selectedId]);
 
   // Sync Carousel states for immediate button responsiveness
   useEffect(() => {
@@ -781,7 +790,7 @@ function HomeContent() {
                                   </div>
                                 </div>
                                 {renderChecklist(game)}
-                                <div className={`relative flex flex-col ${game.comments?.length > 5 ? "h-[320px]" : "h-auto"}`}>
+                                <div className={`flex flex-col ${game.comments?.length > 5 ? "h-[320px]" : "h-auto"}`}>
                                   <GameCommentList 
                                     game={game}
                                     profiles={profiles}
@@ -790,10 +799,19 @@ function HomeContent() {
                                     handleAddReply={handleAddReply}
                                     handleToggleChecklist={handleToggleChecklist}
                                     fetchData={fetchData}
-                                    className="h-full pb-16 scrollbar-hide"
+                                    className="flex-1 min-h-0 scrollbar-hide"
+                                    onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
+                                    activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
                                   />
-                                  <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0 bg-card">
-                                    <GameCommentInput gameId={game.id} gameTitle={game.title} onComplete={fetchData} />
+                                  <div className="mt-2 bg-card">
+                                    <GameCommentInput 
+                                      gameId={game.id} 
+                                      gameTitle={game.title} 
+                                      onComplete={fetchData} 
+                                      activeReply={activeReply?.gameId === game.id ? activeReply : null}
+                                      onCancelReply={() => setActiveReply(null)}
+                                      onAddReply={handleAddReply}
+                                    />
                                   </div>
                                 </div>
                               </div>
@@ -808,24 +826,30 @@ function HomeContent() {
                           isCommentSection: true,
                           className: "hidden md:flex",
                           content: (
-                            <div className="relative h-full min-h-[450px]">
+                            <div className="flex flex-col h-[450px]">
                               {renderChecklist(game)}
-                              {/* Scrollable Area: Strictly 450px */}
-                              <div className="h-[450px] overflow-hidden">
-                                <GameCommentList 
-                                  game={game}
-                                  profiles={profiles}
-                                  displayNamesMap={displayNamesMap}
-                                  handleAddReaction={handleAddReaction}
-                                  handleAddReply={handleAddReply}
-                                  handleToggleChecklist={handleToggleChecklist}
-                                  fetchData={fetchData}
-                                  className="h-full pb-16"
-                                />
-                              </div>
+                              <GameCommentList 
+                                game={game}
+                                profiles={profiles}
+                                displayNamesMap={displayNamesMap}
+                                handleAddReaction={handleAddReaction}
+                                handleAddReply={handleAddReply}
+                                handleToggleChecklist={handleToggleChecklist}
+                                fetchData={fetchData}
+                                className="flex-1 min-h-0"
+                                onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
+                                activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
+                              />
                               {/* Fixed Bottom Input: Flush to card edges */}
-                              <div className="absolute bottom-0 left-0 right-0 z-10 px-0 pb-0 bg-card/90 backdrop-blur-sm">
-                                <GameCommentInput gameId={game.id} gameTitle={game.title} onComplete={fetchData} />
+                              <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
+                                <GameCommentInput 
+                                  gameId={game.id} 
+                                  gameTitle={game.title} 
+                                  onComplete={fetchData} 
+                                  activeReply={activeReply?.gameId === game.id ? activeReply : null}
+                                  onCancelReply={() => setActiveReply(null)}
+                                  onAddReply={handleAddReply}
+                                />
                               </div>
                             </div>
                           )

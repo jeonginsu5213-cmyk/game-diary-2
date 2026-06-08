@@ -14,7 +14,9 @@ const GameCommentList = ({
   handleAddReply, 
   handleToggleChecklist,
   fetchData,
-  className
+  className,
+  onMobileReply,
+  activeReplyId
 }: any) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCommentsLength = useRef(game.comments?.length || 0);
@@ -64,6 +66,8 @@ const GameCommentList = ({
             onAddReply={(text: string) => handleAddReply(c.id, text)}
             onToggleChecklist={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
             onDelete={async () => { if(window.confirm("삭제할까요?")) { await supabase.from('comments').delete().eq('id', c.id); fetchData(); } }}
+            onMobileReply={onMobileReply}
+            isActiveReply={activeReplyId === c.id}
           />
         ))
       ) : !hasComments ? (

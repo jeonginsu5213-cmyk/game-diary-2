@@ -4,9 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import ReactionPicker from './ReactionPicker';
 import Link from 'next/link';
-import { ArrowUp, Pin, CornerUpLeft } from 'lucide-react';
+import { ArrowUp, Pin, CornerUpLeft, Copy, Trash2 } from 'lucide-react';
 import { cn, maskNickname } from "@/src/lib/utils";
 import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { Drawer, DrawerPopup, DrawerPanel } from '@/components/diary/Drawer';
+
+const EMOJIS = ["👍", "❤️", "🔥", "🎮", "😮", "😂", "😢"];
 
 interface CommentItemProps {
   comment: any;
@@ -19,6 +22,8 @@ interface CommentItemProps {
   isReply?: boolean;
   displayNames?: { [userId: string]: string };
   profiles?: any;
+  onMobileReply?: (commentId: string, userName: string) => void;
+  isActiveReply?: boolean;
 }
 
 const formatCommentDate = (isoString?: string) => {
@@ -44,17 +49,69 @@ export default function CommentItem({
   onDeleteReply,
   isReply = false,
   displayNames = {},
-  profiles = {}
+  profiles = {},
+  onMobileReply,
+  isActiveReply = false
 }: CommentItemProps) {
   const { data: session }: any = useSession();
   const [showPicker, setShowPicker] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyInput] = useState("");
   const replyInputRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
   
   const x = useMotionValue(0);
   const iconScale = useTransform(x, [0, 50], [0.6, 1.15]);
   const iconOpacity = useTransform(x, [0, 40], [0, 1]);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPressing, setIsPressing] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressed = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    isLongPressed.current = false;
+    setIsPressing(true);
+    longPressTimer.current = setTimeout(() => {
+      isLongPressed.current = true;
+      setIsMenuOpen(true);
+      setIsPressing(false);
+      if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+    }, 600);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    setIsPressing(false);
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handleTouchMove = () => {
+    setIsPressing(false);
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isLongPressed.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      isLongPressed.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (isActiveReply && itemRef.current) {
+      itemRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [isActiveReply]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -88,7 +145,7 @@ export default function CommentItem({
     : maskNickname(comment.user || 'Anonymous');
 
   return (
-    <div className={`flex flex-col ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
+    <div ref={itemRef} className={`flex flex-col scroll-my-2 ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
       <div className="relative overflow-hidden rounded-lg">
         {/* Swipe Reply Icon Background */}
         {!isReply && (
@@ -109,20 +166,33 @@ export default function CommentItem({
           style={{ x }}
           onDragEnd={(event, info) => {
             if (!isReply && x.get() > 50) {
-              setShowReplyInput(true);
-              setTimeout(() => {
-                const input = replyInputRef.current?.querySelector('input');
-                if (input) input.focus();
-              }, 100);
+              if (window.innerWidth < 768) {
+                onMobileReply?.(comment.id, displayName);
+              } else {
+                setShowReplyInput(true);
+                setTimeout(() => {
+                  const input = replyInputRef.current?.querySelector('input');
+                  if (input) input.focus();
+                }, 100);
+              }
             }
           }}
-          onMouseLeave={() => setShowPicker(false)}
-          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 relative z-10 ${
-            showReplyInput 
-              ? 'bg-primary/5 border border-primary/25 shadow-sm shadow-primary/5' 
-              : isChecklist 
-                ? 'bg-primary/5 border border-primary/10' 
-                : 'bg-transparent border border-transparent'
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchMove}
+          onMouseDown={handleTouchStart}
+          onMouseUp={handleTouchEnd}
+          onMouseLeave={handleTouchEnd}
+          onContextMenu={(e) => e.preventDefault()}
+          onClickCapture={handleCardClick}
+          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-all duration-200 hover:bg-muted/50 select-none relative z-10 ${
+            isPressing
+              ? 'scale-[0.97] bg-primary/10 border border-primary/30 shadow-inner'
+              : (showReplyInput || isActiveReply) 
+                ? 'bg-primary/5 border border-primary/25 shadow-sm shadow-primary/5' 
+                : isChecklist 
+                  ? 'bg-primary/5 border border-primary/10' 
+                  : 'bg-transparent border border-transparent'
           }`}
         >
           {/* Avatar - Slightly larger than sidebar, but still compact */}
@@ -198,7 +268,16 @@ export default function CommentItem({
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </button>
               {!isReply && (
-                <button onClick={() => setShowReplyInput(!showReplyInput)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
+                <button 
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      onMobileReply?.(comment.id, displayName);
+                    } else {
+                      setShowReplyInput(!showReplyInput);
+                    }
+                  }} 
+                  className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                 </button>
               )}
@@ -249,7 +328,7 @@ export default function CommentItem({
 
       {/* Reply Input */}
       {showReplyInput && (
-        <div ref={replyInputRef} className="ml-7 mt-1 mb-3 flex items-center gap-2 bg-white/40 p-1.5 rounded-none border border-border/50 focus-within:border-primary/30 transition-all">
+        <div ref={replyInputRef} className="hidden md:flex ml-7 mt-1 mb-3 items-center gap-2 bg-white/40 p-1.5 rounded-none border border-border/50 focus-within:border-primary/30 transition-all">
           <input 
             type="text" 
             value={replyText} 
@@ -269,6 +348,96 @@ export default function CommentItem({
           </button>
         </div>
       )}
+      {/* Drawer Panel */}
+      <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
+          <DrawerPanel scrollable={false} className="px-3 pb-6 pt-6 select-none font-sans">
+            {/* Emojis Reaction Bar (Separate white box matching the actions list) */}
+            <div className="flex justify-around items-center p-2 bg-[#FFFFFF] rounded-xl mb-2">
+              {EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => {
+                    onAddReaction(emoji);
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center text-[22px] rounded-lg hover:bg-primary/10 active:scale-90 transition-all cursor-pointer"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            {/* Actions List (shadcn/ui style divided list) */}
+            <div className="bg-[#FFFFFF] rounded-xl overflow-hidden divide-y divide-border/30">
+              {/* Reply (Only if not a nested reply) */}
+              {!isReply && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (window.innerWidth < 768) {
+                      onMobileReply?.(comment.id, displayName);
+                    } else {
+                      setShowReplyInput(true);
+                      setTimeout(() => {
+                        const input = replyInputRef.current?.querySelector('input');
+                        if (input) input.focus();
+                      }, 100);
+                    }
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold text-foreground/80 hover:bg-accent/40 transition-colors text-left font-sans"
+                >
+                  <CornerUpLeft className="w-4 h-4 text-foreground/60 shrink-0" strokeWidth={2.5} />
+                  <span>답장하기</span>
+                </button>
+              )}
+
+              {/* Copy */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigator.clipboard.writeText(comment.text);
+                  alert("댓글 내용이 복사되었습니다.");
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold text-foreground/80 hover:bg-accent/40 transition-colors text-left font-sans"
+              >
+                <Copy className="w-4 h-4 text-foreground/60 shrink-0" strokeWidth={2.5} />
+                <span>댓글 복사</span>
+              </button>
+
+              {/* Toggle Checklist (Only for root comments and if author) */}
+              {!isReply && isAuthor && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onToggleChecklist?.();
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold text-foreground/80 hover:bg-accent/40 transition-colors text-left font-sans"
+                >
+                  <Pin className={`w-4 h-4 shrink-0 ${isChecklist ? 'text-primary rotate-45' : 'text-foreground/60'}`} strokeWidth={2.5} />
+                  <span>{isChecklist ? "체크리스트 해제" : "체크리스트 등록 (상단 고정)"}</span>
+                </button>
+              )}
+
+              {/* Delete (Only if author) */}
+              {isAuthor && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (window.confirm('삭제할까요?')) {
+                      onDelete?.();
+                    }
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold text-red-500 hover:bg-red-500/5 transition-colors text-left font-sans"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500 shrink-0" strokeWidth={2.5} />
+                  <span>삭제하기</span>
+                </button>
+              )}
+            </div>
+          </DrawerPanel>
+        </DrawerPopup>
+      </Drawer>
 
 
     </div>
