@@ -80,7 +80,7 @@ function BentoGrid({ items }: BentoGridProps) {
                                         )}
                                     </div>
                                     {item.status && (
-                                        <div className="md:hidden shrink-0 flex items-center h-6 mt-2 md:mt-1">
+                                        <div className="md:hidden shrink-0 flex items-start mt-0">
                                             {item.status}
                                         </div>
                                     )}
