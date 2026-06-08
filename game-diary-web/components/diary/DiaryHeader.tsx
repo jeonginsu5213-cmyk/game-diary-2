@@ -165,6 +165,15 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
               </h2>
             )}
           </div>
+
+          {current && (
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg border border-border/50 shrink-0">
+              <Calendar className="w-3 h-3 opacity-40 text-foreground" />
+              <span className="text-[11px] font-bold text-muted-foreground tabular-nums uppercase tracking-tight translate-y-[0.5px]">
+                {formatDate(current.date)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
