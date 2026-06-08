@@ -51,7 +51,7 @@ const GameCommentList = ({
   const normalComments = game.comments?.filter((c: any) => !c.is_checklist) || [];
 
   return (
-    <div ref={scrollRef} className={`flex-1 overflow-y-auto px-0 pt-3 space-y-1 scroll-smooth ${hasScrollbarHide ? '' : 'custom-scrollbar'} ${className}`}>
+    <div ref={scrollRef} className={`flex-1 overflow-y-auto px-0 pt-0 space-y-1 scroll-smooth ${hasScrollbarHide ? '' : 'custom-scrollbar'} ${className}`}>
       {normalComments.length > 0 ? (
         normalComments.map((c: any) => (
           <CommentItem 
