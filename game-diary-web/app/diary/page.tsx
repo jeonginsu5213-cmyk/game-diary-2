@@ -572,49 +572,52 @@ function HomeContent() {
           <div className="w-full pb-72">
             {current ? (
               <div className="w-full">
-                {/* Mobile-only Session Metadata Bar */}
-                <div className="md:hidden px-4 py-3.5 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-muted-foreground/60" />
-                      <span className="translate-y-[0.5px]">{formatDate(current.start_time || current.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
-                      <span className="translate-y-[0.5px]">{formatTime(current.start_time)} — {formatTime(current.end_time)} ({formatDurationText(current.total_duration_min)})</span>
-                    </div>
-                  </div>
-                  {/* Participants Row */}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-black text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
-                    <div className="flex items-center flex-wrap gap-1.5">
-                      {sortedParticipants.map((p: any) => {
-                        const profile = profiles?.[p.user_id];
-                        const hasLoggedIn = !!profile?.has_logged_in;
-                        const displayName = hasLoggedIn 
-                          ? (profile?.display_name || 'Anonymous') 
-                          : maskNickname(profile?.display_name || 'Anonymous');
-                        return (
-                          <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
-                            <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 isolate">
-                              <img 
-                                src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                                className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
-                                alt="" 
-                              />
-                            </div>
-                            <span className="translate-y-[1px]">{displayName}</span>
-                            <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
                 {/* --- Bento Grid Start --- */}
                 <BentoGrid 
                   items={[
+                    // 0. Mobile-only Session Metadata Card
+                    {
+                      title: "기록 정보",
+                      icon: <Calendar className="w-5 h-5 text-primary" />,
+                      meta: formatDate(current.start_time || current.date),
+                      className: "md:hidden",
+                      content: (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
+                            <span className="translate-y-[0.5px]">
+                              {formatTime(current.start_time)} — {formatTime(current.end_time)} ({formatDurationText(current.total_duration_min)})
+                            </span>
+                          </div>
+                          {/* Participants Row */}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-black text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
+                            <div className="flex items-center flex-wrap gap-1.5">
+                              {sortedParticipants.map((p: any) => {
+                                const profile = profiles?.[p.user_id];
+                                const hasLoggedIn = !!profile?.has_logged_in;
+                                const displayName = hasLoggedIn 
+                                  ? (profile?.display_name || 'Anonymous') 
+                                  : maskNickname(profile?.display_name || 'Anonymous');
+                                return (
+                                  <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
+                                    <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 isolate">
+                                      <img 
+                                        src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                        className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
+                                        alt="" 
+                                      />
+                                    </div>
+                                    <span className="translate-y-[1px]">{displayName}</span>
+                                    <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    },
                     // 1. Map Each Game and its Screenshots
                     ...(current.session_games?.flatMap((game: any) => {
                       const gameShots = current.screenshots?.filter((s: any) => s.game_title === game.title) || [];
