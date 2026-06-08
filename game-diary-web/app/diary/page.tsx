@@ -576,11 +576,11 @@ function HomeContent() {
                 <div className="md:hidden px-4 py-3.5 bg-card/60 backdrop-blur-md border-b border-border/40 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 opacity-60 text-primary" />
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground/60" />
                       <span className="translate-y-[0.5px]">{formatDate(current.start_time || current.date)}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 opacity-60 text-primary" />
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
                       <span className="translate-y-[0.5px]">{formatTime(current.start_time)} — {formatTime(current.end_time)} ({formatDurationText(current.total_duration_min)})</span>
                     </div>
                   </div>
