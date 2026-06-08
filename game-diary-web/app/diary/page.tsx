@@ -473,7 +473,7 @@ function HomeContent() {
               placeholder="일기 제목 검색..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-card/40 border border-border/50 rounded-xl pl-9 pr-4 py-2 text-[12px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-muted-foreground/40"
+              className="w-full bg-card/40 border border-border/50 rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
