@@ -52,9 +52,9 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
           />
           
           {(uploader || comment) && (
-            <div className="mt-6 w-full flex items-start gap-3 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="mt-6 w-full flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-500">
               {uploader && (
-                <div className="w-6.5 h-6.5 md:w-8 md:h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0 isolate mt-0.5">
+                <div className="w-6.5 h-6.5 md:w-8 md:h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0 isolate">
                   <img 
                     src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
                     alt="" 
@@ -62,13 +62,13 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
                   />
                 </div>
               )}
-              <div className="flex-1 min-w-0 text-sm leading-relaxed break-words">
+              <div className="flex-1 min-w-0 text-sm leading-normal break-words translate-y-[1px]">
                 {uploader && (
                   <span className="font-black text-white mr-2 select-none">{uploader.name}</span>
                 )}
                 {comment && (
                   <span className="font-medium text-white/80 italic tracking-tight">
-                    {comment}
+                    "{comment}"
                   </span>
                 )}
               </div>
