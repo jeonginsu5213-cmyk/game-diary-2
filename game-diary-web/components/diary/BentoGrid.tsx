@@ -27,7 +27,7 @@ interface BentoGridProps {
 
 function BentoGrid({ items }: BentoGridProps) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 p-3 md:p-6 w-full items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 gap-x-3 md:gap-4 pt-2 pb-3 px-3 md:p-6 w-full items-stretch">
             {items.map((item, index) => (
                 <div
                     key={index}

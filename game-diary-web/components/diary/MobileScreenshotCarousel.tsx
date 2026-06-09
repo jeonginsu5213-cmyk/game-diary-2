@@ -79,7 +79,7 @@ export default function MobileScreenshotCarousel({
                 handleImageDelete={handleImageDelete}
                 fetchData={fetchData}
               />
-              <div className="mt-1.5 p-2 bg-card border-[0.5px] border-border/30 rounded-[6px] flex items-start gap-2.5 animate-in fade-in duration-300">
+              <div className="mt-1.5 p-2 bg-card border-[0.5px] border-border/30 rounded-[6px] flex items-center gap-2.5 animate-in fade-in duration-300">
                 <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
                   <img 
                     src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
@@ -87,18 +87,16 @@ export default function MobileScreenshotCarousel({
                     className={`w-full h-full object-cover ${!profiles?.[shot.uploader_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`}
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-black text-foreground">
-                      {profiles?.[shot.uploader_id]?.has_logged_in 
-                        ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
-                        : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
-                    </span>
-                  </div>
+                <div className="flex-1 min-w-0 text-[11px] leading-relaxed break-words">
+                  <span className="font-black text-foreground mr-1.5 select-none">
+                    {profiles?.[shot.uploader_id]?.has_logged_in 
+                      ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
+                      : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
+                  </span>
                   {shot.comment && (
-                    <p className="text-[11px] font-medium text-muted-foreground/80 mt-0.5 leading-relaxed break-words">
-                      {shot.comment}
-                    </p>
+                    <span className="font-medium text-muted-foreground/80 italic tracking-tight">
+                      "{shot.comment}"
+                    </span>
                   )}
                 </div>
               </div>

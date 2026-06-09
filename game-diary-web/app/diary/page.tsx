@@ -166,6 +166,7 @@ function HomeContent() {
   }, [uncatCarouselApi]);
   
   const [viewMode, setViewMode] = useState<'list' | 'diary'>('list');
+  const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'desc' | 'asc' | 'playtime'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const searchParams = useSearchParams();
@@ -572,52 +573,118 @@ function HomeContent() {
           <div className="w-full pb-72">
             {current ? (
               <div className="w-full">
+                {/* Mobile-only collapsible Toss-style Metadata Card */}
+                <div className="md:hidden px-3 pt-3 pb-0">
+                  <div className="relative rounded-2xl overflow-hidden py-2.5 px-4 bg-card/50 backdrop-blur-sm">
+                    {/* Background Pattern (Subtle dots) */}
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(224,93,56,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="relative z-0 flex flex-col">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono font-bold text-muted-foreground text-[13px] tracking-tight leading-none translate-y-[1px] pl-1 inline-block shrink-0 select-none">
+                            {formatDate(current.start_time || current.date)}
+                          </span>
+                          {!isMetadataExpanded && (
+                            <motion.span 
+                              layoutId="duration-badge"
+                              transition={{ type: "spring", stiffness: 400, damping: 38 }}
+                              className="inline-flex items-center justify-center bg-[#e05d38] text-white font-black text-[10px] px-3 py-1 rounded-full tracking-widest uppercase select-none leading-none"
+                            >
+                              <span className="translate-y-[1px]">{formatDurationText(current.total_duration_min)}</span>
+                            </motion.span>
+                          )}
+                        </div>
+                        
+                        {/* Right button / Badge when expanded */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isMetadataExpanded ? (
+                            <>
+                              {/* Session start-end time */}
+                              <span className="text-[11px] font-bold text-muted-foreground/50 tracking-tight font-mono select-none translate-y-[1px]">
+                                {formatTime(current.start_time)} — {formatTime(current.end_time)}
+                              </span>
+                              <motion.span 
+                                layoutId="duration-badge"
+                                transition={{ type: "spring", stiffness: 400, damping: 38 }}
+                                className="inline-flex items-center justify-center bg-[#e05d38] text-white font-black text-[10px] px-3 py-1 rounded-full tracking-widest uppercase select-none leading-none"
+                              >
+                                <span className="translate-y-[1px]">{formatDurationText(current.total_duration_min)}</span>
+                              </motion.span>
+                            </>
+                          ) : (
+                            <button 
+                              onClick={() => setIsMetadataExpanded(true)}
+                              className="flex items-center gap-0.5 text-muted-foreground/50 hover:text-muted-foreground/90 font-bold text-[11px] transition-all duration-200 select-none"
+                            >
+                              <span className="translate-y-[1px]">상세보기</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <AnimatePresence initial={false}>
+                        {isMetadataExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-4 mt-4 border-t border-border/40 flex flex-col gap-3.5">
+                              {/* Participants Row */}
+                              <div className="flex flex-col items-center justify-center gap-2">
+                                <span className="text-[10px] font-black text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
+                                <div className="flex flex-col items-center gap-1.5">
+                                  {sortedParticipants.map((p: any) => {
+                                    const profile = profiles?.[p.user_id];
+                                    const hasLoggedIn = !!profile?.has_logged_in;
+                                    const displayName = hasLoggedIn 
+                                      ? (profile?.display_name || 'Anonymous') 
+                                      : maskNickname(profile?.display_name || 'Anonymous');
+                                    return (
+                                      <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
+                                        <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 isolate">
+                                          <img 
+                                            src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                            className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
+                                            alt="" 
+                                          />
+                                        </div>
+                                        <span className="translate-y-[1px]">{displayName}</span>
+                                        <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              
+                              {/* Fold button at bottom right */}
+                              <div className="flex justify-end mt-1">
+                                <button 
+                                  onClick={() => setIsMetadataExpanded(false)}
+                                  className="flex items-center gap-0.5 text-muted-foreground/50 hover:text-muted-foreground/90 font-bold text-[11px] transition-all duration-200 select-none"
+                                >
+                                  <span className="translate-y-[1px]">접기</span>
+                                  <ChevronRight className="w-3 h-3 -rotate-90" />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+
                 {/* --- Bento Grid Start --- */}
                 <BentoGrid 
                   items={[
-                    // 0. Mobile-only Session Metadata Card
-                    {
-                      title: "기록 정보",
-                      icon: <Calendar className="w-5 h-5 text-primary" />,
-                      meta: formatDate(current.start_time || current.date),
-                      className: "md:hidden",
-                      content: (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
-                            <span className="translate-y-[0.5px]">
-                              {formatTime(current.start_time)} — {formatTime(current.end_time)} ({formatDurationText(current.total_duration_min)})
-                            </span>
-                          </div>
-                          {/* Participants Row */}
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] font-black text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
-                            <div className="flex items-center flex-wrap gap-1.5">
-                              {sortedParticipants.map((p: any) => {
-                                const profile = profiles?.[p.user_id];
-                                const hasLoggedIn = !!profile?.has_logged_in;
-                                const displayName = hasLoggedIn 
-                                  ? (profile?.display_name || 'Anonymous') 
-                                  : maskNickname(profile?.display_name || 'Anonymous');
-                                return (
-                                  <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
-                                    <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 isolate">
-                                      <img 
-                                        src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                                        className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
-                                        alt="" 
-                                      />
-                                    </div>
-                                    <span className="translate-y-[1px]">{displayName}</span>
-                                    <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    },
                     // 1. Map Each Game and its Screenshots
                     ...(current.session_games?.flatMap((game: any) => {
                       const gameShots = current.screenshots?.filter((s: any) => s.game_title === game.title) || [];
@@ -630,7 +697,7 @@ function HomeContent() {
                           icon: game.icon_url ? <img src={game.icon_url} className="w-10 h-10 object-contain" alt="" /> : <Gamepad2 className="w-10 h-10 text-primary" />,
                           meta: (
                             <div className="flex items-center gap-1.5">
-                              <Clock className="w-2.5 h-2.5 opacity-40" />
+                              <Clock className="hidden md:block w-2.5 h-2.5 opacity-40" />
                               <span>{formatTime(game.start_time)} — {formatTime(game.end_time)}</span>
                             </div>
                           ),

@@ -52,25 +52,26 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
           />
           
           {(uploader || comment) && (
-            <div className="mt-6 w-full flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="mt-6 w-full flex items-start gap-3 animate-in slide-in-from-bottom-4 duration-500">
               {uploader && (
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0 isolate">
-                    <img 
-                      src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
-                      alt="" 
-                      className={`w-full h-full object-cover ${uploader.isBlurred ? 'blur-xs scale-110' : ''}`}
-                    />
-                  </div>
-                  <span className="text-sm font-black text-white whitespace-nowrap">{uploader.name}</span>
+                <div className="w-6.5 h-6.5 md:w-8 md:h-8 rounded-full overflow-hidden border border-white/20 shadow-lg shrink-0 isolate mt-0.5">
+                  <img 
+                    src={uploader.avatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${uploader.name}`} 
+                    alt="" 
+                    className={`w-full h-full object-cover ${uploader.isBlurred ? 'blur-xs scale-110' : ''}`}
+                  />
                 </div>
               )}
-              {uploader && comment && <div className="w-[1px] h-3 bg-white/20 shrink-0" />}
-              {comment && (
-                <p className="text-sm font-medium text-white/80 leading-relaxed italic tracking-tight flex-1 min-w-0">
-                  {comment}
-                </p>
-              )}
+              <div className="flex-1 min-w-0 text-sm leading-relaxed break-words">
+                {uploader && (
+                  <span className="font-black text-white mr-2 select-none">{uploader.name}</span>
+                )}
+                {comment && (
+                  <span className="font-medium text-white/80 italic tracking-tight">
+                    {comment}
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
