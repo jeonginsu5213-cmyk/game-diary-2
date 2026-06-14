@@ -46,7 +46,7 @@ function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleF
   const iconOpacity = useTransform(x, [0, -40], [0, 1]);
 
   return (
-    <div className="relative overflow-hidden rounded-lg w-full flex items-center select-none">
+    <div className="relative overflow-hidden rounded-lg w-full flex items-center">
       {/* Swipe Star Icon Background (Right-aligned for left swipe) */}
       <div className="absolute inset-y-0 right-0 w-24 flex items-center justify-end pr-3 pointer-events-none z-0">
         <motion.div 
@@ -59,6 +59,7 @@ function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleF
 
       <motion.div 
         drag="x"
+        dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.6, right: 0 }}
         dragTransition={{ bounceStiffness: 300, bounceDamping: 28 }}
@@ -183,6 +184,21 @@ function HomeContent() {
       router.replace('/auth/signin');
     }
   }, [status, router]);
+
+  // Prevent main layout scroll container from interfering with our custom scroll columns
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.classList.remove('overflow-y-auto');
+      mainEl.classList.add('overflow-hidden', 'h-full');
+    }
+    return () => {
+      if (mainEl) {
+        mainEl.classList.remove('overflow-hidden', 'h-full');
+        mainEl.classList.add('overflow-y-auto');
+      }
+    };
+  }, []);
 
   const [sessions, setSessions] = useState<any[]>([]);
   const [favoriteSessionIds, setFavoriteSessionIds] = useState<Set<string>>(new Set());
@@ -655,7 +671,7 @@ function HomeContent() {
           </div>
           <div 
             onScroll={isMobile ? handleScroll : undefined}
-            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-4 md:pb-1"
+            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-4 md:pb-1 touch-pan-y"
           >
             <div className="space-y-1 min-h-[396px]">
               {(isMobile ? mobileSessions : paginatedSessions).map(s => (
