@@ -62,7 +62,7 @@ export default function Lightbox({ imageUrl, onClose, uploader, comment }: Light
                   />
                 </div>
               )}
-              <div className="flex-1 min-w-0 text-sm leading-normal break-words translate-y-[1px]">
+              <div className="flex-1 min-w-0 text-sm leading-normal break-words">
                 {uploader && (
                   <span className="font-black text-white mr-2 select-none">{uploader.name}</span>
                 )}

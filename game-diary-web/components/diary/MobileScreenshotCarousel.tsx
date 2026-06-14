@@ -115,7 +115,7 @@ export default function MobileScreenshotCarousel({
                     className={`w-full h-full object-cover ${!profiles?.[shot.uploader_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`}
                   />
                 </div>
-                <div className="flex-1 min-w-0 text-[11px] leading-normal break-words translate-y-[1px]">
+                <div className="flex-1 min-w-0 text-[11px] leading-normal break-words">
                   <span className="font-semibold text-foreground mr-1.5 select-none">
                     {profiles?.[shot.uploader_id]?.has_logged_in 
                       ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
