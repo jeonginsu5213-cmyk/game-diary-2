@@ -54,7 +54,7 @@ const DiarySidebar: React.FC<DiarySidebarProps> = ({
               onClick={() => onDiarySelect(s.id)} 
               className={`w-full text-left px-4 py-3.5 rounded-xl flex flex-col gap-0.5 transition-all border ${selectedId === s.id ? 'bg-card border-border shadow-sm text-foreground ring-1 ring-primary/10' : 'bg-transparent border-transparent text-muted-foreground hover:bg-card/40 hover:border-border/30 hover:text-foreground'}`}
             >
-               <span className={`text-[14px] truncate tracking-tight ${selectedId === s.id ? 'font-black' : 'font-bold'}`}>{s.sessionTitle || s.title}</span>
+               <span className={`text-[14px] truncate tracking-tight ${selectedId === s.id ? 'font-semibold' : 'font-medium'}`}>{s.sessionTitle || s.title}</span>
                <span className="text-[10px] font-medium opacity-50 tracking-widest uppercase font-mono">{formatDate(s.date || s.start_time)}</span>
             </button>
           ))}

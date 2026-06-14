@@ -55,7 +55,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
   const remainingCount = sortedParticipants.length - maxVisible;
 
   return (
-    <header className="h-16 flex items-center justify-between px-3 md:px-6 border-b border-border bg-card/70 backdrop-blur-xl sticky top-0 z-30">
+    <header className="h-16 flex items-center justify-between px-3 md:px-6 bg-card/70 backdrop-blur-xl sticky top-0 z-30">
       <div className="flex items-center gap-6 min-w-0 flex-1">
         {/* 1. Members & Title Section */}
         <div className="flex items-center gap-4 min-w-0">
@@ -103,7 +103,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-black font-mono tracking-tight opacity-70">
+                            <div className="text-[11px] text-muted-foreground font-black font-sans tracking-tight opacity-70">
                               {formatDurationText(p.duration_min || 0)}
                             </div>
                             {/* Arrow Pointer */}
@@ -151,17 +151,19 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                 onKeyDown={(e) => e.key === 'Enter' && onTitleUpdate()} 
                 onBlur={onTitleUpdate} 
                 autoFocus 
-                className="bg-background text-foreground font-black text-lg outline-none px-3 py-1 rounded-lg border border-primary/50 w-full transition-all focus:ring-4 focus:ring-primary/10 translate-y-[1px]" 
+                className="bg-background text-foreground font-semibold text-xl tracking-tight outline-none px-3 py-1 rounded-lg w-full translate-y-[1px]" 
               />
             ) : (
               <h2 
-                className="text-foreground font-black text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px]" 
+                className="text-foreground font-semibold text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px]" 
                 onClick={onTitleClick}
               >
                 {current?.sessionTitle || '기록을 선택해주세요'}
-                <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
+                {current && (
+                  <svg className="w-3.5 h-3.5 text-muted-foreground/45 group-hover:text-primary transition-colors shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                )}
               </h2>
             )}
           </div>
@@ -169,7 +171,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
           {current && (
             <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-lg border border-border/50 shrink-0">
               <Calendar className="w-3 h-3 opacity-40 text-foreground" />
-              <span className="text-[11px] font-bold text-muted-foreground tabular-nums uppercase tracking-tight translate-y-[0.5px]">
+              <span className="text-[11px] font-bold text-muted-foreground tabular-nums uppercase tracking-tight translate-y-[-0.5px]">
                 {formatDate(current.date)}
               </span>
             </div>
@@ -188,8 +190,8 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
               </span>
             </div>
             {/* Total Duration */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full border border-primary shadow-lg shadow-primary/10 shrink-0">
-              <span className="text-[10px] font-black uppercase tracking-[0.05em]">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary text-primary-foreground rounded-full border border-primary shadow-lg shadow-primary/10 shrink-0 leading-none">
+              <span className="text-[10px] font-black uppercase tracking-[0.05em] translate-y-[-0.5px] font-sans">
                 {formatDurationText(current.total_duration_min)}
               </span>
             </div>

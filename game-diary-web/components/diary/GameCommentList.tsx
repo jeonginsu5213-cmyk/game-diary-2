@@ -73,9 +73,9 @@ const GameCommentList = ({
           />
         ))
       ) : !hasComments ? (
-        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/30 space-y-2 italic">
+        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/30 space-y-2 italic py-5 pb-6">
           <MessageCircleMore className="w-8 h-8 opacity-20" />
-          <p className="text-xs font-bold">No stories shared yet.</p>
+          <p className="text-xs font-bold">아직 댓글이 없습니다.</p>
         </div>
       ) : null}
     </div>

@@ -61,6 +61,34 @@ export default function MobileScreenshotCarousel({
 
   return (
     <div className="w-full flex flex-col">
+      {/* Mobile Header Row: Highlight title and Dots Indicator */}
+      <div className="flex items-center justify-between mb-2 pl-[6px]">
+        <div className="flex items-center gap-1 group/label cursor-pointer select-none">
+          <span className="text-[12px] font-bold tracking-tight text-primary/60 group-hover/label:text-primary transition-colors duration-200">
+            하이라이트
+          </span>
+          <div className="text-primary/60 group-hover/label:text-primary transition-colors duration-200 flex items-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="translate-y-[-0.5px]">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Dots Indicator */}
+        {count > 1 && (
+          <div className="flex items-center gap-1.5 select-none pr-1.5">
+            {Array.from({ length: count }).map((_, index) => (
+              <div
+                key={index}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                  index === currentSlide ? "bg-primary w-3.5" : "bg-muted-foreground/30"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       <Carousel setApi={setApi} opts={{ align: "start", dragFree: false }} className="w-full">
         <CarouselContent className="-ml-3">
           {gameShots.map((shot) => (
@@ -79,7 +107,7 @@ export default function MobileScreenshotCarousel({
                 handleImageDelete={handleImageDelete}
                 fetchData={fetchData}
               />
-              <div className="mt-1.5 p-2 bg-card border-[0.5px] border-border/30 rounded-[6px] flex items-center gap-2.5 animate-in fade-in duration-300">
+              <div className="mt-1.5 p-2 bg-muted rounded-[6px] flex items-center gap-2.5 animate-in fade-in duration-300">
                 <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
                   <img 
                     src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
@@ -88,7 +116,7 @@ export default function MobileScreenshotCarousel({
                   />
                 </div>
                 <div className="flex-1 min-w-0 text-[11px] leading-normal break-words translate-y-[1px]">
-                  <span className="font-black text-foreground mr-1.5 select-none">
+                  <span className="font-semibold text-foreground mr-1.5 select-none">
                     {profiles?.[shot.uploader_id]?.has_logged_in 
                       ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
                       : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
@@ -107,20 +135,6 @@ export default function MobileScreenshotCarousel({
           </CarouselItem>
         </CarouselContent>
       </Carousel>
-
-      {/* Dots Indicator */}
-      {count > 1 && (
-        <div className="flex justify-center gap-1.5 mt-3 select-none">
-          {Array.from({ length: count }).map((_, index) => (
-            <div
-              key={index}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                index === currentSlide ? "bg-primary w-3.5" : "bg-muted-foreground/30"
-              }`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

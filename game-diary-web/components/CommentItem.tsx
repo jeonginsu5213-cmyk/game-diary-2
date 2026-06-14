@@ -149,7 +149,7 @@ export default function CommentItem({
 
   return (
     <div ref={itemRef} className={`flex flex-col scroll-my-2 ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
-      <div className="relative overflow-hidden rounded-lg">
+      <div className={`relative ${isActiveReply || showReplyInput ? 'overflow-visible' : 'overflow-hidden rounded-lg'}`}>
         {/* Swipe Reply Icon Background */}
         {!isReply && (
           <div className="absolute inset-y-0 left-0 w-24 flex items-center pl-3 pointer-events-none z-0">
@@ -192,14 +192,14 @@ export default function CommentItem({
           onMouseLeave={handleTouchEnd}
           onContextMenu={(e) => e.preventDefault()}
           onClickCapture={handleCardClick}
-          className={`group flex items-start gap-3 px-1 py-2 rounded-lg transition-[background-color,border-color,box-shadow,opacity] duration-200 hover:bg-muted/50 select-none relative z-10 ${
+          className={`group flex items-start gap-3 py-2 transition-[background-color,box-shadow,opacity] duration-200 hover:bg-muted/50 select-none relative z-10 ${
             isPressing
-              ? 'scale-[0.97] bg-primary/10 border border-primary/30 shadow-inner'
-              : (showReplyInput || isActiveReply) 
-                ? 'bg-primary/5 border border-primary/25 shadow-sm shadow-primary/5' 
+              ? '-mx-4 px-4 scale-[0.97] bg-primary/15 shadow-inner rounded-none'
+              : (showReplyInput || isActiveReply)
+                ? '-mx-4 px-4 bg-primary/10 rounded-none border-l-4 border-primary'
                 : isChecklist 
-                  ? 'bg-primary/5 border border-primary/10' 
-                  : 'bg-transparent border border-transparent'
+                  ? 'px-1 rounded-lg bg-primary/5'
+                  : 'px-1 rounded-lg bg-transparent'
           }`}
         >
           {/* Avatar - Slightly larger than sidebar, but still compact */}

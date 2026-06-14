@@ -1,3 +1,4 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
 @import "tailwindcss";
 
 @theme inline {
@@ -80,13 +81,13 @@
   --sidebar-ring: #e05d38;
   --secondary: #f3f4f6;
   --secondary-foreground: #4b5563;
-  --background: #e8ebed;
+  --background: #f2f4f6;
   --foreground: #333333;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   
   --font-mono: "JetBrains Mono", monospace;
-  --font-sans: "Inter", sans-serif;
+  --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   --font-serif: "Source Serif 4", serif;
   
   --shadow-blur: 3px;
@@ -128,37 +129,40 @@
 }
 
 /* Base Reset (TweakCN 스타일 기반 리팩토링) */
-*, ::before, ::after {
-  box-sizing: border-box;
-  border-width: 0;
-  border-style: solid;
-  border-color: var(--border);
+@layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: var(--border);
+  }
+
+  html {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    width: 100%;
+    min-width: 320px;
+    min-height: 100vh;
+    line-height: 1.5;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--foreground);
+    background-color: var(--background);
+    font-synthesis: style;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-html {
-  line-height: 1.5;
-  -webkit-text-size-adjust: 100%;
-  tab-size: 4;
-  font-family: var(--font-sans);
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  margin: 0;
-  width: 100%;
-  min-width: 320px;
-  min-height: 100vh;
-  line-height: 1.5;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 400;
-  color: var(--foreground);
-  background-color: var(--background);
-  font-synthesis: style;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
 /* Layout Utilities */
 .custom-page-section {

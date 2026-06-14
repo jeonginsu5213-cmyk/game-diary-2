@@ -34,7 +34,7 @@ function BentoGrid({ items }: BentoGridProps) {
                     className={cn(
                         "group/card relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-auto md:h-full min-h-0",
                         item.isCommentSection ? "pt-5 px-3 pb-3 md:pt-6 md:px-4 md:pb-4" : "p-4 md:p-6",
-                        "border border-border/50 bg-card/50 backdrop-blur-sm",
+                        "bg-card backdrop-blur-sm",
                         "hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.02)]",
                         item.colSpan === 2 ? "md:col-span-2" : "md:col-span-1",
                         item.hasPersistentHover && "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
@@ -46,23 +46,8 @@ function BentoGrid({ items }: BentoGridProps) {
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(224,93,56,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
                     </div>
 
-                    {/* Gradient Border Overlay (Hover Only, Masked to avoid bleed) */}
-                    <div
-                        className={cn(
-                            "absolute inset-0 rounded-2xl transition-opacity duration-500 pointer-events-none",
-                            item.hasPersistentHover ? "opacity-70" : "opacity-0 group-hover/card:opacity-70"
-                        )}
-                        style={{
-                            padding: '1px',
-                            background: 'linear-gradient(to bottom right, rgba(224, 93, 56, 0.4), transparent, rgba(251, 146, 60, 0.4))',
-                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                            WebkitMaskComposite: 'xor',
-                            maskComposite: 'exclude',
-                        }}
-                    />
-
                     <div className="relative flex flex-col h-full min-h-0 z-0">
-                        <div className={cn("flex items-start md:items-center gap-4 mb-4 shrink-0 min-h-[40px] pt-0", item.isCommentSection && "px-2")}>
+                        <div className={cn("flex items-start md:items-center gap-4 md:gap-6 mb-4 shrink-0 min-h-[40px] pt-0", item.isCommentSection && "px-2")}>
                             {item.icon && (
                                 <div className="w-10 h-10 shrink-0 flex items-center justify-center transition-all duration-500">
                                     {item.icon}
@@ -71,12 +56,12 @@ function BentoGrid({ items }: BentoGridProps) {
                             
                             <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
                                 <div className="flex items-start justify-between gap-4 md:flex-1 min-w-0">
-                                    <div className="flex flex-col min-w-0">
-                                        <h3 className="font-black text-foreground tracking-tight text-lg truncate mt-2 md:mt-1 leading-none">
+                                    <div className="flex flex-col min-w-0 mt-0.5 md:mt-0">
+                                        <h3 className="font-semibold text-foreground tracking-tight text-lg truncate mt-0.5 md:mt-1 leading-none">
                                             {item.title}
                                         </h3>
                                         {item.meta && (
-                                            <div className="md:hidden text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider opacity-60 mt-0.5">
+                                            <div className="md:hidden text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider opacity-60 mt-1 ml-0.5">
                                                 {item.meta}
                                             </div>
                                         )}

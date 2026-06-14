@@ -88,10 +88,10 @@ const UploadPlaceholder = ({ onFileSelect }: { onFileSelect: (file: File) => voi
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`relative aspect-video rounded-[6px] border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300 group/upload ${
+      className={`relative aspect-video rounded-[6px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300 group/upload ${
         active 
-          ? 'bg-primary/10 border-primary/50 shadow-sm' 
-          : 'bg-black/5 border-black/10'
+          ? 'bg-primary/10 shadow-sm' 
+          : 'bg-black/5'
       }`}
     >
       <input 

@@ -317,6 +317,14 @@ function HomeContent() {
     return new Set(current.session_games?.flatMap((g: any) => g.session_game_players?.map((p: any) => p.user_id)));
   }, [current]);
 
+  const players = useMemo(() => {
+    return sortedParticipants.filter((p: any) => playedUsersSet.has(p.user_id));
+  }, [sortedParticipants, playedUsersSet]);
+
+  const observers = useMemo(() => {
+    return sortedParticipants.filter((p: any) => !playedUsersSet.has(p.user_id));
+  }, [sortedParticipants, playedUsersSet]);
+
   useEffect(() => {
     if (loading) return;
     const urlId = searchParams?.get('id');
@@ -524,7 +532,7 @@ function HomeContent() {
                     </div>
                   )}
                 </div>
-                <span className={`text-[12px] truncate tracking-tight transition-all flex-1 ${selectedId === s.id ? 'font-black' : 'font-medium'}`}>{s.title}</span>
+                <span className={`text-[12px] truncate tracking-tight transition-all flex-1 ${selectedId === s.id ? 'font-semibold' : 'font-medium'}`}>{s.title}</span>
                 <span className={`text-[9px] font-mono tracking-tighter opacity-30 shrink-0`}>
                   {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
                 </span>
@@ -575,7 +583,12 @@ function HomeContent() {
               <div className="w-full">
                 {/* Mobile-only collapsible Toss-style Metadata Card */}
                 <div className="md:hidden px-3 pt-3 pb-0">
-                  <div className="relative rounded-2xl overflow-hidden py-2.5 px-4 bg-card/50 backdrop-blur-sm">
+                  <div 
+                    onClick={!isMetadataExpanded ? () => setIsMetadataExpanded(true) : undefined}
+                    className={`relative rounded-2xl overflow-hidden py-2.5 px-4 bg-card backdrop-blur-sm transition-all duration-200 ${
+                      !isMetadataExpanded ? 'cursor-pointer select-none active:scale-[0.995] active:bg-muted/30' : ''
+                    }`}
+                  >
                     {/* Background Pattern (Subtle dots) */}
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(224,93,56,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
@@ -583,44 +596,54 @@ function HomeContent() {
                     
                     {/* Content */}
                     <div className="relative z-0 flex flex-col">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono font-bold text-muted-foreground text-[13px] tracking-tight leading-none translate-y-[1px] pl-1 inline-block shrink-0 select-none">
+                      <div 
+                        onClick={isMetadataExpanded ? () => setIsMetadataExpanded(false) : undefined}
+                        className={`flex items-center justify-between ${
+                          isMetadataExpanded ? 'cursor-pointer select-none' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span 
+                            className="font-mono font-bold text-muted-foreground text-[13px] leading-none translate-y-[-0.5px] pl-1 inline-block shrink-0 select-none"
+                            style={{ wordSpacing: '-0.18em' }}
+                          >
                             {formatDate(current.start_time || current.date)}
                           </span>
                           {!isMetadataExpanded && (
                             <motion.span 
                               layoutId="duration-badge"
                               transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                              className="inline-flex items-center justify-center bg-[#e05d38] text-white font-black text-[10px] px-3 py-1 rounded-full tracking-widest uppercase select-none leading-none"
+                              className="inline-flex items-center justify-center bg-[#e05d38] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none shrink-0"
                             >
-                              <span className="translate-y-[1px]">{formatDurationText(current.total_duration_min)}</span>
+                              <span className="translate-y-[-0.5px]">{formatDurationText(current.total_duration_min)}</span>
                             </motion.span>
                           )}
                         </div>
                         
                         {/* Right button / Badge when expanded */}
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2.5 shrink-0">
                           {isMetadataExpanded ? (
                             <>
-                              {/* Session start-end time */}
-                              <span className="text-[11px] font-bold text-muted-foreground/50 tracking-tight font-mono select-none translate-y-[1px]">
+                              <span 
+                                className="text-[11px] font-bold text-muted-foreground/50 font-mono select-none translate-y-[-0.5px] shrink-0"
+                                style={{ wordSpacing: '-0.18em' }}
+                              >
                                 {formatTime(current.start_time)} — {formatTime(current.end_time)}
                               </span>
                               <motion.span 
                                 layoutId="duration-badge"
                                 transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                                className="inline-flex items-center justify-center bg-[#e05d38] text-white font-black text-[10px] px-3 py-1 rounded-full tracking-widest uppercase select-none leading-none"
+                                className="inline-flex items-center justify-center bg-[#e05d38] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none"
                               >
-                                <span className="translate-y-[1px]">{formatDurationText(current.total_duration_min)}</span>
+                                <span className="translate-y-[-0.5px]">{formatDurationText(current.total_duration_min)}</span>
                               </motion.span>
                             </>
                           ) : (
                             <button 
                               onClick={() => setIsMetadataExpanded(true)}
-                              className="flex items-center gap-0.5 text-muted-foreground/50 hover:text-muted-foreground/90 font-bold text-[11px] transition-all duration-200 select-none"
+                              className="flex items-center gap-0.5 text-muted-foreground/50 hover:text-muted-foreground/90 font-bold text-[12px] transition-all duration-200 select-none"
                             >
-                              <span className="translate-y-[1px]">상세보기</span>
+                              <span>상세보기</span>
                               <ChevronRight className="w-3 h-3" />
                             </button>
                           )}
@@ -636,41 +659,71 @@ function HomeContent() {
                             transition={{ duration: 0.25, ease: "easeInOut" }}
                             className="overflow-hidden"
                           >
-                            <div className="pt-4 mt-4 border-t border-border/40 flex flex-col gap-3.5">
-                              {/* Participants Row */}
-                              <div className="flex flex-col items-center justify-center gap-2">
-                                <span className="text-[10px] font-black text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
-                                <div className="flex flex-col items-center gap-1.5">
-                                  {sortedParticipants.map((p: any) => {
-                                    const profile = profiles?.[p.user_id];
-                                    const hasLoggedIn = !!profile?.has_logged_in;
-                                    const displayName = hasLoggedIn 
-                                      ? (profile?.display_name || 'Anonymous') 
-                                      : maskNickname(profile?.display_name || 'Anonymous');
-                                    return (
-                                      <div key={p.user_id} className="flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded-full border border-border/20 text-[10px] font-black text-foreground/80 shadow-xs">
-                                        <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 isolate">
-                                          <img 
-                                            src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                                            className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
-                                            alt="" 
-                                          />
+                            <div className="pt-1 mt-4.5 flex flex-col gap-3.5">
+                              {/* Players Row */}
+                              {players.length > 0 && (
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tight uppercase shrink-0">참여자</span>
+                                  <div className="flex flex-col items-center gap-1.5">
+                                    {players.map((p: any) => {
+                                      const profile = profiles?.[p.user_id];
+                                      const hasLoggedIn = !!profile?.has_logged_in;
+                                      const displayName = hasLoggedIn 
+                                        ? (profile?.display_name || 'Anonymous') 
+                                        : maskNickname(profile?.display_name || 'Anonymous');
+                                      return (
+                                        <div key={p.user_id} className="flex items-center gap-1.5 bg-muted/70 pl-1.5 pr-2.5 py-1.5 rounded-full text-[11px] font-bold text-foreground/80 shadow-xs leading-none">
+                                          <div className="w-4.5 h-4.5 rounded-full overflow-hidden shrink-0 isolate">
+                                            <img 
+                                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                              className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
+                                              alt="" 
+                                            />
+                                          </div>
+                                          <span className="translate-y-[-0.5px]">{displayName}</span>
+                                          <span className="text-primary/60 font-bold font-sans text-[9.5px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
                                         </div>
-                                        <span className="translate-y-[1px]">{displayName}</span>
-                                        <span className="text-primary/60 font-bold font-mono text-[9px] ml-0.5">{formatDurationText(p.duration_min || 0)}</span>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
+                              )}
+
+                              {/* Observers Row */}
+                              {observers.length > 0 && (
+                                <div className="flex flex-col items-center justify-center gap-2 mt-2">
+                                  <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tight uppercase shrink-0">관전자</span>
+                                  <div className="flex flex-col items-center gap-1.5">
+                                    {observers.map((p: any) => {
+                                      const profile = profiles?.[p.user_id];
+                                      const hasLoggedIn = !!profile?.has_logged_in;
+                                      const displayName = hasLoggedIn 
+                                        ? (profile?.display_name || 'Anonymous') 
+                                        : maskNickname(profile?.display_name || 'Anonymous');
+                                      return (
+                                        <div key={p.user_id} className="flex items-center gap-1.5 bg-muted/70 pl-1.5 pr-2.5 py-1.5 rounded-full text-[11px] font-bold text-foreground/80 shadow-xs leading-none">
+                                          <div className="w-4.5 h-4.5 rounded-full overflow-hidden shrink-0 isolate">
+                                            <img 
+                                              src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                              className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
+                                              alt="" 
+                                            />
+                                          </div>
+                                          <span className="translate-y-[-0.5px]">{displayName}</span>
+                                          <span className="text-primary/60 font-bold font-sans text-[9.5px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                               
-                              {/* Fold button at bottom right */}
                               <div className="flex justify-end mt-1">
                                 <button 
                                   onClick={() => setIsMetadataExpanded(false)}
-                                  className="flex items-center gap-0.5 text-muted-foreground/50 hover:text-muted-foreground/90 font-bold text-[11px] transition-all duration-200 select-none"
+                                  className="flex items-center gap-0.5 text-muted-foreground/50 hover:text-muted-foreground/90 font-bold text-[12px] transition-all duration-200 select-none"
                                 >
-                                  <span className="translate-y-[1px]">접기</span>
+                                  <span>접기</span>
                                   <ChevronRight className="w-3 h-3 -rotate-90" />
                                 </button>
                               </div>
@@ -696,18 +749,18 @@ function HomeContent() {
                           title: game.title,
                           icon: game.icon_url ? <img src={game.icon_url} className="w-10 h-10 object-contain" alt="" /> : <Gamepad2 className="w-10 h-10 text-primary" />,
                           meta: (
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 leading-none">
                               <Clock className="hidden md:block w-2.5 h-2.5 opacity-40" />
-                              <span>{formatTime(game.start_time)} — {formatTime(game.end_time)}</span>
+                              <span className="translate-y-[-0.5px]">{formatTime(game.start_time)} — {formatTime(game.end_time)}</span>
                             </div>
                           ),
                           status: (
                             <div className="relative">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); toggleGameStats(game.id); }}
-                                className={`group/btn flex items-center gap-1.5 px-3 py-1 rounded-full transition-all text-[10px] font-black uppercase tracking-widest border ${isExpanded ? 'bg-primary text-primary-foreground border-primary shadow-lg' : 'bg-primary/5 text-primary border-primary/10 hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
+                                className={`group/btn flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[10px] font-sans font-bold uppercase tracking-widest leading-none ${isExpanded ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
                               >
-                                {formatDurationText(game.play_time_min)}
+                                <span className="translate-y-[-0.5px]">{formatDurationText(game.play_time_min)}</span>
                                 <motion.div
                                   animate={{ rotate: isExpanded ? 180 : 0 }}
                                   transition={{ duration: 0.2, ease: 'easeInOut' }}
@@ -723,7 +776,7 @@ function HomeContent() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -4, scale: 0.95 }}
                                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                                    className="absolute top-[calc(100%+0.25rem)] right-0 z-50 w-48 overflow-hidden rounded-lg bg-card border border-border shadow-lg shadow-black/5"
+                                    className="absolute top-[calc(100%+0.25rem)] right-0 z-50 w-48 overflow-hidden rounded-lg bg-card shadow-xl shadow-black/10"
                                   >
                                     <div className="flex flex-col p-1">
                                       {[...(game.session_game_players || [])]
@@ -744,7 +797,7 @@ function HomeContent() {
                                                   : maskNickname(profiles[p.user_id]?.display_name || '알 수 없음')}
                                               </span>
                                             </div>
-                                            <span className="text-[9px] font-black text-primary/60 shrink-0 whitespace-nowrap">{formatDurationText(p.play_time_min)}</span>
+                                            <span className="text-[9px] font-sans font-bold text-primary/60 shrink-0 whitespace-nowrap">{formatDurationText(p.play_time_min)}</span>
                                           </div>
                                         ))}
                                     </div>
@@ -756,12 +809,13 @@ function HomeContent() {
                           colSpan: 2,
                           content: (
                             <div className="flex flex-col h-auto md:h-[450px]">
-                              <div className="flex items-center mb-2 pl-[6px]">
+                              {/* Header (Desktop only) */}
+                              <div className="hidden md:flex items-center mb-2 pl-[6px]">
                                 <motion.div 
                                   whileHover="hover"
                                   className="flex items-center gap-1 group/label cursor-pointer select-none"
                                 >
-                                  <span className="text-[12px] font-bold tracking-tight text-primary">
+                                  <span className="text-[12px] font-bold tracking-tight text-primary/60 group-hover/label:text-primary transition-colors duration-200">
                                     하이라이트
                                   </span>
                                   <motion.div
@@ -769,11 +823,9 @@ function HomeContent() {
                                       hover: { x: 2 }
                                     }}
                                     transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                                    className="text-primary flex items-center"
+                                    className="text-primary/60 group-hover/label:text-primary transition-colors duration-200 flex items-center"
                                   >
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="translate-y-[-0.5px]">
-                                      <polyline points="9 18 15 12 9 6" />
-                                    </svg>
+                                    <ChevronRight className="w-3 h-3" />
                                   </motion.div>
                                 </motion.div>
                               </div>
@@ -905,16 +957,15 @@ function HomeContent() {
                               )}
 
                               {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
-                              <div className="block md:hidden mt-6 -mx-4 -mb-4 p-4 bg-card border-t border-border/40 animate-in fade-in duration-300">
-                                <div className="flex items-center justify-between mb-4 pl-[2px] pr-[2px]">
-                                  <h3 className="font-black text-foreground tracking-tight text-lg leading-none">
+                              <div className="block md:hidden mt-4 -mx-4 -mb-4 pt-4 pb-4 px-0 bg-muted rounded-b-2xl animate-in fade-in duration-300">
+                                <div className="flex items-center mb-4 px-4">
+                                  <h3 className="font-semibold text-foreground tracking-tight text-lg leading-none">
                                     댓글
                                   </h3>
-                                  <div className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-primary/5 text-primary border border-primary/10">
-                                    {game.comments?.length || 0}개의 의견
-                                  </div>
                                 </div>
-                                {renderChecklist(game)}
+                                <div className="px-4">
+                                  {renderChecklist(game)}
+                                </div>
                                 <div className={`flex flex-col ${game.comments?.length > 5 ? "h-[320px]" : "h-auto"}`}>
                                   <GameCommentList 
                                     game={game}
@@ -924,12 +975,12 @@ function HomeContent() {
                                     handleAddReply={handleAddReply}
                                     handleToggleChecklist={handleToggleChecklist}
                                     fetchData={fetchData}
-                                    className="flex-1 min-h-0 scrollbar-hide"
+                                    className="flex-1 min-h-0 scrollbar-hide px-4"
                                     onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
                                     activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
                                     handleDeleteReply={handleDeleteReply}
                                   />
-                                  <div className="mt-2 bg-card">
+                                  <div className="mt-2 px-4 bg-transparent">
                                     <GameCommentInput 
                                       gameId={game.id} 
                                       gameTitle={game.title} 
@@ -937,6 +988,7 @@ function HomeContent() {
                                       activeReply={activeReply?.gameId === game.id ? activeReply : null}
                                       onCancelReply={() => setActiveReply(null)}
                                       onAddReply={handleAddReply}
+                                      isMobile={true}
                                     />
                                   </div>
                                 </div>
@@ -947,7 +999,6 @@ function HomeContent() {
                         // Right Card: Dedicated Comments Section (1 col)
                         {
                           title: "댓글",
-                          status: <div className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-primary/5 text-primary border border-primary/10 hover:bg-primary/10 transition-colors">{game.comments?.length || 0}개의 의견</div>,
                           colSpan: 1,
                           isCommentSection: true,
                           className: "hidden md:flex",
