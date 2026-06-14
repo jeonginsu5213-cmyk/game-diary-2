@@ -623,7 +623,7 @@ function HomeContent() {
       <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] z-10 ${
         viewMode === 'list' ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
       }`}>
-        <div className="h-16 flex items-center px-4 border-b-0 md:border-b border-border shrink-0">
+        <div className="h-16 hidden md:flex items-center px-4 border-b border-border shrink-0">
           <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -645,7 +645,7 @@ function HomeContent() {
               placeholder="일기 제목 검색..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-card/40 border border-border/50 rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all placeholder:text-muted-foreground/40"
+              className="w-full bg-white rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none transition-all placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
@@ -655,7 +655,7 @@ function HomeContent() {
           </div>
           <div 
             onScroll={isMobile ? handleScroll : undefined}
-            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-24 md:pb-1"
+            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-4 md:pb-1"
           >
             <div className="space-y-1 min-h-[396px]">
               {(isMobile ? mobileSessions : paginatedSessions).map(s => (
@@ -678,6 +678,9 @@ function HomeContent() {
                 onPageChange={setCurrentPage} 
               />
             )}
+
+            {/* Haptic/Visual spacer to push content above the 88px mobile dock */}
+            <div className="h-28 md:hidden shrink-0" />
           </div>
         </div>
         <div className="hidden md:flex p-4 border-t border-border items-center gap-3 bg-card/20 backdrop-blur-sm">
