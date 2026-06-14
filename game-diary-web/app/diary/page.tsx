@@ -920,20 +920,20 @@ function HomeContent() {
                                         .map((p: any) => (
                                           <div key={p.user_id} className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors gap-4">
                                             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                              <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-border/30 isolate">
+                                              <div className="w-4.5 h-4.5 rounded-full overflow-hidden shrink-0 border border-border/30 isolate">
                                                 <img 
                                                   src={profiles[p.user_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
                                                   className={`w-full h-full object-cover ${!profiles[p.user_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`} 
                                                   alt="" 
                                                 />
                                               </div>
-                                              <span className="text-[10px] font-bold text-foreground truncate">
+                                              <span className="text-[11px] font-bold text-foreground/80 truncate translate-y-[-0.5px]">
                                                 {profiles[p.user_id]?.has_logged_in 
                                                   ? (profiles[p.user_id]?.display_name || '알 수 없음') 
                                                   : maskNickname(profiles[p.user_id]?.display_name || '알 수 없음')}
                                               </span>
                                             </div>
-                                            <span className="text-[9px] font-sans font-bold text-primary/60 shrink-0 whitespace-nowrap">{formatDurationText(p.play_time_min)}</span>
+                                            <span className="text-[9.5px] font-sans font-bold text-primary/60 shrink-0 whitespace-nowrap translate-y-[-0.5px]">{formatDurationText(p.play_time_min)}</span>
                                           </div>
                                         ))}
                                     </div>
