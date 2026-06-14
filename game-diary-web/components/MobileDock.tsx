@@ -21,7 +21,7 @@ function DockContent() {
     {
       href: "/diary?view=list",
       icon: <List className="w-[22px] h-[22px]" strokeWidth={2} />,
-      label: "일기 목록",
+      label: "목록",
       active: pathname === "/diary" && viewParam === "list",
     },
     {
@@ -33,7 +33,7 @@ function DockContent() {
     {
       href: "/?landing=true",
       icon: <Home className="w-[22px] h-[22px]" strokeWidth={2} />,
-      label: "메인화면",
+      label: "메인",
       active: isLanding,
     },
   ];

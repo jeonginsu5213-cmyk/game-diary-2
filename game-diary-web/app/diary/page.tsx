@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { supabase } from "@/src/lib/supabase"; 
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from 'next/link';
@@ -12,7 +12,7 @@ import { formatDurationText, formatDate, formatTime, getObjectParticle, maskNick
 import DiarySidebar from '@/components/diary/DiarySidebar';
 import DiaryHeader from '@/components/diary/DiaryHeader';
 import { BentoGrid, BentoItem } from '@/components/diary/BentoGrid';
-import { Gamepad2, Camera, MessageCircleMore, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar } from 'lucide-react';
+import { Gamepad2, Camera, MessageCircleMore, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar, Star } from 'lucide-react';
 import { Pagination } from "@ark-ui/react/pagination";
 import SidebarSortDropdown from '@/components/diary/SidebarSortDropdown';
 import SidebarPagination from '@/components/diary/SidebarPagination';
@@ -29,6 +29,75 @@ import { Drawer, DrawerPopup, DrawerHeader, DrawerTitle, DrawerDescription, Draw
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarousel';
+
+// --- Diary List Item Component (Swipe to Favorite) ---
+
+interface DiaryListItemProps {
+  session: any;
+  isSelected: boolean;
+  isFavorite: boolean;
+  onSelect: (id: string) => void;
+  onToggleFavorite: (id: string, isFav: boolean) => void;
+}
+
+function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleFavorite }: DiaryListItemProps) {
+  const x = useMotionValue(0);
+  const iconScale = useTransform(x, [0, -50], [0.6, 1.15]);
+  const iconOpacity = useTransform(x, [0, -40], [0, 1]);
+
+  return (
+    <div className="relative overflow-hidden rounded-lg w-full flex items-center select-none">
+      {/* Swipe Star Icon Background (Right-aligned for left swipe) */}
+      <div className="absolute inset-y-0 right-0 w-24 flex items-center justify-end pr-3 pointer-events-none z-0">
+        <motion.div 
+          style={{ scale: iconScale, opacity: iconOpacity }}
+          className="w-7 h-7 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500"
+        >
+          <Star className="w-3.5 h-3.5 fill-yellow-500" strokeWidth={3} />
+        </motion.div>
+      </div>
+
+      <motion.div 
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.6, right: 0 }}
+        dragTransition={{ bounceStiffness: 300, bounceDamping: 28 }}
+        style={{ x }}
+        onDragEnd={(event, info) => {
+          if (x.get() < -50) {
+            onToggleFavorite(s.id, isFavorite);
+            if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+              window.navigator.vibrate(30);
+            }
+          }
+        }}
+        className="w-full relative z-10"
+      >
+        <button 
+          onClick={() => onSelect(s.id)} 
+          className={`w-full text-left pl-3 pr-4 py-2 rounded-lg flex items-center gap-2.5 transition-all duration-200 ${isSelected ? 'bg-muted/80 text-foreground' : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+        >
+          <div className="w-5 h-5 rounded-md overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-sm">
+            {s.guild_icon ? (
+              <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
+            ) : (
+              <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[9px] font-black text-primary">
+                {s.guild_name?.charAt(0) || 'G'}
+              </div>
+            )}
+          </div>
+          <span className={`text-[12px] truncate tracking-tight transition-all flex-1 ${isSelected ? 'font-semibold' : 'font-medium'}`}>{s.title}</span>
+          <span className={`text-[10px] font-mono tracking-tighter opacity-30 shrink-0 flex items-center gap-1.5`}>
+            {isFavorite && (
+              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500 shrink-0" strokeWidth={2.5} />
+            )}
+            {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+          </span>
+        </button>
+      </motion.div>
+    </div>
+  );
+}
 
 // --- Main Content Component ---
 
@@ -116,6 +185,7 @@ function HomeContent() {
   }, [status, router]);
 
   const [sessions, setSessions] = useState<any[]>([]);
+  const [favoriteSessionIds, setFavoriteSessionIds] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeShot, setActiveShot] = useState<any | null>(null);
@@ -167,11 +237,24 @@ function HomeContent() {
   
   const [viewMode, setViewMode] = useState<'list' | 'diary'>('list');
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
-  const [sortBy, setSortBy] = useState<'desc' | 'asc' | 'playtime'>('desc');
+  const [sortBy, setSortBy] = useState<'desc' | 'asc' | 'playtime' | 'favorites'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(15);
   const searchParams = useSearchParams();
   const pageSize = 10;
   const viewParam = searchParams?.get('view');
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    setVisibleCount(15);
+  }, [searchTerm, sortBy]);
 
   useEffect(() => {
     if (viewParam === 'diary') {
@@ -180,6 +263,24 @@ function HomeContent() {
       setViewMode('list');
     }
   }, [viewParam]);
+
+  const fetchFavorites = async () => {
+    if (!supabase || !session?.user?.id) {
+      setFavoriteSessionIds(new Set());
+      return;
+    }
+    const { data } = await supabase
+      .from('session_favorites')
+      .select('session_id')
+      .eq('user_id', session.user.id);
+    if (data) {
+      setFavoriteSessionIds(new Set(data.map((f: any) => f.session_id)));
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [session]);
 
   // 1. Core Data Fetching
   const fetchData = async () => {
@@ -216,9 +317,10 @@ function HomeContent() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'screenshots' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_favorites' }, fetchFavorites)
       .subscribe();
     return () => { supabase.removeChannel(channels); };
-  }, []);
+  }, [session]);
 
   // 2. Computed States
   const [profiles, setProfiles] = useState<any>({});
@@ -241,20 +343,28 @@ function HomeContent() {
   }, [sessions, searchTerm, session]);
 
   const sortedSessions = useMemo(() => {
-    return [...filteredSessions].sort((a, b) => {
+    let list = [...filteredSessions];
+    if (sortBy === 'favorites') {
+      list = list.filter(s => favoriteSessionIds.has(s.id));
+    }
+    return list.sort((a, b) => {
       if (sortBy === 'playtime') {
         return (b.total_duration_min || 0) - (a.total_duration_min || 0);
       }
       const timeA = new Date(a.start_time).getTime();
       const timeB = new Date(b.start_time).getTime();
-      return sortBy === 'desc' ? timeB - timeA : timeA - timeB;
+      return sortBy === 'asc' ? timeA - timeB : timeB - timeA;
     });
-  }, [filteredSessions, sortBy]);
+  }, [filteredSessions, sortBy, favoriteSessionIds]);
 
   const paginatedSessions = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return sortedSessions.slice(start, start + pageSize);
   }, [sortedSessions, currentPage]);
+
+  const mobileSessions = useMemo(() => {
+    return sortedSessions.slice(0, visibleCount);
+  }, [sortedSessions, visibleCount]);
 
   const current = useMemo(() => {
     const s = sortedSessions.find(s => s.id === selectedId) || sortedSessions[0];
@@ -342,6 +452,26 @@ function HomeContent() {
       setIsEditingTitle(false);
       fetchData();
     } catch (err) { setIsEditingTitle(false); }
+  };
+
+  const handleToggleFavorite = async (sessionId: string, isFav: boolean) => {
+    if (!session?.user?.id) return alert("로그인이 필요합니다.");
+    try {
+      if (isFav) {
+        await supabase
+          .from('session_favorites')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('session_id', sessionId);
+      } else {
+        await supabase
+          .from('session_favorites')
+          .insert({ user_id: session.user.id, session_id: sessionId });
+      }
+      fetchFavorites();
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+    }
   };
 
   const handleDiarySelect = (id: string) => {
@@ -471,22 +601,29 @@ function HomeContent() {
 
 
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollHeight - target.scrollTop - target.clientHeight < 100) {
+      setVisibleCount(prev => Math.min(prev + 15, sortedSessions.length));
+    }
+  };
+
   const displayNamesMap = Object.keys(profiles).reduce((acc: any, k) => ({...acc, [k]: profiles[k].display_name}), {});
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-6">
       <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      <p className="font-black text-xs tracking-[0.4em] uppercase animate-pulse opacity-40">Loading Dashboard...</p>
+      <p className="font-semibold text-[14px] uppercase animate-pulse opacity-40">일기장 불러오는 중...</p>
     </div>
   );
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0">
+    <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className={`md:w-[312px] w-full bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-all duration-200 ${
-        viewMode === 'list' ? 'flex' : 'hidden md:flex'
+      <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] z-10 ${
+        viewMode === 'list' ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
       }`}>
-        <div className="h-16 flex items-center px-4 border-b border-border shrink-0">
+        <div className="h-16 flex items-center px-4 border-b-0 md:border-b border-border shrink-0">
           <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -500,7 +637,7 @@ function HomeContent() {
         </div>
         <div className="px-4 py-4 shrink-0">
           <div className="relative group">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-primary transition-colors">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-primary/60 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
             <input 
@@ -508,46 +645,42 @@ function HomeContent() {
               placeholder="일기 제목 검색..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-card/40 border border-border/50 rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-muted-foreground/40"
+              className="w-full bg-card/40 border border-border/50 rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
-        <div className="h-8 flex items-center justify-end px-5 shrink-0">
-          <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
-        </div>
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-1">
-          <div className="space-y-1 min-h-[396px]">
-            {paginatedSessions.map(s => (
-              <button 
-                key={s.id} 
-                onClick={() => handleDiarySelect(s.id)} 
-                className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2.5 transition-all duration-200 ${selectedId === s.id ? 'bg-muted/80 text-foreground' : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-              >
-                <div className="w-5 h-5 rounded-md overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-sm">
-                  {s.guild_icon ? (
-                    <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[9px] font-black text-primary">
-                      {s.guild_name?.charAt(0) || 'G'}
-                    </div>
-                  )}
-                </div>
-                <span className={`text-[12px] truncate tracking-tight transition-all flex-1 ${selectedId === s.id ? 'font-semibold' : 'font-medium'}`}>{s.title}</span>
-                <span className={`text-[9px] font-mono tracking-tighter opacity-30 shrink-0`}>
-                  {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
-                </span>
-              </button>
-            ))}
+        <div className="flex-1 flex flex-col bg-card rounded-2xl mb-3 p-3 min-h-0 md:bg-transparent md:rounded-none md:border-none md:shadow-none md:mx-0 md:mb-0 md:p-0 md:flex-1 md:flex md:flex-col md:min-h-0">
+          <div className="h-8 flex items-center justify-end px-2 md:px-5 shrink-0">
+            <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
           </div>
+          <div 
+            onScroll={isMobile ? handleScroll : undefined}
+            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-24 md:pb-1"
+          >
+            <div className="space-y-1 min-h-[396px]">
+              {(isMobile ? mobileSessions : paginatedSessions).map(s => (
+                <DiaryListItem 
+                  key={s.id}
+                  session={s}
+                  isSelected={selectedId === s.id}
+                  isFavorite={favoriteSessionIds.has(s.id)}
+                  onSelect={handleDiarySelect}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              ))}
+            </div>
 
-          <SidebarPagination 
-            totalCount={sortedSessions.length} 
-            pageSize={pageSize} 
-            page={currentPage} 
-            onPageChange={setCurrentPage} 
-          />
+            {!isMobile && (
+              <SidebarPagination 
+                totalCount={sortedSessions.length} 
+                pageSize={pageSize} 
+                page={currentPage} 
+                onPageChange={setCurrentPage} 
+              />
+            )}
+          </div>
         </div>
-        <div className="p-4 border-t border-border flex items-center gap-3 bg-card/20 backdrop-blur-sm">
+        <div className="hidden md:flex p-4 border-t border-border items-center gap-3 bg-card/20 backdrop-blur-sm">
           <div className="w-9 h-9 rounded-full overflow-hidden border border-border shadow-sm ring-2 ring-background/50 shrink-0">
             <img src={session?.user?.image || ""} alt="" className="w-full h-full object-cover" />
           </div>
@@ -561,8 +694,8 @@ function HomeContent() {
       </aside>
 
       {/* 3. Main Content Area */}
-      <section className={`flex-1 flex flex-col min-w-0 transition-all relative h-full bg-background ${
-        viewMode === 'diary' ? 'flex' : 'hidden md:flex'
+      <section className={`flex-1 flex flex-col min-w-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 w-full h-full md:relative md:left-auto md:top-auto md:w-auto md:h-full bg-background z-20 ${
+        viewMode === 'diary' ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none md:pointer-events-auto'
       }`}>
         <DiaryHeader 
           current={{ ...current, sessionTitle: current?.title, date: current?.start_time }}
@@ -582,7 +715,7 @@ function HomeContent() {
             {current ? (
               <div className="w-full">
                 {/* Mobile-only collapsible Toss-style Metadata Card */}
-                <div className="md:hidden px-3 pt-3 pb-0">
+                <div className="md:hidden px-3 pt-2 pb-0">
                   <div 
                     onClick={!isMetadataExpanded ? () => setIsMetadataExpanded(true) : undefined}
                     className={`relative rounded-2xl overflow-hidden py-2.5 px-4 bg-card backdrop-blur-sm transition-all duration-200 ${

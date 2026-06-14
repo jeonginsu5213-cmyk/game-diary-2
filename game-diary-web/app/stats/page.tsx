@@ -77,7 +77,7 @@ export default function StatsPage() {
 
   const heatmapCells = generateHeatmap();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-discord-main-content text-white font-sans">ANALYZING DATA...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-semibold bg-discord-main-content text-white font-sans text-[14px]">데이터 분석 중...</div>;
 
   return (
     <div className="flex flex-col h-full bg-discord-main-content font-sans overflow-hidden">

@@ -22,7 +22,7 @@ function useClickOutside(ref: React.RefObject<HTMLElement | null>, handler: () =
 
 interface SidebarSortDropdownProps {
   currentSort: string;
-  onSortChange: (sort: 'desc' | 'asc' | 'playtime') => void;
+  onSortChange: (sort: 'desc' | 'asc' | 'playtime' | 'favorites') => void;
   className?: string;
 }
 
@@ -30,6 +30,7 @@ const SORT_OPTIONS = [
   { id: 'desc', name: '최신순' },
   { id: 'asc', name: '오래된순' },
   { id: 'playtime', name: '플레이시간순' },
+  { id: 'favorites', name: '즐겨찾기' },
 ] as const;
 
 export default function SidebarSortDropdown({
@@ -49,7 +50,7 @@ export default function SidebarSortDropdown({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-1 text-[9px] font-black text-muted-foreground hover:text-primary transition-all duration-200 group outline-none",
+          "flex items-center gap-1 text-[12px] font-bold text-muted-foreground hover:text-primary transition-all duration-200 group outline-none",
           isOpen && "text-primary"
         )}
       >
@@ -59,8 +60,9 @@ export default function SidebarSortDropdown({
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2, ease: 'easeInOut' }}
+          className={cn("opacity-40 group-hover:opacity-100 transition-opacity", isOpen && "opacity-100")}
         >
-          <ChevronDown className='h-2.5 w-2.5' strokeWidth={4} />
+          <ChevronDown className='h-3 w-3' strokeWidth={2.5} />
         </motion.div>
       </button>
 
@@ -74,7 +76,7 @@ export default function SidebarSortDropdown({
             className={cn(
               'absolute top-[calc(100%+0.25rem)] right-0 z-50 w-32',
               'overflow-hidden rounded-lg',
-              'bg-card border border-border',
+              'bg-card',
               'shadow-lg shadow-black/5'
             )}
           >
@@ -87,7 +89,7 @@ export default function SidebarSortDropdown({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    'w-full text-left px-3 py-1.5 text-[10px] font-bold rounded-md transition-colors',
+                    'w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors',
                     currentSort === item.id 
                       ? 'bg-primary/5 text-primary' 
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'

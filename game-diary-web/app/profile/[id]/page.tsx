@@ -117,7 +117,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   const heatmapCells = generateHeatmap();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black bg-discord-main-content text-white font-sans text-xl animate-pulse">LOADING PROFILE...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-semibold bg-discord-main-content text-white font-sans text-[14px] animate-pulse">프로필 불러오는 중...</div>;
 
   return (
     <div className="flex flex-col h-full bg-discord-main-content font-sans overflow-hidden">
