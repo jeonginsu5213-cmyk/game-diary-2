@@ -1093,7 +1093,7 @@ function HomeContent() {
                               )}
 
                               {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
-                              <div className="block md:hidden mt-4 -mx-4 -mb-4 pt-4 pb-4 px-0 bg-muted rounded-b-2xl border border-border/40 animate-in fade-in duration-300">
+                              <div className="block md:hidden mt-4 -mx-4 -mb-4 pt-4 pb-4 px-0 bg-muted rounded-2xl border border-border/40 animate-in fade-in duration-300">
                                 <div className="flex items-center mb-4 px-4">
                                   <h3 className="font-semibold text-foreground tracking-tight text-lg leading-none">
                                     댓글
