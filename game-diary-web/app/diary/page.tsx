@@ -62,7 +62,7 @@ function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleF
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.6, right: 0 }}
         dragTransition={{ bounceStiffness: 300, bounceDamping: 28 }}
-        style={{ x }}
+        style={{ x, touchAction: 'pan-y' }}
         onDragEnd={(event, info) => {
           if (x.get() < -50) {
             onToggleFavorite(s.id, isFavorite);
@@ -620,8 +620,8 @@ function HomeContent() {
   return (
     <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] z-10 ${
-        viewMode === 'list' ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
+      <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
+        viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-20' : '-translate-x-full pointer-events-none z-10'
       }`}>
         <div className="h-16 hidden md:flex items-center px-4 border-b border-border shrink-0">
           <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
@@ -697,8 +697,8 @@ function HomeContent() {
       </aside>
 
       {/* 3. Main Content Area */}
-      <section className={`flex-1 flex flex-col min-w-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 w-full h-full md:relative md:left-auto md:top-auto md:w-auto md:h-full bg-background z-20 ${
-        viewMode === 'diary' ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none md:pointer-events-auto'
+      <section className={`flex-1 flex flex-col min-w-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 w-full h-full md:relative md:left-auto md:top-auto md:w-auto md:h-full bg-background ${
+        viewMode === 'diary' ? 'translate-x-0 pointer-events-auto z-20' : 'translate-x-full pointer-events-none md:pointer-events-auto z-10'
       }`}>
         <DiaryHeader 
           current={{ ...current, sessionTitle: current?.title, date: current?.start_time }}
@@ -1093,7 +1093,7 @@ function HomeContent() {
                               )}
 
                               {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
-                              <div className="block md:hidden mt-4 -mx-4 -mb-4 pt-4 pb-4 px-0 bg-muted rounded-b-2xl animate-in fade-in duration-300">
+                              <div className="block md:hidden mt-4 -mx-4 -mb-4 pt-4 pb-4 px-0 bg-muted rounded-b-2xl border border-border/40 animate-in fade-in duration-300">
                                 <div className="flex items-center mb-4 px-4">
                                   <h3 className="font-semibold text-foreground tracking-tight text-lg leading-none">
                                     댓글
@@ -1137,7 +1137,7 @@ function HomeContent() {
                           title: "댓글",
                           colSpan: 1,
                           isCommentSection: true,
-                          className: "hidden md:flex",
+                          className: "hidden md:flex border border-border/40",
                           content: (
                             <div className="flex flex-col h-[450px]">
                               {renderChecklist(game)}
