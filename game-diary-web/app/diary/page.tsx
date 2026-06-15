@@ -637,7 +637,7 @@ function HomeContent() {
     <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
       <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
-        viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-20' : '-translate-x-full pointer-events-none z-10'
+        viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-20 md:z-auto' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
       }`}>
         <div className="h-16 hidden md:flex items-center px-4 border-b border-border shrink-0">
           <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
@@ -714,7 +714,7 @@ function HomeContent() {
 
       {/* 3. Main Content Area */}
       <section className={`flex-1 flex flex-col min-w-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 w-full h-full md:relative md:left-auto md:top-auto md:w-auto md:h-full bg-background ${
-        viewMode === 'diary' ? 'translate-x-0 pointer-events-auto z-20' : 'translate-x-full pointer-events-none md:pointer-events-auto z-10'
+        viewMode === 'diary' ? 'translate-x-0 pointer-events-auto z-20 md:z-auto' : 'translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
       }`}>
         <DiaryHeader 
           current={{ ...current, sessionTitle: current?.title, date: current?.start_time }}
