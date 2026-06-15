@@ -411,6 +411,8 @@ client.once('ready', async () => {
             const channelId = voiceState.channelId;
             if (!activeSessions.has(channelId)) {
                 activeSessions.set(channelId, {
+                    guildName: voiceState.guild.name,
+                    guildIcon: voiceState.guild.iconURL({ format: 'png', size: 512 }),
                     channelName: voiceState.channel.name, sessionTitle: "오늘의 게임일기", startTime: Date.now(),
                     participants: new Set(), displayNames: new Map(), profileImages: new Map(),
                     gameLogs: {}, participantLogs: {}, pendingScreenshots: [], controlMessage: null 
