@@ -277,7 +277,7 @@ export default function CommentItem({
 
             {/* Reactions Row */}
             {comment.reactions && Object.keys(comment.reactions).length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
+              <div className="flex flex-wrap gap-1 mt-1.5" onPointerDown={(e) => e.stopPropagation()}>
                 {Object.entries(comment.reactions).map(([emoji, users]: [string, any]) => {
                   const hasReacted = myId && users.includes(myId);
                   const reactorNames = users.map((uid: string) => {
@@ -289,6 +289,7 @@ export default function CommentItem({
                   return (
                     <div key={emoji} className="relative group/reaction">
                       <button
+                        onPointerDown={(e) => e.stopPropagation()}
                         onMouseDown={(e) => startEmojiPress(emoji, e)}
                         onMouseUp={(e) => { e.stopPropagation(); endEmojiPress(emoji, () => onAddReaction(emoji)); }}
                         onMouseLeave={(e) => { e.stopPropagation(); cancelEmojiPress(); }}
