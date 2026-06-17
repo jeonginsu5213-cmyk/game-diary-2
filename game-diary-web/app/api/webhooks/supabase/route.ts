@@ -122,9 +122,8 @@ export async function POST(request: Request) {
           const body = `${senderName}님이 내 댓글에 답글을 남겼습니다: "${newReply.text}"`;
           const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
 
-          // Vercel 타임아웃 방지를 위해 동기 대기 없이 백그라운드 비동기로 FCM 전송
-          // 또한 인앱 알림용 notifications 테이블에도 기록 저장
-          Promise.allSettled([
+          // Vercel 서버리스 환경에서 함수가 조기 동결되는 것을 막기 위해 비동기 작업을 대기(await)합니다.
+          const results = await Promise.allSettled([
             sendFcmNotification(recipientProfile.fcm_token, title, body, { url: redirectUrl }),
             supabase.from("notifications").insert({
               recipient_id: recipientId,
@@ -133,9 +132,8 @@ export async function POST(request: Request) {
               source_id: commentId,
               content: body,
             })
-          ]).then((results) => {
-            console.log("FCM & notification logging processes settled:", results);
-          });
+          ]);
+          console.log("FCM & notification logging processes settled:", results);
         }
       }
     }
@@ -185,8 +183,8 @@ export async function POST(request: Request) {
         const body = `${senderName}님이 내 댓글에 이모지 반응(${addedReactionEmoji})을 남겼습니다.`;
         const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
 
-        // 비동기 처리
-        Promise.allSettled([
+        // Vercel 서버리스 환경에서 함수가 조기 동결되는 것을 막기 위해 비동기 작업을 대기(await)합니다.
+        const results = await Promise.allSettled([
           sendFcmNotification(recipientProfile.fcm_token, title, body, { url: redirectUrl }),
           supabase.from("notifications").insert({
             recipient_id: recipientId,
@@ -195,9 +193,8 @@ export async function POST(request: Request) {
             source_id: commentId,
             content: body,
           })
-        ]).then((results) => {
-          console.log("FCM Reaction & notification logging processes settled:", results);
-        });
+        ]);
+        console.log("FCM Reaction & notification logging processes settled:", results);
       }
     }
 
