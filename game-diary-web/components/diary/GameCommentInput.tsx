@@ -116,8 +116,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden bg-primary/10"
           >
-            <div className="flex items-center gap-2 px-3 py-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            <div className="flex items-center px-3 py-2">
               <span className="text-[11px] font-semibold text-primary leading-none">
                 메시지를 상단에 고정하고 체크리스트로 활용할 수 있습니다.
               </span>
