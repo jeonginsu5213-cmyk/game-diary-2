@@ -1429,13 +1429,13 @@ function HomeContent() {
       {/* 모바일 리액션 상세 바텀 시트 */}
       {reactionDetailOpen && activeReactionComment && (
         <Drawer open={reactionDetailOpen} onOpenChange={setReactionDetailOpen}>
-          <DrawerPopup position="bottom" showBar className="bg-popover border-t border-border/20 rounded-t-3xl shadow-2xl select-none" backdropClassName="bg-black/40 backdrop-blur-[2px]">
-            <DrawerPanel scrollable={true} className="pb-8 pt-4 px-4 select-none font-sans">
-              <div className="text-center font-black text-base text-foreground mb-4">리액션</div>
+          <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
+            <DrawerPanel scrollable={true} className="px-3 pb-6 pt-6 select-none font-sans h-[50vh] flex flex-col">
+              <div className="text-center font-black text-base text-foreground mb-4 shrink-0">리액션</div>
               
               {/* 이모지 탭 리스트 */}
               {activeReactionComment.reactions && (
-                <div className="flex gap-2 overflow-x-auto justify-center pb-4 border-b border-border/10 mb-4 no-scrollbar">
+                <div className="flex gap-2 overflow-x-auto justify-center pb-4 border-b border-border/10 mb-4 no-scrollbar shrink-0">
                   {Object.entries(activeReactionComment.reactions).map(([emoji, users]: [string, any]) => {
                     const isSelected = reactionDetailEmoji === emoji;
                     return (
@@ -1458,7 +1458,7 @@ function HomeContent() {
 
               {/* 현재 선택된 이모지에 반응을 남긴 유저 목록 */}
               {reactionDetailEmoji && activeReactionComment.reactions?.[reactionDetailEmoji] && (
-                <div className="flex flex-col gap-3 max-h-[280px] overflow-y-auto px-1 custom-scrollbar">
+                <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto px-1 custom-scrollbar">
                   {(activeReactionComment.reactions[reactionDetailEmoji] as string[]).map((uid) => {
                     const userProfile = profiles[uid];
                     const isMe = session?.user?.id === uid;
