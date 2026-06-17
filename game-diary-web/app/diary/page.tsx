@@ -1203,7 +1203,7 @@ function HomeContent() {
                                 <div className="px-4">
                                   {renderChecklist(game)}
                                 </div>
-                                <div className={`flex flex-col ${game.comments?.filter((c: any) => !c.is_checklist).length > 5 ? "h-[320px]" : "h-auto"}`}>
+                                <div className={`flex flex-col ${(game.comments?.filter((c: any) => !c.is_checklist) || []).reduce((acc: number, c: any) => acc + 1 + (c.replies?.length || 0), 0) > 5 ? "h-[320px]" : "h-auto"}`}>
                                   <GameCommentList 
                                     game={game}
                                     profiles={profiles}
@@ -1241,7 +1241,7 @@ function HomeContent() {
                           isCommentSection: true,
                           className: "hidden md:flex border border-border/40",
                           content: (
-                            <div className={`flex flex-col ${game.comments?.filter((c: any) => !c.is_checklist).length > 5 ? "h-[450px]" : "h-auto"}`}>
+                            <div className={`flex flex-col ${(game.comments?.filter((c: any) => !c.is_checklist) || []).reduce((acc: number, c: any) => acc + 1 + (c.replies?.length || 0), 0) > 5 ? "h-[450px]" : "h-auto"}`}>
                               {renderChecklist(game)}
                               <GameCommentList 
                                 game={game}
