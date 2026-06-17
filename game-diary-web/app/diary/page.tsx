@@ -1434,7 +1434,7 @@ function HomeContent() {
             
             {/* 이모지 탭 리스트 */}
             {activeReactionComment?.reactions && (
-              <div className="flex gap-2 overflow-x-auto justify-center pb-4 border-b border-border/10 mb-4 no-scrollbar shrink-0">
+              <div className="flex gap-2 overflow-x-auto justify-start pb-4 border-b border-border/10 mb-4 no-scrollbar shrink-0 px-1">
                 {Object.entries(activeReactionComment.reactions).map(([emoji, users]: [string, any]) => {
                   const isSelected = reactionDetailEmoji === emoji;
                   return (
@@ -1444,7 +1444,7 @@ function HomeContent() {
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
                         isSelected 
                           ? 'bg-primary/10 border-primary text-primary shadow-sm' 
-                          : 'bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/85'
+                          : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted/85 hover:border-muted-foreground/30'
                       }`}
                     >
                       <span>{emoji}</span>
