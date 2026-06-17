@@ -386,10 +386,10 @@ export function DrawerBar({
     <div
       aria-hidden
       className={cn(
-        "absolute flex touch-none items-center justify-center p-3 before:rounded-full before:bg-border",
+        "absolute flex touch-none items-center justify-center py-2 px-3 before:rounded-full before:bg-border",
         horizontal
-          ? "inset-y-0 before:h-12 before:w-1"
-          : "inset-x-0 before:h-1 before:w-12",
+          ? "inset-y-0 before:h-8 before:w-1"
+          : "inset-x-0 before:h-1 before:w-8",
         position === "top" && "bottom-0",
         position === "bottom" && "top-0",
         position === "left" && "right-0",
