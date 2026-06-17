@@ -404,7 +404,7 @@ export default function CommentItem({
       {/* Drawer Panel */}
       <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
-          <DrawerPanel scrollable={false} className="px-3 pb-6 pt-6 select-none font-sans h-[50vh] flex flex-col">
+          <DrawerPanel scrollable={false} className="px-3 pb-6 pt-5 select-none font-sans h-[50vh] flex flex-col">
             {/* Emojis Reaction Bar (Separate white box matching the actions list) */}
             <div className="flex justify-around items-center p-2 bg-[#FFFFFF] rounded-xl mb-2">
               {EMOJIS.map((emoji) => (
