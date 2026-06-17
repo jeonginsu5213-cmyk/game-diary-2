@@ -499,34 +499,97 @@ function HomeContent() {
 
   const handleAddReaction = async (commentId: string, emoji: string) => {
     if (!session) return alert("로그인이 필요합니다.");
-    const myId = session.user.id;
-    const { data: comment } = await supabase.from('comments').select('reactions').eq('id', commentId).single();
-    let reactions = comment?.reactions || {};
-    if (!reactions[emoji]) reactions[emoji] = [];
-    if (reactions[emoji].includes(myId)) {
-      reactions[emoji] = reactions[emoji].filter((id: string) => id !== myId);
-      if (reactions[emoji].length === 0) delete reactions[emoji];
-    } else reactions[emoji].push(myId);
-    await supabase.from('comments').update({ reactions }).eq('id', commentId);
-    fetchData();
+    try {
+      const myId = session.user.id;
+      const { data: comment, error: fetchError } = await supabase
+        .from('comments')
+        .select('reactions')
+        .eq('id', commentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      let reactions = comment?.reactions || {};
+      if (!reactions[emoji]) reactions[emoji] = [];
+      if (reactions[emoji].includes(myId)) {
+        reactions[emoji] = reactions[emoji].filter((id: string) => id !== myId);
+        if (reactions[emoji].length === 0) delete reactions[emoji];
+      } else {
+        reactions[emoji].push(myId);
+      }
+
+      const { error: updateError } = await supabase
+        .from('comments')
+        .update({ reactions })
+        .eq('id', commentId);
+
+      if (updateError) throw updateError;
+      await fetchData();
+    } catch (err: any) {
+      console.error("❌ Failed to add reaction:", err);
+      alert(`반응 추가 중 오류가 발생했습니다: ${err.message || "알 수 없는 에러"}`);
+    }
   };
 
   const handleAddReply = async (commentId: string, text: string) => {
     if (!session) return alert("로그인이 필요합니다.");
-    const { data: comment } = await supabase.from('comments').select('replies').eq('id', commentId).single();
-    const replies = comment?.replies || [];
-    const newReply = { userId: session.user.id, user: session.user.name, image: session.user.image, text: text.trim(), createdAt: new Date().toISOString(), reactions: {} };
-    await supabase.from('comments').update({ replies: [...replies, newReply] }).eq('id', commentId);
-    fetchData();
+    try {
+      const { data: comment, error: fetchError } = await supabase
+        .from('comments')
+        .select('replies')
+        .eq('id', commentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const replies = comment?.replies || [];
+      const newReply = { 
+        userId: session.user.id, 
+        user: session.user.name, 
+        image: session.user.image, 
+        text: text.trim(), 
+        createdAt: new Date().toISOString(), 
+        reactions: {} 
+      };
+
+      const { error: updateError } = await supabase
+        .from('comments')
+        .update({ replies: [...replies, newReply] })
+        .eq('id', commentId);
+
+      if (updateError) throw updateError;
+      await fetchData();
+    } catch (err: any) {
+      console.error("❌ Failed to add reply:", err);
+      alert(`답글 등록 중 오류가 발생했습니다: ${err.message || "알 수 없는 에러"}`);
+    }
   };
 
   const handleDeleteReply = async (commentId: string, replyIdx: number) => {
     if (!session) return alert("로그인이 필요합니다.");
-    const { data: comment } = await supabase.from('comments').select('replies').eq('id', commentId).single();
-    const replies = comment?.replies || [];
-    const newReplies = replies.filter((_: any, idx: number) => idx !== replyIdx);
-    await supabase.from('comments').update({ replies: newReplies }).eq('id', commentId);
-    fetchData();
+    try {
+      const { data: comment, error: fetchError } = await supabase
+        .from('comments')
+        .select('replies')
+        .eq('id', commentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const replies = comment?.replies || [];
+      const newReplies = replies.filter((_: any, idx: number) => idx !== replyIdx);
+
+      const { error: updateError } = await supabase
+        .from('comments')
+        .update({ replies: newReplies })
+        .eq('id', commentId);
+
+      if (updateError) throw updateError;
+      await fetchData();
+    } catch (err: any) {
+      console.error("❌ Failed to delete reply:", err);
+      alert(`답글 삭제 중 오류가 발생했습니다: ${err.message || "알 수 없는 에러"}`);
+    }
   };
 
   const handleToggleChecklist = async (commentId: string, currentStatus: boolean, gameId: string) => {

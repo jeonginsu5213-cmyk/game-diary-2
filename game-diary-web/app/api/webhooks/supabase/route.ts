@@ -8,15 +8,23 @@ export const dynamic = "force-dynamic";
 // Firebase Admin SDK 초기화 (중복 초기화 방지)
 if (!getApps().length) {
   try {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-    });
-    console.log("Firebase Admin SDK initialized successfully.");
+    const rawKey = process.env.FIREBASE_PRIVATE_KEY;
+    const privateKey = rawKey 
+      ? rawKey.replace(/^"|"$/g, "").replace(/\\n/g, "\n") 
+      : undefined;
+
+    if (!privateKey) {
+      console.warn("⚠️ Firebase private key is missing. FCM notifications will be skipped.");
+    } else {
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+      });
+      console.log("Firebase Admin SDK initialized successfully.");
+    }
   } catch (error) {
     console.error("Firebase Admin init error:", error);
   }
@@ -25,6 +33,10 @@ if (!getApps().length) {
 // FCM 전송 공통 함수
 async function sendFcmNotification(token: string, title: string, body: string, data?: any) {
   try {
+    if (!getApps().length) {
+      console.warn("⚠️ Cannot send FCM: Firebase app is not initialized.");
+      return false;
+    }
     const message = {
       notification: { title, body },
       token: token,
