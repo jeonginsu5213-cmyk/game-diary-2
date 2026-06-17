@@ -253,7 +253,7 @@ export default function CommentItem({
                     <div key={emoji} className="relative group/reaction">
                       <button
                         onClick={() => onAddReaction(emoji)}
-                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${hasReacted ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-muted border-transparent text-muted-foreground hover:border-border'}`}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border bg-primary/20 border-primary/30 text-primary hover:border-primary/50"
                       >
                         <span>{emoji}</span>
                         <span>{users.length}</span>
