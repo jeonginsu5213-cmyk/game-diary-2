@@ -620,7 +620,7 @@ function HomeContent() {
     
     try {
       if (currentStatus) {
-        if (!window.confirm("체크리스트 설정을 해제하시겠습니까?")) {
+        if (!window.confirm("상단 고정을 해제할까요?")) {
           return;
         }
       } else {
@@ -633,7 +633,7 @@ function HomeContent() {
           .eq('is_checklist', true);
 
         if (existingPins && existingPins.length > 0) {
-          if (!window.confirm("이미 고정된 메시지가 있습니다. 새로운 메시지로 교체하시겠습니까?")) {
+          if (!window.confirm("이미 고정해 둔 댓글이 있어요. 새로운 댓글로 바꿀까요?")) {
             return;
           }
           // 기존 고정 메시지들 해제
