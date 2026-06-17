@@ -3,11 +3,7 @@ import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { createClient } from "@supabase/supabase-js";
 
-// Supabase Admin Client (RLS 우회 및 토큰 조회를 위해 서비스 롤 키 사용 또는 기본 클라이언트 사용)
-// 여기서는 토큰 조회 및 profiles 테이블 접근을 위해 환경 변수의 SUPABASE_URL과 SUPABASE_SERVICE_ROLE_KEY를 활용합니다.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+export const dynamic = "force-dynamic";
 
 // Firebase Admin SDK 초기화 (중복 초기화 방지)
 if (!getApps().length) {
@@ -55,6 +51,16 @@ async function sendFcmNotification(token: string, title: string, body: string, d
 
 export async function POST(request: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Supabase credentials are missing at runtime.");
+      return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // 1. 보안 토큰 검증 (선택)
     const authHeader = request.headers.get("Authorization");
     const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
