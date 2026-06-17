@@ -1430,7 +1430,7 @@ function HomeContent() {
       <Drawer open={reactionDetailOpen} onOpenChange={setReactionDetailOpen}>
         <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
           <DrawerPanel scrollable={false} className="px-3 pb-6 pt-6 select-none font-sans h-[50vh] flex flex-col">
-            <div className="text-center font-normal text-sm text-foreground mb-4 shrink-0">리액션</div>
+            <div className="text-center font-medium text-base text-foreground mb-4 shrink-0">리액션</div>
             
             {/* 이모지 탭 리스트 */}
             {activeReactionComment?.reactions && (
