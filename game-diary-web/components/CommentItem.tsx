@@ -20,6 +20,7 @@ interface CommentItemProps {
   onDelete?: () => void;
   onDeleteReply?: (replyIdx: number) => void;
   isReply?: boolean;
+  isLastReply?: boolean;
   displayNames?: { [userId: string]: string };
   profiles?: any;
   onMobileReply?: (commentId: string, userName: string) => void;
@@ -49,6 +50,7 @@ export default function CommentItem({
   onDelete, 
   onDeleteReply,
   isReply = false,
+  isLastReply = false,
   displayNames = {},
   profiles = {},
   onMobileReply,
@@ -186,7 +188,15 @@ export default function CommentItem({
 
   return (
     <div ref={itemRef} className={`flex flex-col scroll-my-2 ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
-      <div className={`relative ${isActiveReply || showReplyInput ? 'overflow-visible' : 'overflow-hidden rounded-lg'}`}>
+      <div className={`relative ${isReply || isActiveReply || showReplyInput ? 'overflow-visible' : 'overflow-hidden rounded-lg'}`}>
+        {isReply && (
+          <div className="absolute left-[-16px] top-0 bottom-0 w-[16px] pointer-events-none select-none z-0">
+            {/* 세로선 */}
+            <div className={`absolute left-0 w-[1px] bg-border/50 ${isLastReply ? 'top-0 h-[24px]' : 'top-0 bottom-0'}`} />
+            {/* L자형 가로선 */}
+            <div className="absolute left-0 top-[24px] w-[12px] h-[1px] bg-border/50" />
+          </div>
+        )}
         {/* Swipe Reply Icon Background */}
         {!isReply && (
           <div className="absolute inset-y-0 left-0 w-24 flex items-center pl-3 pointer-events-none z-0">
@@ -364,7 +374,7 @@ export default function CommentItem({
 
       {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
-        <div className="space-y-0.5 border-l border-border/50 ml-3.5 pl-2">
+        <div className="space-y-0.5 ml-3.5 pl-[18px] relative">
           {comment.replies.map((reply: any, idx: number) => (
             <CommentItem 
               key={idx} 
@@ -373,6 +383,7 @@ export default function CommentItem({
               onAddReply={() => {}} 
               onDelete={() => onDeleteReply?.(idx)} 
               isReply 
+              isLastReply={idx === comment.replies.length - 1}
               displayNames={displayNames}
               profiles={profiles}
             />

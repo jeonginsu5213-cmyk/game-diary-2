@@ -1218,7 +1218,7 @@ function HomeContent() {
                                     handleDeleteReply={handleDeleteReply}
                                     onOpenReactionDetail={handleOpenReactionDetail}
                                   />
-                                  <div className="mt-2 px-4 bg-transparent">
+                                  <div className="px-4 bg-transparent">
                                     <GameCommentInput 
                                       gameId={game.id} 
                                       gameTitle={game.title} 
