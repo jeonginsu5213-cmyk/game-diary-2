@@ -1427,78 +1427,76 @@ function HomeContent() {
       )}
 
       {/* 모바일 리액션 상세 바텀 시트 */}
-      {reactionDetailOpen && activeReactionComment && (
-        <Drawer open={reactionDetailOpen} onOpenChange={setReactionDetailOpen}>
-          <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
-            <DrawerPanel scrollable={false} className="px-3 pb-6 pt-6 select-none font-sans h-[50vh] flex flex-col">
-              <div className="text-center font-black text-base text-foreground mb-4 shrink-0">리액션</div>
-              
-              {/* 이모지 탭 리스트 */}
-              {activeReactionComment.reactions && (
-                <div className="flex gap-2 overflow-x-auto justify-center pb-4 border-b border-border/10 mb-4 no-scrollbar shrink-0">
-                  {Object.entries(activeReactionComment.reactions).map(([emoji, users]: [string, any]) => {
-                    const isSelected = reactionDetailEmoji === emoji;
-                    return (
-                      <button
-                        key={emoji}
-                        onClick={() => setReactionDetailEmoji(emoji)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                          isSelected 
-                            ? 'bg-primary/10 border-primary text-primary shadow-sm' 
-                            : 'bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/85'
-                        }`}
-                      >
-                        <span>{emoji}</span>
-                        <span>{users.length}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+      <Drawer open={reactionDetailOpen} onOpenChange={setReactionDetailOpen}>
+        <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
+          <DrawerPanel scrollable={false} className="px-3 pb-6 pt-6 select-none font-sans h-[50vh] flex flex-col">
+            <div className="text-center font-black text-base text-foreground mb-4 shrink-0">리액션</div>
+            
+            {/* 이모지 탭 리스트 */}
+            {activeReactionComment?.reactions && (
+              <div className="flex gap-2 overflow-x-auto justify-center pb-4 border-b border-border/10 mb-4 no-scrollbar shrink-0">
+                {Object.entries(activeReactionComment.reactions).map(([emoji, users]: [string, any]) => {
+                  const isSelected = reactionDetailEmoji === emoji;
+                  return (
+                    <button
+                      key={emoji}
+                      onClick={() => setReactionDetailEmoji(emoji)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                        isSelected 
+                          ? 'bg-primary/10 border-primary text-primary shadow-sm' 
+                          : 'bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/85'
+                      }`}
+                    >
+                      <span>{emoji}</span>
+                      <span>{users.length}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-              {/* 현재 선택된 이모지에 반응을 남긴 유저 목록 */}
-              {reactionDetailEmoji && activeReactionComment.reactions?.[reactionDetailEmoji] && (
-                <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto px-1 custom-scrollbar">
-                  {(activeReactionComment.reactions[reactionDetailEmoji] as string[]).map((uid) => {
-                    const userProfile = profiles[uid];
-                    const isMe = session?.user?.id === uid;
-                    const isLoggedIn = !!userProfile?.has_logged_in;
-                    const displayName = userProfile?.display_name || displayNamesMap[uid] || uid || "알 수 없음";
-                    const maskedName = isLoggedIn ? displayName : maskNickname(displayName);
+            {/* 현재 선택된 이모지에 반응을 남긴 유저 목록 */}
+            {activeReactionComment && reactionDetailEmoji && activeReactionComment.reactions?.[reactionDetailEmoji] && (
+              <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto px-1 custom-scrollbar">
+                {(activeReactionComment.reactions[reactionDetailEmoji] as string[]).map((uid) => {
+                  const userProfile = profiles[uid];
+                  const isMe = session?.user?.id === uid;
+                  const isLoggedIn = !!userProfile?.has_logged_in;
+                  const displayName = userProfile?.display_name || displayNamesMap[uid] || uid || "알 수 없음";
+                  const maskedName = isLoggedIn ? displayName : maskNickname(displayName);
 
-                    return (
-                      <div key={uid} className="flex items-center gap-3 py-2 border-b border-border/5 last:border-0">
-                        {/* 아바타 */}
-                        {userProfile?.avatar_url ? (
-                          <img 
-                            src={userProfile.avatar_url} 
-                            alt={maskedName} 
-                            className="w-9 h-9 rounded-full object-cover shrink-0 border border-border/20 shadow-sm"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-black text-xs text-muted-foreground shrink-0 border border-border/20 shadow-sm">
-                            {maskedName.slice(0, 1)}
-                          </div>
-                        )}
-                        
-                        {/* 닉네임 및 '나' 뱃지 */}
-                        <div className="flex items-center gap-2">
-                          {isMe && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted text-[10px] font-black text-muted-foreground/80 shrink-0">
-                              나
-                            </span>
-                          )}
-                          <span className="text-sm font-bold text-foreground">{maskedName}</span>
+                  return (
+                    <div key={uid} className="flex items-center gap-3 py-2 border-b border-border/5 last:border-0">
+                      {/* 아바타 */}
+                      {userProfile?.avatar_url ? (
+                        <img 
+                          src={userProfile.avatar_url} 
+                          alt={maskedName} 
+                          className="w-9 h-9 rounded-full object-cover shrink-0 border border-border/20 shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-black text-xs text-muted-foreground shrink-0 border border-border/20 shadow-sm">
+                          {maskedName.slice(0, 1)}
                         </div>
+                      )}
+                      
+                      {/* 닉네임 및 '나' 뱃지 */}
+                      <div className="flex items-center gap-2">
+                        {isMe && (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted text-[10px] font-black text-muted-foreground/80 shrink-0">
+                            나
+                          </span>
+                        )}
+                        <span className="text-sm font-bold text-foreground">{maskedName}</span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </DrawerPanel>
-          </DrawerPopup>
-        </Drawer>
-      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </DrawerPanel>
+        </DrawerPopup>
+      </Drawer>
     </div>
   );
 }
