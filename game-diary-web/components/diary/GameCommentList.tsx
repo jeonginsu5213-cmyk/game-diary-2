@@ -17,7 +17,8 @@ const GameCommentList = ({
   className,
   onMobileReply,
   activeReplyId,
-  handleDeleteReply
+  handleDeleteReply,
+  onOpenReactionDetail
 }: any) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCommentsLength = useRef(game.comments?.length || 0);
@@ -70,6 +71,7 @@ const GameCommentList = ({
             onDeleteReply={(replyIdx: number) => handleDeleteReply?.(c.id, replyIdx)}
             onMobileReply={onMobileReply}
             isActiveReply={activeReplyId === c.id}
+            onOpenReactionDetail={onOpenReactionDetail}
           />
         ))
       ) : !hasComments ? (

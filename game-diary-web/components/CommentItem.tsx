@@ -24,6 +24,7 @@ interface CommentItemProps {
   profiles?: any;
   onMobileReply?: (commentId: string, userName: string) => void;
   isActiveReply?: boolean;
+  onOpenReactionDetail?: (commentId: string, initialEmoji: string) => void;
 }
 
 const formatCommentDate = (isoString?: string) => {
@@ -51,7 +52,8 @@ export default function CommentItem({
   displayNames = {},
   profiles = {},
   onMobileReply,
-  isActiveReply = false
+  isActiveReply = false,
+  onOpenReactionDetail
 }: CommentItemProps) {
   const { data: session }: any = useSession();
   const [showPicker, setShowPicker] = useState(false);
@@ -101,6 +103,40 @@ export default function CommentItem({
       e.preventDefault();
       e.stopPropagation();
       isLongPressed.current = false;
+    }
+  };
+
+  // 이모지 반응 롱프레스 상태 관리
+  const emojiTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isEmojiLongPressed = useRef(false);
+
+  const startEmojiPress = (emoji: string) => {
+    isEmojiLongPressed.current = false;
+    emojiTimerRef.current = setTimeout(() => {
+      isEmojiLongPressed.current = true;
+      if (onOpenReactionDetail) {
+        onOpenReactionDetail(comment.id, emoji);
+      }
+      if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+    }, 500);
+  };
+
+  const endEmojiPress = (emoji: string, callback: () => void) => {
+    if (emojiTimerRef.current) {
+      clearTimeout(emojiTimerRef.current);
+      emojiTimerRef.current = null;
+    }
+    if (!isEmojiLongPressed.current) {
+      callback();
+    }
+  };
+
+  const cancelEmojiPress = () => {
+    if (emojiTimerRef.current) {
+      clearTimeout(emojiTimerRef.current);
+      emojiTimerRef.current = null;
     }
   };
 
@@ -252,8 +288,13 @@ export default function CommentItem({
                   return (
                     <div key={emoji} className="relative group/reaction">
                       <button
-                        onClick={() => onAddReaction(emoji)}
-                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border bg-primary/20 border-primary/30 text-primary hover:border-primary/50"
+                        onMouseDown={() => startEmojiPress(emoji)}
+                        onMouseUp={() => endEmojiPress(emoji, () => onAddReaction(emoji))}
+                        onMouseLeave={cancelEmojiPress}
+                        onTouchStart={() => startEmojiPress(emoji)}
+                        onTouchEnd={(e) => { e.preventDefault(); endEmojiPress(emoji, () => onAddReaction(emoji)); }}
+                        onTouchMove={cancelEmojiPress}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border bg-primary/20 border-primary/30 text-primary hover:border-primary/50 select-none touch-none touch-callout-none"
                       >
                         <span>{emoji}</span>
                         <span>{users.length}</span>

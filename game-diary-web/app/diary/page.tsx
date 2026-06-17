@@ -226,6 +226,29 @@ function HomeContent() {
     userName: string;
   } | null>(null);
 
+  // 모바일 리액션 상세 바텀 시트 상태
+  const [reactionDetailOpen, setReactionDetailOpen] = useState(false);
+  const [reactionDetailCommentId, setReactionDetailCommentId] = useState<string | null>(null);
+  const [reactionDetailEmoji, setReactionDetailEmoji] = useState<string | null>(null);
+
+  const activeReactionComment = useMemo(() => {
+    if (!reactionDetailCommentId) return null;
+    for (const s of sessions) {
+      for (const sg of s.session_games || []) {
+        for (const c of sg.comments || []) {
+          if (c.id === reactionDetailCommentId) return c;
+        }
+      }
+    }
+    return null;
+  }, [reactionDetailCommentId, sessions]);
+
+  const handleOpenReactionDetail = (commentId: string, emoji: string) => {
+    setReactionDetailCommentId(commentId);
+    setReactionDetailEmoji(emoji);
+    setReactionDetailOpen(true);
+  };
+
   useEffect(() => {
     setActiveReply(null);
   }, [selectedId]);
@@ -1193,6 +1216,7 @@ function HomeContent() {
                                     onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
                                     activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
                                     handleDeleteReply={handleDeleteReply}
+                                    onOpenReactionDetail={handleOpenReactionDetail}
                                   />
                                   <div className="mt-2 px-4 bg-transparent">
                                     <GameCommentInput 
@@ -1231,6 +1255,7 @@ function HomeContent() {
                                 onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
                                 activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
                                 handleDeleteReply={handleDeleteReply}
+                                onOpenReactionDetail={handleOpenReactionDetail}
                               />
                               {/* Fixed Bottom Input: Flush to card edges */}
                               <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
@@ -1399,6 +1424,80 @@ function HomeContent() {
           comment={activeShot.comment}
           onClose={() => setActiveShot(null)} 
         />
+      )}
+
+      {/* 모바일 리액션 상세 바텀 시트 */}
+      {reactionDetailOpen && activeReactionComment && (
+        <Drawer open={reactionDetailOpen} onOpenChange={setReactionDetailOpen}>
+          <DrawerPopup position="bottom" showBar className="bg-popover border-t border-border/20 rounded-t-3xl shadow-2xl select-none" backdropClassName="bg-black/40 backdrop-blur-[2px]">
+            <DrawerPanel scrollable={true} className="pb-8 pt-4 px-4 select-none font-sans">
+              <div className="text-center font-black text-base text-foreground mb-4">리액션</div>
+              
+              {/* 이모지 탭 리스트 */}
+              {activeReactionComment.reactions && (
+                <div className="flex gap-2 overflow-x-auto justify-center pb-4 border-b border-border/10 mb-4 no-scrollbar">
+                  {Object.entries(activeReactionComment.reactions).map(([emoji, users]: [string, any]) => {
+                    const isSelected = reactionDetailEmoji === emoji;
+                    return (
+                      <button
+                        key={emoji}
+                        onClick={() => setReactionDetailEmoji(emoji)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                          isSelected 
+                            ? 'bg-primary/10 border-primary text-primary shadow-sm' 
+                            : 'bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/85'
+                        }`}
+                      >
+                        <span>{emoji}</span>
+                        <span>{users.length}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* 현재 선택된 이모지에 반응을 남긴 유저 목록 */}
+              {reactionDetailEmoji && activeReactionComment.reactions?.[reactionDetailEmoji] && (
+                <div className="flex flex-col gap-3 max-h-[280px] overflow-y-auto px-1 custom-scrollbar">
+                  {(activeReactionComment.reactions[reactionDetailEmoji] as string[]).map((uid) => {
+                    const userProfile = profiles[uid];
+                    const isMe = session?.user?.id === uid;
+                    const isLoggedIn = !!userProfile?.has_logged_in;
+                    const displayName = userProfile?.display_name || displayNamesMap[uid] || uid || "알 수 없음";
+                    const maskedName = isLoggedIn ? displayName : maskNickname(displayName);
+
+                    return (
+                      <div key={uid} className="flex items-center gap-3 py-2 border-b border-border/5 last:border-0">
+                        {/* 아바타 */}
+                        {userProfile?.avatar_url ? (
+                          <img 
+                            src={userProfile.avatar_url} 
+                            alt={maskedName} 
+                            className="w-9 h-9 rounded-full object-cover shrink-0 border border-border/20 shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-black text-xs text-muted-foreground shrink-0 border border-border/20 shadow-sm">
+                            {maskedName.slice(0, 1)}
+                          </div>
+                        )}
+                        
+                        {/* 닉네임 및 '나' 뱃지 */}
+                        <div className="flex items-center gap-2">
+                          {isMe && (
+                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted text-[10px] font-black text-muted-foreground/80 shrink-0">
+                              나
+                            </span>
+                          )}
+                          <span className="text-sm font-bold text-foreground">{maskedName}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </DrawerPanel>
+          </DrawerPopup>
+        </Drawer>
       )}
     </div>
   );
