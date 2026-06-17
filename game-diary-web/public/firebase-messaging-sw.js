@@ -14,17 +14,10 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// FCM SDK가 notification 페이로드를 받아 백그라운드 상태에서 자동으로 알림을 띄워주므로,
+// 중복 알림(Double Notification)이 뜨는 것을 막기 위해 수동 showNotification 호출을 생략합니다.
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  
-  const notificationTitle = payload.notification?.title || 'Game Diary 알림';
-  const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: payload.notification?.icon || '/favicon.ico',
-    data: payload.data
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // 알림 클릭 이벤트 핸들러
