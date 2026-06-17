@@ -1430,11 +1430,11 @@ function HomeContent() {
       <Drawer open={reactionDetailOpen} onOpenChange={setReactionDetailOpen}>
         <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
           <DrawerPanel scrollable={false} className="px-3 pb-6 pt-6 select-none font-sans h-[50vh] flex flex-col">
-            <div className="text-center font-medium text-base text-foreground mb-4 shrink-0">리액션</div>
+            <div className="text-center font-medium text-base text-foreground mb-3 shrink-0">리액션</div>
             
             {/* 이모지 탭 리스트 */}
             {activeReactionComment?.reactions && (
-              <div className="flex gap-2 overflow-x-auto justify-start pb-2.5 border-b border-border/10 mb-2.5 no-scrollbar shrink-0 px-1">
+              <div className="flex gap-2 overflow-x-auto justify-start pb-1.5 border-b border-border/10 mb-1.5 no-scrollbar shrink-0 px-1">
                 {Object.entries(activeReactionComment.reactions).map(([emoji, users]: [string, any]) => {
                   const isSelected = reactionDetailEmoji === emoji;
                   return (
@@ -1466,7 +1466,7 @@ function HomeContent() {
                   const maskedName = isLoggedIn ? displayName : maskNickname(displayName);
 
                   return (
-                    <div key={uid} className="flex items-center gap-3 py-2 border-b border-border/5 last:border-0">
+                    <div key={uid} className="flex items-center gap-3 py-2 first:pt-0 border-b border-border/5 last:border-0">
                       {/* 아바타 */}
                       {userProfile?.avatar_url ? (
                         <img 
