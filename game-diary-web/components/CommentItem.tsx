@@ -110,7 +110,8 @@ export default function CommentItem({
   const emojiTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isEmojiLongPressed = useRef(false);
 
-  const startEmojiPress = (emoji: string) => {
+  const startEmojiPress = (emoji: string, e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
     isEmojiLongPressed.current = false;
     emojiTimerRef.current = setTimeout(() => {
       isEmojiLongPressed.current = true;
@@ -288,12 +289,12 @@ export default function CommentItem({
                   return (
                     <div key={emoji} className="relative group/reaction">
                       <button
-                        onMouseDown={() => startEmojiPress(emoji)}
-                        onMouseUp={() => endEmojiPress(emoji, () => onAddReaction(emoji))}
-                        onMouseLeave={cancelEmojiPress}
-                        onTouchStart={() => startEmojiPress(emoji)}
-                        onTouchEnd={(e) => { e.preventDefault(); endEmojiPress(emoji, () => onAddReaction(emoji)); }}
-                        onTouchMove={cancelEmojiPress}
+                        onMouseDown={(e) => startEmojiPress(emoji, e)}
+                        onMouseUp={(e) => { e.stopPropagation(); endEmojiPress(emoji, () => onAddReaction(emoji)); }}
+                        onMouseLeave={(e) => { e.stopPropagation(); cancelEmojiPress(); }}
+                        onTouchStart={(e) => { e.stopPropagation(); startEmojiPress(emoji, e); }}
+                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); endEmojiPress(emoji, () => onAddReaction(emoji)); }}
+                        onTouchMove={(e) => { e.stopPropagation(); cancelEmojiPress(); }}
                         className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border bg-primary/20 border-primary/30 text-primary hover:border-primary/50 select-none touch-none touch-callout-none"
                       >
                         <span>{emoji}</span>
