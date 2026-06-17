@@ -59,11 +59,10 @@ function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleF
 
       <motion.div 
         drag="x"
-        dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.6, right: 0 }}
         dragTransition={{ bounceStiffness: 300, bounceDamping: 28 }}
-        style={{ x, touchAction: 'pan-y' }}
+        style={{ x }}
         onDragEnd={(event, info) => {
           if (x.get() < -50) {
             onToggleFavorite(s.id, isFavorite);
@@ -72,7 +71,7 @@ function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleF
             }
           }
         }}
-        className="w-full relative z-10"
+        className="w-full relative z-10 !touch-pan-y"
       >
         <button 
           onClick={() => onSelect(s.id)} 
@@ -671,7 +670,7 @@ function HomeContent() {
           </div>
           <div 
             onScroll={isMobile ? handleScroll : undefined}
-            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-4 md:pb-1 touch-pan-y"
+            className="flex-1 overflow-y-auto scrollbar-hide px-1 md:px-3 py-1 pb-4 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch]"
           >
             <div className="space-y-1 min-h-[396px]">
               {(isMobile ? mobileSessions : paginatedSessions).map(s => (

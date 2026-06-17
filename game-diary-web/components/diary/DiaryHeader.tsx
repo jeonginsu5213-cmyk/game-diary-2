@@ -142,7 +142,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
           )}
 
           {/* Title Wrapper */}
-          <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[200px] sm:max-w-[300px] md:max-w-[400px] pl-1.5 md:pl-0">
+          <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[240px] sm:max-w-[360px] md:max-w-[450px]">
             {isEditingTitle ? (
               <input 
                 type="text" 
@@ -155,10 +155,10 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
               />
             ) : (
               <h2 
-                className="text-foreground font-semibold text-xl tracking-tight truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px]" 
+                className="text-foreground font-semibold text-xl tracking-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px] pl-1.5 md:pl-0 min-w-0" 
                 onClick={onTitleClick}
               >
-                {current?.sessionTitle || '기록을 선택해주세요'}
+                <span className="truncate">{current?.sessionTitle || '기록을 선택해주세요'}</span>
                 {current && (
                   <svg className="w-3.5 h-3.5 text-muted-foreground/45 group-hover:text-primary transition-colors shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />

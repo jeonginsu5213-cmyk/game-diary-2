@@ -172,6 +172,8 @@ export default function CommentItem({
             if (!isReply && x.get() > 50) {
               if (window.innerWidth < 768) {
                 onMobileReply?.(comment.id, displayName);
+                const input = document.getElementById('diary-comment-input') as HTMLInputElement;
+                if (input) input.focus();
                 if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
                   window.navigator.vibrate(30);
                 }
@@ -279,6 +281,8 @@ export default function CommentItem({
                   onClick={() => {
                     if (window.innerWidth < 768) {
                       onMobileReply?.(comment.id, displayName);
+                      const input = document.getElementById('diary-comment-input') as HTMLInputElement;
+                      if (input) input.focus();
                     } else {
                       setShowReplyInput(!showReplyInput);
                     }
@@ -384,6 +388,8 @@ export default function CommentItem({
                     setIsMenuOpen(false);
                     if (window.innerWidth < 768) {
                       onMobileReply?.(comment.id, displayName);
+                      const input = document.getElementById('diary-comment-input') as HTMLInputElement;
+                      if (input) input.focus();
                     } else {
                       setShowReplyInput(true);
                       setTimeout(() => {

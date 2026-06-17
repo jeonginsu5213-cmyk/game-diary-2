@@ -22,10 +22,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
   React.useEffect(() => {
     if (activeReply) {
       setIsChecklistMode(false);
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
+      inputRef.current?.focus();
     }
   }, [activeReply]);
   
@@ -142,6 +139,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
         
         <input 
           ref={inputRef}
+          id="diary-comment-input"
           type="text" 
           value={text} 
           onChange={(e) => setText(e.target.value)} 
