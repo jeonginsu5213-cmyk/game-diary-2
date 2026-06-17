@@ -118,8 +118,8 @@ export async function POST(request: Request) {
         const senderName = senderProfile?.display_name || "알 수 없음";
 
         if (recipientProfile?.fcm_token) {
-          const title = "💬 새 답글 알림";
-          const body = `${senderName}님이 내 댓글에 답글을 남겼습니다: "${newReply.text}"`;
+          const title = "새 답글 알림";
+          const body = `${senderName}님이 답글을 남겼습니다: "${newReply.text}"`;
           const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
 
           // Vercel 서버리스 환경에서 함수가 조기 동결되는 것을 막기 위해 비동기 작업을 대기(await)합니다.
@@ -179,8 +179,8 @@ export async function POST(request: Request) {
       const senderName = senderProfile?.display_name || "알 수 없음";
 
       if (recipientProfile?.fcm_token) {
-        const title = `${addedReactionEmoji} 새 반응 알림`;
-        const body = `${senderName}님이 내 댓글에 이모지 반응(${addedReactionEmoji})을 남겼습니다.`;
+        const title = "새 반응 알림";
+        const body = `${senderName}님이 내 댓글에 반응(${addedReactionEmoji})을 남겼습니다.`;
         const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
 
         // Vercel 서버리스 환경에서 함수가 조기 동결되는 것을 막기 위해 비동기 작업을 대기(await)합니다.
