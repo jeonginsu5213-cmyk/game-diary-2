@@ -84,7 +84,69 @@ export async function POST(request: Request) {
     const payload = await request.json();
     const { type, table, record, old_record } = payload;
 
-    // comments 테이블의 UPDATE 이벤트만 감지
+    // 1. sessions 테이블의 INSERT 이벤트 감지 (일기 생성 알림)
+    if (table === "sessions" && type === "INSERT" && record) {
+      const sessionId = record.id;
+      const sessionTitle = record.title || "새로운 일기";
+      const guildName = record.guild_name || "";
+
+      // 봇이 session_participants를 추가로 INSERT할 때까지 잠시 대기 (3초)
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // 해당 세션의 참여자 조회
+      const { data: participants, error: partError } = await supabase
+        .from("session_participants")
+        .select("user_id")
+        .eq("session_id", sessionId);
+
+      if (partError) {
+        console.error("Error fetching session participants:", partError);
+      }
+
+      if (participants && participants.length > 0) {
+        const userIds = participants.map((p: any) => p.user_id);
+        
+        // 참여자들의 프로필 정보(fcm_token) 조회
+        const { data: profiles, error: profError } = await supabase
+          .from("profiles")
+          .select("id, fcm_token, display_name")
+          .in("id", userIds);
+
+        if (profError) {
+          console.error("Error fetching profiles:", profError);
+        }
+
+        if (profiles && profiles.length > 0) {
+          const title = "새 일기장 생성 알림";
+          const body = `${guildName ? `[${guildName}] ` : ""}새로운 일기장이 생성되었습니다: "${sessionTitle}"`;
+          const redirectUrl = `/diary?id=${sessionId}&view=diary`;
+
+          const notificationPromises = profiles.map(async (profile: any) => {
+            // DB에 알림 추가
+            const dbInsert = supabase.from("notifications").insert({
+              recipient_id: profile.id,
+              sender_id: "system",
+              type: "session_created",
+              source_id: sessionId,
+              content: body,
+            });
+
+            // FCM 푸시 발송
+            const fcmSend = profile.fcm_token 
+              ? sendFcmNotification(profile.fcm_token, title, body, { url: redirectUrl })
+              : Promise.resolve(null);
+
+            return Promise.allSettled([dbInsert, fcmSend]);
+          });
+
+          await Promise.allSettled(notificationPromises);
+        }
+      }
+
+      return NextResponse.json({ success: true, message: "Session creation notification processed" }, { status: 200 });
+    }
+
+    // 2. comments 테이블의 UPDATE 이벤트만 감지
     if (table !== "comments" || type !== "UPDATE" || !record || !old_record) {
       return NextResponse.json({ message: "Ignored event type or table" }, { status: 200 });
     }
