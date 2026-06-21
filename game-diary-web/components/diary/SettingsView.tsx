@@ -51,7 +51,7 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-background text-foreground z-50 flex flex-col font-sans">
+    <div className="fixed inset-0 bg-background text-foreground z-50 flex flex-col font-sans overflow-hidden">
       {/* Header */}
       <header className="h-12 pl-2 pr-4 flex items-center shrink-0">
         <button 
@@ -64,8 +64,8 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
       </header>
       
       {/* Content */}
-      <main className="flex-1 overflow-y-auto py-4 px-4 max-w-[1192px] w-full mx-auto pb-24">
-        <div className="max-w-2xl mx-auto relative overflow-hidden">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 max-w-[1192px] w-full mx-auto pb-24">
+        <div className="max-w-2xl mx-auto relative">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             {subView === 'menu' && (
               <motion.div
