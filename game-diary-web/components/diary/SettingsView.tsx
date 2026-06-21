@@ -13,7 +13,7 @@ type SubViewType = 'menu' | 'notifications';
 
 const pageVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 30 : -30,
+    x: direction === 0 ? 0 : (direction > 0 ? '100%' : '-100%'),
     opacity: 0,
   }),
   center: {
@@ -21,15 +21,14 @@ const pageVariants = {
     opacity: 1,
   },
   exit: (direction: number) => ({
-    x: direction > 0 ? -30 : 30,
+    x: direction === 0 ? 0 : (direction > 0 ? '-100%' : '100%'),
     opacity: 0,
   }),
 };
 
 const pageTransition = {
-  type: "spring",
-  stiffness: 380,
-  damping: 35,
+  x: { type: "spring", stiffness: 380, damping: 30 },
+  opacity: { duration: 0.2 },
 } as const;
 
 export default function SettingsView({ onClose, session }: SettingsViewProps) {
