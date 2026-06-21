@@ -11,8 +11,30 @@ interface SettingsViewProps {
 
 type SubViewType = 'menu' | 'notifications';
 
+const pageVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 30 : -30,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -30 : 30,
+    opacity: 0,
+  }),
+};
+
+const pageTransition = {
+  type: "spring",
+  stiffness: 380,
+  damping: 35,
+} as const;
+
 export default function SettingsView({ onClose, session }: SettingsViewProps) {
   const [subView, setSubView] = useState<SubViewType>('menu');
+  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
   const [pushEnabled, setPushEnabled] = useState(true);
   const [diaryAlert, setDiaryAlert] = useState(true);
   const [replyAlert, setReplyAlert] = useState(true);
@@ -24,6 +46,7 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
     if (subView === 'menu') {
       onClose();
     } else {
+      setDirection(-1);
       setSubView('menu');
     }
   };
@@ -43,10 +66,19 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
       
       {/* Content */}
       <main className="flex-1 overflow-y-auto py-4 px-4 max-w-[1192px] w-full mx-auto pb-24">
-        <div className="max-w-2xl mx-auto flex flex-col gap-6">
-          
-          {subView === 'menu' && (
-            <div className="flex flex-col gap-[10px] animate-in fade-in duration-200">
+        <div className="max-w-2xl mx-auto relative overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={direction}>
+            {subView === 'menu' && (
+              <motion.div
+                key="menu"
+                custom={direction}
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={pageTransition}
+                className="flex flex-col gap-[10px] w-full"
+              >
               {/* Card 1: 기본 설정 */}
               <div className="bg-card rounded-2xl p-6 flex flex-col gap-6">
                 <button 
@@ -61,7 +93,10 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                 </button>
 
                 <button 
-                  onClick={() => setSubView('notifications')}
+                  onClick={() => {
+                    setDirection(1);
+                    setSubView('notifications');
+                  }}
                   className="w-full text-left flex items-center justify-between gap-4 outline-none cursor-pointer group"
                 >
                   <span className="text-[15px] font-semibold text-foreground">알림</span>
@@ -166,11 +201,20 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   <span className="text-[15px] font-semibold text-muted-foreground/60">v1.0.0</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {subView === 'notifications' && (
-            <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-3 duration-250">
+            <motion.div
+              key="notifications"
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={pageTransition}
+              className="flex flex-col gap-5 w-full"
+            >
               {/* Header Title Area (IMG_4518.PNG Style) */}
               <div className="flex flex-col px-1">
                 <h2 className="text-[20px] font-bold text-foreground tracking-tight">
@@ -243,12 +287,9 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   </button>
                 </div>
               </div>
-
-
-
-            </div>
+            </motion.div>
           )}
-          
+          </AnimatePresence>
         </div>
       </main>
 
