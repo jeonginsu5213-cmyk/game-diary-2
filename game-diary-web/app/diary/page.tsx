@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { supabase } from "@/src/lib/supabase"; 
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -30,7 +30,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/com
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarousel';
 
-// --- Diary List Item Component (Swipe to Favorite) ---
+// --- Diary List Item Component (Swipe to Favorite or Trash layout) ---
 
 interface DiaryListItemProps {
   session: any;
@@ -38,12 +38,47 @@ interface DiaryListItemProps {
   isFavorite: boolean;
   onSelect: (id: string) => void;
   onToggleFavorite: (id: string, isFav: boolean) => void;
+  isTrash?: boolean;
+  currentUserId?: string;
 }
 
-function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleFavorite }: DiaryListItemProps) {
+function DiaryListItem({ session: s, isSelected, isFavorite, onSelect, onToggleFavorite, isTrash = false, currentUserId }: DiaryListItemProps) {
   const x = useMotionValue(0);
   const iconScale = useTransform(x, [0, -50], [0.6, 1.15]);
   const iconOpacity = useTransform(x, [0, -40], [0, 1]);
+
+  const getRemainingDays = (deletedAtStr: string) => {
+    if (!deletedAtStr) return 7;
+    const deletedAt = new Date(deletedAtStr);
+    const now = new Date();
+    const diffMs = now.getTime() - deletedAt.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const remaining = 7 - diffDays;
+    return Math.max(0, Math.ceil(remaining));
+  };
+
+  if (isTrash) {
+    const participant = s.session_participants?.find((p: any) => p.user_id === currentUserId);
+    const remainingDays = getRemainingDays(participant?.deleted_at);
+    
+    return (
+      <button 
+        onClick={() => onSelect(s.id)} 
+        className={`w-full text-left pl-3 pr-4 py-2.5 rounded-lg flex items-center justify-between transition-all duration-200 ${
+          isSelected 
+            ? 'bg-muted/80 text-foreground shadow-xs' 
+            : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+        }`}
+      >
+        <span className={`text-[12px] truncate tracking-tight transition-all flex-1 pr-2 ${isSelected ? 'font-semibold' : 'font-medium'}`}>
+          {s.title}
+        </span>
+        <span className="text-[10px] font-mono tracking-tighter opacity-60 shrink-0 select-none">
+          {remainingDays}일 후 삭제
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden rounded-lg w-full flex items-center">
@@ -145,31 +180,33 @@ function HomeContent() {
               </div>
 
               {/* Right Actions */}
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Delete button */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              {!isDeleted && (
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Delete button */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={async () => { 
+                        if (window.confirm("삭제할까요?")) { 
+                          await supabase.from('comments').delete().eq('id', c.id); 
+                          fetchData(); 
+                        } 
+                      }}
+                      className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
+                    >
+                      삭제
+                    </button>
+                  </div>
+
+                  {/* Pin Toggle Button on the Right */}
                   <button 
-                    onClick={async () => { 
-                      if (window.confirm("삭제할까요?")) { 
-                        await supabase.from('comments').delete().eq('id', c.id); 
-                        fetchData(); 
-                      } 
-                    }}
-                    className="text-[9px] font-bold text-muted-foreground/60 hover:text-red-500 transition-colors px-1"
+                    onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
+                    className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
+                    title="고정 해제"
                   >
-                    삭제
+                    <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
                   </button>
                 </div>
-
-                {/* Pin Toggle Button on the Right */}
-                <button 
-                  onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
-                  className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
-                  title="고정 해제"
-                >
-                  <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
-                </button>
-              </div>
+              )}
             </div>
           );
         })}
@@ -279,6 +316,8 @@ function HomeContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [visibleCount, setVisibleCount] = useState(15);
+  const [listTab, setListTab] = useState<'active' | 'trash'>('active');
+
   const searchParams = useSearchParams();
   const pageSize = 10;
   const viewParam = searchParams?.get('view');
@@ -331,6 +370,13 @@ function HomeContent() {
       return;
     }
 
+    // Automatically purge expired sessions before fetching
+    try {
+      await supabase.rpc('purge_expired_sessions');
+    } catch (e) {
+      console.error("Error purging expired sessions:", e);
+    }
+
     const { data, error } = await supabase
       .from('sessions')
       .select('*, session_games(*, comments(*), session_game_players(*)), screenshots(*), session_participants(*)')
@@ -376,9 +422,21 @@ function HomeContent() {
       const matchesUser = session?.user?.id 
         ? s.session_participants?.some((p: any) => p.user_id === session.user.id)
         : false;
-      return matchesSearch && matchesUser;
+      if (!matchesSearch || !matchesUser) return false;
+
+      const participant = s.session_participants?.find((p: any) => p.user_id === session?.user?.id);
+      const isDeletedParticipant = !!participant?.is_deleted;
+      
+      if (listTab === 'active') {
+        return !isDeletedParticipant;
+      } else {
+        if (!isDeletedParticipant) return false;
+        if (!participant.deleted_at) return true;
+        const diffDays = (new Date().getTime() - new Date(participant.deleted_at).getTime()) / (1000 * 60 * 60 * 24);
+        return diffDays <= 8;
+      }
     });
-  }, [sessions, searchTerm, session]);
+  }, [sessions, searchTerm, session, listTab]);
 
   const sortedSessions = useMemo(() => {
     let list = [...filteredSessions];
@@ -405,7 +463,7 @@ function HomeContent() {
   }, [sortedSessions, visibleCount]);
 
   const current = useMemo(() => {
-    const s = sortedSessions.find(s => s.id === selectedId) || sortedSessions[0];
+    const s = (selectedId ? sessions.find(s => s.id === selectedId) : null) || sortedSessions[0];
     if (s) {
       s.session_games?.forEach((g: any) => {
         g.comments?.sort((a: any, b: any) => {
@@ -416,7 +474,13 @@ function HomeContent() {
       });
     }
     return s;
-  }, [sortedSessions, selectedId]);
+  }, [sortedSessions, sessions, selectedId]);
+
+  const isDeleted = useMemo(() => {
+    if (!current || !session?.user?.id) return false;
+    const participant = current.session_participants?.find((p: any) => p.user_id === session.user.id);
+    return !!participant?.is_deleted;
+  }, [current, session]);
 
   const sortedParticipants = useMemo(() => {
     if (!current?.session_participants) return [];
@@ -476,9 +540,9 @@ function HomeContent() {
   useEffect(() => {
     if (loading) return;
     const urlId = searchParams?.get('id');
-    if (urlId && sortedSessions.some(s => s.id === urlId)) setSelectedId(urlId);
+    if (urlId && sessions.some(s => s.id === urlId)) setSelectedId(urlId);
     else if (sortedSessions.length > 0 && !selectedId) setSelectedId(sortedSessions[0].id);
-  }, [sortedSessions, loading, searchParams, selectedId]);
+  }, [sortedSessions, sessions, loading, searchParams, selectedId]);
 
   useEffect(() => { if (current) setNewTitle(current.title); }, [current]);
 
@@ -665,6 +729,84 @@ function HomeContent() {
     setMovingShot(null);
   };
 
+  const handleMoveToTrash = async (sessionId: string) => {
+    if (!supabase || !session?.user?.id) return;
+    try {
+      const { error } = await supabase
+        .from('session_participants')
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .eq('session_id', sessionId)
+        .eq('user_id', session.user.id);
+        
+      if (error) {
+        console.error("Error moving to trash:", error.message);
+        alert("삭제 중 오류가 발생했습니다.");
+      } else {
+        if (selectedId === sessionId) {
+          setSelectedId(null);
+          setViewMode('list');
+        }
+        await fetchData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRestoreDiary = async (sessionId: string) => {
+    if (!supabase || !session?.user?.id) return;
+    try {
+      const { error } = await supabase
+        .from('session_participants')
+        .update({ is_deleted: false, deleted_at: null })
+        .eq('session_id', sessionId)
+        .eq('user_id', session.user.id);
+        
+      if (error) {
+        console.error("Error restoring session:", error.message);
+        alert("복구 중 오류가 발생했습니다.");
+      } else {
+        await fetchData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handlePermanentDeleteDiary = async (sessionId: string) => {
+    if (!supabase || !session?.user?.id) return;
+    if (!window.confirm("이 일기를 영구히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const eightDaysAgo = new Date();
+      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+      
+      const { error } = await supabase
+        .from('session_participants')
+        .update({ is_deleted: true, deleted_at: eightDaysAgo.toISOString() })
+        .eq('session_id', sessionId)
+        .eq('user_id', session.user.id);
+        
+      if (error) {
+        console.error("Error marking permanent delete:", error.message);
+        alert("삭제 중 오류가 발생했습니다.");
+        return;
+      }
+      
+      const { error: rpcError } = await supabase.rpc('purge_expired_sessions');
+      if (rpcError) {
+        console.error("Error running database purge RPC:", rpcError.message);
+      }
+      
+      if (selectedId === sessionId) {
+        setSelectedId(null);
+        setViewMode('list');
+      }
+      await fetchData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleUploadComplete = (shotId?: string) => {
     fetchData();
     if (shotId) {
@@ -700,8 +842,6 @@ function HomeContent() {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
   };
 
-
-
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     if (target.scrollHeight - target.scrollTop - target.clientHeight < 100) {
@@ -722,7 +862,7 @@ function HomeContent() {
     <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
       <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
-        viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-20 md:z-auto' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
+        viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-10 md:z-auto' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
       }`}>
         <div className="h-16 hidden md:flex items-center px-4 border-b border-border shrink-0">
           <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
@@ -736,23 +876,64 @@ function HomeContent() {
             <span className="text-[14px] font-black text-foreground tracking-tight group-hover:text-primary transition-colors">Game Diary</span>
           </Link>
         </div>
-        <div className="px-4 py-4 shrink-0">
+
+        {/* Tab Toggle for Segmented Control */}
+        <div className="px-4 pt-4 shrink-0">
+          <div className="flex bg-[#e8ebed]/60 dark:bg-muted/40 p-0.5 rounded-xl">
+            <button
+              onClick={() => {
+                setListTab('active');
+                setSelectedId(null);
+              }}
+              className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-lg transition-all ${
+                listTab === 'active' 
+                  ? 'bg-white text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              일기장
+            </button>
+            <button
+              onClick={() => {
+                setListTab('trash');
+                setSelectedId(null);
+              }}
+              className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-lg transition-all ${
+                listTab === 'trash' 
+                  ? 'bg-white text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              휴지통
+            </button>
+          </div>
+        </div>
+
+        <div className="px-4 py-3.5 shrink-0">
           <div className="relative group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-primary/60 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
             <input 
               type="text" 
-              placeholder="일기 제목 검색..." 
+              placeholder={listTab === 'active' ? "일기 제목 검색..." : "휴지통 검색..."} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none transition-all placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
+
         <div className="flex-1 flex flex-col bg-card rounded-2xl mb-3 p-3 min-h-0 md:bg-transparent md:rounded-none md:border-none md:shadow-none md:mx-0 md:mb-0 md:p-0 md:flex-1 md:flex md:flex-col md:min-h-0">
-          <div className="h-8 flex items-center justify-end px-2 md:px-5 shrink-0">
-            <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
+          <div className="h-8 flex items-center justify-between px-2 md:px-5 shrink-0">
+            {listTab === 'active' ? (
+              <>
+                <div />
+                <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
+              </>
+            ) : (
+              <span className="text-[10px] font-bold text-muted-foreground/60 select-none">7일 후 영구 삭제됩니다.</span>
+            )}
           </div>
           <div 
             onScroll={isMobile ? handleScroll : undefined}
@@ -767,6 +948,8 @@ function HomeContent() {
                   isFavorite={favoriteSessionIds.has(s.id)}
                   onSelect={handleDiarySelect}
                   onToggleFavorite={handleToggleFavorite}
+                  isTrash={listTab === 'trash'}
+                  currentUserId={session?.user?.id}
                 />
               ))}
             </div>
@@ -810,9 +993,50 @@ function HomeContent() {
           onTitleChange={setNewTitle}
           onTitleUpdate={handleUpdateTitle}
           onShare={() => { navigator.clipboard.writeText(window.location.href); alert("공유 링크가 복사되었습니다!"); }}
-          onDelete={async () => { if(current && window.confirm("일기 전체를 삭제할까요?")) { await supabase.from('sessions').delete().eq('id', current.id); fetchData(); } }}
+          onDelete={async () => { 
+            if (current) { 
+              if (window.confirm("일기를 삭제할까요?\n삭제된 일기는 휴지통으로 이동하며 7일간 보관됩니다.")) { 
+                await handleMoveToTrash(current.id); 
+              } 
+            } 
+          }}
           viewMode={viewMode}
+          isDeleted={isDeleted}
         />
+
+        {/* Restore/Permanent Delete Warning Banner for Deleted Diaries */}
+        {isDeleted && current && (
+          <div className="bg-[#e05d38]/5 border-b border-[#e05d38]/10 px-4 py-3 flex items-center justify-between gap-4 animate-in fade-in duration-200 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Trash2 className="w-4 h-4 text-[#e05d38] shrink-0" />
+              <span className="text-[12px] font-medium text-foreground/90 truncate translate-y-[0.5px]">
+                이 일기는 휴지통에 있습니다. {
+                  (() => {
+                    const participant = current.session_participants?.find((p: any) => p.user_id === session?.user?.id);
+                    const deletedAt = participant?.deleted_at;
+                    if (!deletedAt) return 7;
+                    const diffDays = (new Date().getTime() - new Date(deletedAt).getTime()) / (1000 * 60 * 60 * 24);
+                    return Math.max(0, Math.ceil(7 - diffDays));
+                  })()
+                }일 후 영구 삭제됩니다.
+              </span>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button 
+                onClick={() => handleRestoreDiary(current.id)}
+                className="px-3 py-1.5 bg-[#e05d38] text-white rounded-lg text-[11px] font-bold hover:bg-[#e05d38]/90 transition-colors shadow-sm"
+              >
+                복원
+              </button>
+              <button 
+                onClick={() => handlePermanentDeleteDiary(current.id)}
+                className="text-[11px] font-bold text-muted-foreground/60 hover:text-[#e05d38] transition-colors"
+              >
+                영구 삭제
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <div className="w-full pb-72">
@@ -1092,12 +1316,15 @@ function HomeContent() {
                                             handleDownload={handleDownload}
                                             handleImageDelete={handleImageDelete}
                                             fetchData={fetchData}
+                                            isDeleted={isDeleted}
                                           />
                                         ))}
-                                        <UploadPlaceholder 
-                                          key={pendingUpload ? 'active' : 'idle'}
-                                          onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })} 
-                                        />
+                                        {!isDeleted && (
+                                          <UploadPlaceholder 
+                                            key={pendingUpload ? 'active' : 'idle'}
+                                            onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })} 
+                                          />
+                                        )}
                                       </>
                                     );
                                   })()}
@@ -1119,6 +1346,7 @@ function HomeContent() {
                                     handleImageDelete={handleImageDelete}
                                     fetchData={fetchData}
                                     onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })}
+                                    isDeleted={isDeleted}
                                   />
                                 </div>
                               </div>
@@ -1218,17 +1446,19 @@ function HomeContent() {
                                     handleDeleteReply={handleDeleteReply}
                                     onOpenReactionDetail={handleOpenReactionDetail}
                                   />
-                                  <div className="px-4 bg-transparent">
-                                    <GameCommentInput 
-                                      gameId={game.id} 
-                                      gameTitle={game.title} 
-                                      onComplete={fetchData} 
-                                      activeReply={activeReply?.gameId === game.id ? activeReply : null}
-                                      onCancelReply={() => setActiveReply(null)}
-                                      onAddReply={handleAddReply}
-                                      isMobile={true}
-                                    />
-                                  </div>
+                                  {!isDeleted && (
+                                    <div className="px-4 bg-transparent">
+                                      <GameCommentInput 
+                                        gameId={game.id} 
+                                        gameTitle={game.title} 
+                                        onComplete={fetchData} 
+                                        activeReply={activeReply?.gameId === game.id ? activeReply : null}
+                                        onCancelReply={() => setActiveReply(null)}
+                                        onAddReply={handleAddReply}
+                                        isMobile={true}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1258,16 +1488,18 @@ function HomeContent() {
                                 onOpenReactionDetail={handleOpenReactionDetail}
                               />
                               {/* Fixed Bottom Input: Flush to card edges */}
-                              <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
-                                <GameCommentInput 
-                                  gameId={game.id} 
-                                  gameTitle={game.title} 
-                                  onComplete={fetchData} 
-                                  activeReply={activeReply?.gameId === game.id ? activeReply : null}
-                                  onCancelReply={() => setActiveReply(null)}
-                                  onAddReply={handleAddReply}
-                                />
-                              </div>
+                              {!isDeleted && (
+                                <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
+                                  <GameCommentInput 
+                                    gameId={game.id} 
+                                    gameTitle={game.title} 
+                                    onComplete={fetchData} 
+                                    activeReply={activeReply?.gameId === game.id ? activeReply : null}
+                                    onCancelReply={() => setActiveReply(null)}
+                                    onAddReply={handleAddReply}
+                                  />
+                                </div>
+                              )}
                             </div>
                           )
                         }
@@ -1368,18 +1600,21 @@ function HomeContent() {
                                       fetchData={fetchData}
                                       isDrawer={true}
                                       positionHint="center"
+                                      isDeleted={isDeleted}
                                     />
                                   </div>
                                 </CarouselItem>
                               ))}
-                              <CarouselItem className="pl-4 basis-auto">
-                                <div className="w-[240px]">
-                                  <UploadPlaceholder 
-                                    key={pendingUpload ? 'active-uncat-drawer' : 'idle-uncat-drawer'}
-                                    onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: "" })} 
-                                  />
-                                </div>
-                              </CarouselItem>
+                              {!isDeleted && (
+                                <CarouselItem className="pl-4 basis-auto">
+                                  <div className="w-[240px]">
+                                    <UploadPlaceholder 
+                                      key={pendingUpload ? 'active-uncat-drawer' : 'idle-uncat-drawer'}
+                                      onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: "" })} 
+                                    />
+                                  </div>
+                                </CarouselItem>
+                              )}
                             </>
                           );
                         })()}

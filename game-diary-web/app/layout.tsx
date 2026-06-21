@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "./SessionProviderWrapper";
 import SidebarNav from "../components/SidebarNav";
-import MobileDock from "../components/MobileDock";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +40,6 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col min-w-0 relative overflow-y-auto">
             {children}
           </main>
-          <MobileDock />
         </SessionProviderWrapper>
       </body>
     </html>

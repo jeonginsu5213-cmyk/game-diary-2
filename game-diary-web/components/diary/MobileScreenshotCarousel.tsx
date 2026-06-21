@@ -20,6 +20,7 @@ interface MobileScreenshotCarouselProps {
   handleImageDelete: (id: string) => void;
   fetchData: () => void;
   onFileSelect: (file: File) => void;
+  isDeleted?: boolean;
 }
 
 export default function MobileScreenshotCarousel({
@@ -36,6 +37,7 @@ export default function MobileScreenshotCarousel({
   handleImageDelete,
   fetchData,
   onFileSelect,
+  isDeleted = false,
 }: MobileScreenshotCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -130,9 +132,11 @@ export default function MobileScreenshotCarousel({
               </div>
             </CarouselItem>
           ))}
-          <CarouselItem className="pl-3 basis-full">
-            <UploadPlaceholder onFileSelect={onFileSelect} />
-          </CarouselItem>
+          {!isDeleted && (
+            <CarouselItem className="pl-3 basis-full">
+              <UploadPlaceholder onFileSelect={onFileSelect} />
+            </CarouselItem>
+          )}
         </CarouselContent>
       </Carousel>
     </div>

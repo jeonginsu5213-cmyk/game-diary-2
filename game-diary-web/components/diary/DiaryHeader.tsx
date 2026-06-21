@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn, formatDate, formatDurationText, formatTime, maskNickname } from "../../src/lib/utils";
-import { Clock, Calendar } from 'lucide-react';
+import { Clock, Calendar, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface DiaryHeaderProps {
@@ -16,6 +17,7 @@ interface DiaryHeaderProps {
   onShare: () => void;
   onDelete: () => void;
   viewMode: 'list' | 'diary';
+  isDeleted?: boolean;
 }
 
 const DiaryHeader: React.FC<DiaryHeaderProps> = ({
@@ -28,8 +30,10 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
   onTitleUpdate,
   onShare,
   onDelete,
-  viewMode
+  viewMode,
+  isDeleted = false
 }) => {
+  const router = useRouter();
   const [hoveredMemberId, setHoveredMemberId] = useState<string | null>(null);
 
   // 1. Calculate played users (to identify observers)
@@ -56,9 +60,18 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
 
   return (
     <header className="h-16 flex items-center justify-between px-3 md:px-6 bg-card/70 backdrop-blur-xl sticky top-0 z-30">
-      <div className="flex items-center gap-6 min-w-0 flex-1">
+      <div className="flex items-center gap-1.5 md:gap-6 min-w-0 flex-1">
         {/* 1. Members & Title Section */}
         <div className="flex items-center gap-4 min-w-0">
+          {/* Mobile Back Button */}
+          {viewMode === 'diary' && (
+            <button 
+              onClick={() => router.push('/diary?view=list')}
+              className="md:hidden p-0 text-muted-foreground hover:text-foreground shrink-0 active:scale-95 transition-all"
+            >
+              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            </button>
+          )}
           {current && (
             <div className="hidden md:flex items-center shrink-0">
               <div className="flex items-center">
@@ -155,11 +168,14 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
               />
             ) : (
               <h2 
-                className="text-foreground font-semibold text-xl tracking-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group translate-y-[1px] pl-1.5 md:pl-0 min-w-0" 
-                onClick={onTitleClick}
+                className={cn(
+                  "text-foreground font-semibold text-xl tracking-tight translate-y-[1px] md:pl-0 min-w-0 truncate",
+                  !isDeleted ? "cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group" : ""
+                )}
+                onClick={!isDeleted ? onTitleClick : undefined}
               >
                 <span className="truncate">{current?.sessionTitle || '기록을 선택해주세요'}</span>
-                {current && (
+                {current && !isDeleted && (
                   <svg className="w-3.5 h-3.5 text-muted-foreground/45 group-hover:text-primary transition-colors shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
@@ -198,33 +214,35 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
           </div>
         )}
 
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={onShare} 
-            className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-transparent hover:border-primary/20 group" 
-            title="공유"
-          >
-            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-              <polyline points="16 6 12 2 8 6"></polyline>
-              <line x1="12" y1="2" x2="12" y2="15"></line>
-            </svg>
-          </button>
-          {current && (
+        {!isDeleted && (
+          <div className="flex items-center gap-2">
             <button 
-              onClick={onDelete} 
-              className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all border border-transparent hover:border-destructive/20 group" 
-              title="삭제"
+              onClick={onShare} 
+              className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-transparent hover:border-primary/20 group" 
+              title="공유"
             >
-              <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
+              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
               </svg>
             </button>
-          )}
-        </div>
+            {current && (
+              <button 
+                onClick={onDelete} 
+                className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all border border-transparent hover:border-destructive/20 group" 
+                title="삭제"
+              >
+                <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

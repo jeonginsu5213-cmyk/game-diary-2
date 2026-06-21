@@ -23,6 +23,7 @@ interface ScreenshotItemProps {
   isNew?: boolean;
   isDrawer?: boolean;
   onMoveClick?: (shot: any) => void;
+  isDeleted?: boolean;
 }
 
 const ScreenshotItem = ({
@@ -40,7 +41,8 @@ const ScreenshotItem = ({
   fetchData,
   positionHint = 'center',
   isDrawer = false,
-  onMoveClick
+  onMoveClick,
+  isDeleted = false
 }: ScreenshotItemProps) => {
   const [isActionsHovered, setIsActionsHovered] = useState(false);
   const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
@@ -162,23 +164,25 @@ const ScreenshotItem = ({
           setHoveredShot(shot);
         }}
       >
-        <div className="relative">
-          <button 
-            ref={buttonRef}
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              if (onMoveClick) {
-                onMoveClick(shot);
-              } else {
-                setActiveMoveShotId(activeMoveShotId === shot.id ? null : shot.id); 
-              }
-            }}
-            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all backdrop-blur-md border ${activeMoveShotId === shot.id ? 'bg-primary text-white border-primary shadow-lg' : 'bg-black/40 text-white/80 border-white/10 hover:bg-black/60 hover:text-white'}`}
-            title="이미지 이동"
-          >
-            <FolderInput className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {!isDeleted && (
+          <div className="relative">
+            <button 
+              ref={buttonRef}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (onMoveClick) {
+                  onMoveClick(shot);
+                } else {
+                  setActiveMoveShotId(activeMoveShotId === shot.id ? null : shot.id); 
+                }
+              }}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all backdrop-blur-md border ${activeMoveShotId === shot.id ? 'bg-primary text-white border-primary shadow-lg' : 'bg-black/40 text-white/80 border-white/10 hover:bg-black/60 hover:text-white'}`}
+              title="이미지 이동"
+            >
+              <FolderInput className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         <button 
           onClick={(e) => { e.stopPropagation(); handleDownload(shot.url); }}
@@ -188,7 +192,7 @@ const ScreenshotItem = ({
           <Download className="w-3.5 h-3.5" />
         </button>
 
-        {session?.user?.id === shot.uploader_id && (
+        {!isDeleted && session?.user?.id === shot.uploader_id && (
           <button 
             onClick={(e) => { e.stopPropagation(); handleImageDelete(shot.id); }}
             className="w-7 h-7 rounded-lg bg-black/40 text-white/80 border border-white/10 hover:bg-red-500 hover:text-white transition-all backdrop-blur-md flex items-center justify-center"
