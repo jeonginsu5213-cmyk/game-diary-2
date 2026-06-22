@@ -51,10 +51,10 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-4">
       {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
-      <div className="relative w-full max-w-[860px] flex flex-col pt-10 md:pt-0">
-        {/* 모바일용 이미지 섹션 상단(카드 바깥) 헤더 */}
-        <div className="absolute top-1.5 left-2 right-2 z-[160] md:hidden select-none">
-          <div className="flex justify-between items-center pb-2">
+      <div className="relative w-full max-w-[860px] flex flex-col">
+        {/* 모바일용 이미지 섹션 상단(카드 바깥) 헤더 - absolute를 제거하여 패널 위에 겹치지 않게 자연스러운 flow로 배치 */}
+        <div className="w-full pb-3 md:hidden select-none">
+          <div className="flex justify-between items-center pb-2 px-1">
             <div className="text-white text-[13px] font-bold">
               {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
             </div>
