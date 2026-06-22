@@ -81,8 +81,10 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
         <div className="w-full md:w-[45%] p-4 md:p-8 flex flex-col bg-white">
           <div className="flex justify-between items-start mb-3 md:mb-6">
             <div className="min-w-0 flex-1">
-              <h2 className="text-[17px] md:text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
-              <p className="text-[11px] md:text-[13px] text-[#6b7280] mt-0.5 md:mt-1 truncate">{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</p>
+              <h2 className="hidden md:block text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
+              <p className="text-[15px] md:text-[13px] font-bold md:font-normal text-[#333333] md:text-[#6b7280] mt-0.5 md:mt-1 truncate">
+                {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+              </p>
             </div>
             <button 
               onClick={onClose}
