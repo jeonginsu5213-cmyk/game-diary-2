@@ -52,9 +52,11 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 p-4 pt-4">
       {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
       <div className="relative w-full max-w-[860px] flex flex-col">
-        {/* ㅇㅇ에 기록됩니다 문구: 카드 바깥 좌측 상단에 플로팅 */}
-        <div className="absolute -top-8 left-2 md:left-0 text-[13px] md:text-[14px] font-bold text-white/90 select-none z-[160]">
-          {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+        {/* ㅇㅇ에 기록됩니다 문구: 카드 바깥 좌측 상단에 플로팅 (배지 스타일) */}
+        <div className="absolute -top-11 left-2 md:left-0 z-[160] select-none">
+          <div className="bg-black/50 border border-white/10 backdrop-blur-md text-white/90 text-[11px] md:text-[13px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+            {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+          </div>
         </div>
 
         <motion.div 
