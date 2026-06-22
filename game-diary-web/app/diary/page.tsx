@@ -1451,7 +1451,11 @@ function HomeContent() {
                         {notifications.map((notif) => {
                           const isUnread = !notif.is_read;
                           const dateObj = new Date(notif.created_at);
-                          const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                          const now = new Date();
+                          const isOver24Hours = now.getTime() - dateObj.getTime() > 24 * 60 * 60 * 1000;
+                          const formattedDate = isOver24Hours
+                            ? `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`
+                            : `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
 
                           return (
                             <div 
