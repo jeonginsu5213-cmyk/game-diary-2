@@ -1491,7 +1491,7 @@ function HomeContent() {
                                     </div>
                                   ) : isSessionCreatedNotification ? (
                                     <div className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
-                                      <span>{parts[0]}</span>
+                                      <span>{parts[0].replace(/^\[.*?\]\s*/, '')}</span>
                                       <p className="text-[13px] text-primary font-bold mt-0.5 whitespace-pre-wrap">
                                         &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
                                       </p>
