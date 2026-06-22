@@ -66,15 +66,15 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
               <span className="text-[14px] font-bold text-[#333333] tracking-tight">이미지 미리보기</span>
             </div>
             
-            <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-white shadow-sm group">
+            <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-[#111111] shadow-sm group">
               {previewUrl && (
                 <img 
                   src={previewUrl} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-contain" 
                   alt="Preview" 
                 />
               )}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
               {/* Mobile-only close button floating on top-right of the image, wrapped in background */}
               <button 
