@@ -50,45 +50,47 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.98 }}
-        className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
-      >
-        {/* Left: Preview Section */}
-        <div className="w-full md:w-[55%] bg-[#f9fafb] border-b md:border-b-0 md:border-r border-[#dcdfe2] p-0 md:p-8 flex flex-col">
-          <div className="hidden md:flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-full bg-[#e05d38]/10 flex items-center justify-center">
-              <ImageIcon size={16} className="text-[#e05d38]" />
-            </div>
-            <span className="text-[14px] font-bold text-[#333333] tracking-tight">이미지 미리보기</span>
+      {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
+      <div className="relative w-full max-w-[860px] flex flex-col pt-10 md:pt-0">
+        {/* 모바일용 이미지 섹션 상단(카드 바깥) 헤더 */}
+        <div className="absolute top-0.5 left-1 right-1 flex justify-between items-center z-[160] md:hidden select-none">
+          <div className="bg-black/50 border border-white/10 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+            {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
           </div>
-          
-          <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-white shadow-sm group">
-            {previewUrl && (
-              <img 
-                src={previewUrl} 
-                className="w-full h-full object-cover" 
-                alt="Preview" 
-              />
-            )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-
-            {/* Mobile-only header elements floating on the image (aligned to top-right close button) */}
-            <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20 md:hidden pointer-events-none">
-              <div className="bg-black/50 border border-white/10 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full select-none shadow-md pointer-events-auto">
-                {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
-              </div>
-              <button 
-                onClick={onClose}
-                className="p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all shadow-md cursor-pointer pointer-events-auto"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          </div>
+          <button 
+            onClick={onClose}
+            className="p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all shadow-md cursor-pointer"
+          >
+            <X size={18} />
+          </button>
         </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+          className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
+        >
+          {/* Left: Preview Section */}
+          <div className="w-full md:w-[55%] bg-[#f9fafb] border-b md:border-b-0 md:border-r border-[#dcdfe2] p-0 md:p-8 flex flex-col">
+            <div className="hidden md:flex items-center gap-2 mb-6">
+              <div className="w-8 h-8 rounded-full bg-[#e05d38]/10 flex items-center justify-center">
+                <ImageIcon size={16} className="text-[#e05d38]" />
+              </div>
+              <span className="text-[14px] font-bold text-[#333333] tracking-tight">이미지 미리보기</span>
+            </div>
+            
+            <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-white shadow-sm group">
+              {previewUrl && (
+                <img 
+                  src={previewUrl} 
+                  className="w-full h-full object-cover" 
+                  alt="Preview" 
+                />
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+            </div>
+          </div>
 
         {/* Right: Info Section */}
         <div className="w-full md:w-[45%] p-4 md:p-8 flex flex-col bg-white">
@@ -144,6 +146,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };
