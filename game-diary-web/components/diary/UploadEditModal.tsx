@@ -66,7 +66,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
               <span className="text-[14px] font-bold text-[#333333] tracking-tight">이미지 미리보기</span>
             </div>
             
-            <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-[#111111] shadow-sm group">
+            <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-[#111111]/70 backdrop-blur-md shadow-sm group">
               {previewUrl && (
                 <img 
                   src={previewUrl} 
