@@ -125,10 +125,14 @@ export async function POST(request: Request) {
             // DB에 알림 추가
             const dbInsert = supabase.from("notifications").insert({
               recipient_id: profile.id,
-              sender_id: "system",
+              sender_id: null,
               type: "session_created",
               source_id: sessionId,
               content: body,
+            }).then(({ error }) => {
+              if (error) {
+                console.error(`Failed to insert session_created notification for ${profile.id}:`, error.message);
+              }
             });
 
             // FCM 푸시 발송
