@@ -15,6 +15,18 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Reset active state when window focus returns (e.g. after file dialog is closed/cancelled)
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      setIsHovered(false);
+      setIsDragging(false);
+    };
+    window.addEventListener('focus', handleWindowFocus);
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, []);
+
   const handleThumbnailClick = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -26,6 +38,8 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
         onUpload?.(file);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
+      setIsHovered(false);
+      setIsDragging(false);
     },
     [onUpload],
   );
@@ -44,6 +58,7 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setIsHovered(false);
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('image/')) {
       onUpload?.(file);
