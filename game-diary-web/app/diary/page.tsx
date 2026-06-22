@@ -1515,7 +1515,7 @@ function HomeContent() {
                               )}
 
                               {isSessionCreatedNotification && (
-                                <div className="mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-full">
+                                <div className="mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1">
                                   {/* Guild Icon */}
                                   <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
                                     {targetSession?.guild_icon ? (
