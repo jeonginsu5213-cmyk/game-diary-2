@@ -1500,7 +1500,7 @@ function HomeContent() {
                                 )}
 
                                 <div className="flex items-center gap-1.5 shrink-0 select-none">
-                                  <span className="text-[10px] text-muted-foreground/45 font-medium">
+                                  <span className="text-[10px] text-muted-foreground/45 font-sans font-medium">
                                     {formattedDate}
                                   </span>
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isUnread ? 'bg-primary animate-pulse' : 'bg-transparent'}`} />
