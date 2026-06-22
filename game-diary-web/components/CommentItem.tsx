@@ -275,7 +275,7 @@ export default function CommentItem({
                 {displayName}
               </span>
               {isChecklist && <span className="text-[8px] text-primary font-black uppercase tracking-tighter opacity-70">Check</span>}
-              <span className="text-[9px] font-mono tracking-tighter opacity-30 shrink-0">
+              <span className="text-[9.5px] font-medium opacity-30 shrink-0 select-none">
                 {formatCommentDate(comment.createdAt)}
               </span>
             </div>
