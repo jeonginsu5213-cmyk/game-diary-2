@@ -306,11 +306,11 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   </button>
                 </div>
 
-                {/* 3. 참여한 일기장의 댓글 알림 */}
+                {/* 3. 일기장 댓글 알림 */}
                 <div className={`bg-card rounded-2xl py-3 px-5 flex items-center justify-between gap-4 transition-opacity duration-200 ${pushEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[15px] font-bold text-foreground">참여한 일기장의 댓글 알림</span>
-                    <span className="text-[12px] text-muted-foreground leading-relaxed">내가 참여자로 포함된 일기장에 새 댓글이 달리면 알려줍니다.</span>
+                    <span className="text-[15px] font-bold text-foreground">일기장 댓글 알림</span>
+                    <span className="text-[12px] text-muted-foreground leading-relaxed">일기장에 새 댓글이 달리면 알려줍니다.</span>
                   </div>
                   <button 
                     onClick={() => {
