@@ -57,15 +57,15 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
         className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
       >
         {/* Left: Preview Section */}
-        <div className="w-full md:w-[55%] bg-[#f9fafb] border-b md:border-b-0 md:border-r border-[#dcdfe2] p-4 md:p-8 flex flex-col">
-          <div className="flex items-center gap-2 mb-3 md:mb-6">
+        <div className="w-full md:w-[55%] bg-[#f9fafb] border-b md:border-b-0 md:border-r border-[#dcdfe2] p-0 md:p-8 flex flex-col">
+          <div className="hidden md:flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-full bg-[#e05d38]/10 flex items-center justify-center">
               <ImageIcon size={16} className="text-[#e05d38]" />
             </div>
             <span className="text-[14px] font-bold text-[#333333] tracking-tight">이미지 미리보기</span>
           </div>
           
-          <div className="relative aspect-video w-full rounded-[0.75rem] overflow-hidden border border-[#dcdfe2] bg-white shadow-sm group">
+          <div className="relative aspect-video w-full md:rounded-[0.75rem] overflow-hidden md:border border-[#dcdfe2] bg-white shadow-sm group">
             {previewUrl && (
               <img 
                 src={previewUrl} 
