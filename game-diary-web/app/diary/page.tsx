@@ -1485,9 +1485,7 @@ function HomeContent() {
                                   <span className="text-[10px] text-muted-foreground/50 font-mono">
                                     {formattedDate}
                                   </span>
-                                  {isUnread && (
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
-                                  )}
+                                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isUnread ? 'bg-primary animate-pulse' : 'bg-transparent'}`} />
                                 </div>
                               </div>
                             </div>
