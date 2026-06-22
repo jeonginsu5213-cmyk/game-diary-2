@@ -1471,6 +1471,9 @@ function HomeContent() {
                           const parts = notif.content.split(': "');
                           const isReplyNotification = notif.type === 'reply' && parts.length > 1;
                           const isSessionCreatedNotification = notif.type === 'session_created' && parts.length > 1;
+                          const targetSession = notif.type === 'session_created'
+                            ? sessions.find(s => s.id === notif.source_id)
+                            : null;
 
                           return (
                             <div 
@@ -1490,11 +1493,24 @@ function HomeContent() {
                                       </p>
                                     </div>
                                   ) : isSessionCreatedNotification ? (
-                                    <div className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
+                                    <div className="text-[13px] font-medium text-foreground leading-relaxed break-all">
                                       <span>{parts[0].replace(/^\[.*?\]\s*/, '')}</span>
-                                      <p className="text-[13px] text-primary font-bold mt-0.5 whitespace-pre-wrap">
-                                        &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
-                                      </p>
+                                      <div className="mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 border border-border/40 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors">
+                                        {/* Guild Icon */}
+                                        <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
+                                          {targetSession?.guild_icon ? (
+                                            <img src={targetSession.guild_icon} className="w-full h-full object-cover" alt="" />
+                                          ) : (
+                                            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                                              {targetSession?.guild_name?.charAt(0) || 'G'}
+                                            </div>
+                                          )}
+                                        </div>
+                                        {/* Diary Title */}
+                                        <span className="text-[13px] font-bold text-foreground/90 truncate flex-1">
+                                          {targetSession?.title || parts.slice(1).join(': "').slice(0, -1)}
+                                        </span>
+                                      </div>
                                     </div>
                                   ) : (
                                     <p className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
