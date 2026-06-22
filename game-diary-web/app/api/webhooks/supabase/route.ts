@@ -106,10 +106,10 @@ export async function POST(request: Request) {
       if (participants && participants.length > 0) {
         const userIds = participants.map((p: any) => p.user_id);
         
-        // 참여자들의 프로필 정보(fcm_token) 조회
+        // 참여자들의 프로필 정보 및 알림 설정 조회
         const { data: profiles, error: profError } = await supabase
           .from("profiles")
-          .select("id, fcm_token, display_name")
+          .select("id, fcm_token, display_name, push_enabled, diary_alert")
           .in("id", userIds);
 
         if (profError) {
@@ -122,6 +122,13 @@ export async function POST(request: Request) {
           const redirectUrl = `/diary?id=${sessionId}&view=diary`;
 
           const notificationPromises = profiles.map(async (profile: any) => {
+            const isPushEnabled = profile.push_enabled ?? true;
+            const isDiaryAlertEnabled = profile.diary_alert ?? true;
+
+            if (!isPushEnabled || !isDiaryAlertEnabled) {
+              return Promise.resolve(null);
+            }
+
             // DB에 알림 추가
             const dbInsert = supabase.from("notifications").insert({
               recipient_id: profile.id,
@@ -150,117 +157,218 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: "Session creation notification processed" }, { status: 200 });
     }
 
-    // 2. comments 테이블의 UPDATE 이벤트만 감지
-    if (table !== "comments" || type !== "UPDATE" || !record || !old_record) {
-      return NextResponse.json({ message: "Ignored event type or table" }, { status: 200 });
-    }
+    // 2. comments 테이블 이벤트 감지 (INSERT 및 UPDATE)
+    if (table === "comments") {
+      if (type === "INSERT" && record) {
+        // 새 댓글이 생성된 경우: 내가 포함되어 있는 일기장(세션)의 다른 참여자들에게 알림 발송
+        const gameId = record.game_id;
+        const senderId = record.user_id;
+        const commentId = record.id;
+        const commentContent = record.content || "";
 
-    const commentId = record.id;
-    const recipientId = record.user_id; // 댓글 원작자
-
-    // 2. 답글(replies) 추가 이벤트 분석
-    const oldReplies = old_record.replies || [];
-    const newReplies = record.replies || [];
-
-    if (newReplies.length > oldReplies.length) {
-      const newReply = newReplies[newReplies.length - 1]; // 가장 최근 추가된 답글
-      const senderId = newReply.userId;
-
-      // 본인이 단 답글은 알림 제외
-      if (recipientId !== senderId) {
-        // 수신 유저 프로필 및 FCM 토큰 조회
-        const { data: recipientProfile } = await supabase
-          .from("profiles")
-          .select("fcm_token, display_name")
-          .eq("id", recipientId)
+        // 1. 게임 레코드에서 session_id 조회
+        const { data: gameRecord, error: gameError } = await supabase
+          .from("session_games")
+          .select("session_id")
+          .eq("id", gameId)
           .single();
 
-        const { data: senderProfile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", senderId)
-          .single();
+        if (gameError || !gameRecord) {
+          console.error("Error fetching game details for comment notification:", gameError);
+          return NextResponse.json({ error: "Game not found" }, { status: 404 });
+        }
 
-        const senderName = senderProfile?.display_name || "알 수 없음";
+        const sessionId = gameRecord.session_id;
 
-        if (recipientProfile?.fcm_token) {
-          const title = "새 답글 알림";
-          const body = `${senderName}님이 답글을 남겼습니다: "${newReply.text}"`;
-          const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
+        // 2. 해당 세션의 참여자 목록 조회 (작성자 본인 제외)
+        const { data: participants, error: partError } = await supabase
+          .from("session_participants")
+          .select("user_id")
+          .eq("session_id", sessionId)
+          .neq("user_id", senderId);
 
-          // Vercel 서버리스 환경에서 함수가 조기 동결되는 것을 막기 위해 비동기 작업을 대기(await)합니다.
-          const results = await Promise.allSettled([
-            sendFcmNotification(recipientProfile.fcm_token, title, body, { url: redirectUrl }),
-            supabase.from("notifications").insert({
+        if (partError) {
+          console.error("Error fetching session participants for comment notification:", partError);
+        }
+
+        if (participants && participants.length > 0) {
+          const userIds = participants.map((p: any) => p.user_id);
+
+          // 3. 참여자들의 프로필 및 알림 설정 조회
+          const { data: profiles, error: profError } = await supabase
+            .from("profiles")
+            .select("id, fcm_token, display_name, push_enabled, session_comment_alert")
+            .in("id", userIds);
+
+          if (profError) {
+            console.error("Error fetching profiles for comment notification:", profError);
+          }
+
+          if (profiles && profiles.length > 0) {
+            // 작성자 닉네임 구하기
+            const { data: senderProfile } = await supabase
+              .from("profiles")
+              .select("display_name")
+              .eq("id", senderId)
+              .single();
+            const senderName = senderProfile?.display_name || "알 수 없음";
+
+            const title = "새 댓글 알림";
+            const body = `${senderName}님이 댓글을 남겼습니다: "${commentContent}"`;
+            const redirectUrl = `/diary?id=${sessionId}&view=diary`;
+
+            const notificationPromises = profiles.map(async (profile: any) => {
+              const isPushEnabled = profile.push_enabled ?? true;
+              const isSessionCommentAlertEnabled = profile.session_comment_alert ?? true;
+
+              if (!isPushEnabled || !isSessionCommentAlertEnabled) {
+                return Promise.resolve(null);
+              }
+
+              // DB 알림 추가
+              const dbInsert = supabase.from("notifications").insert({
+                recipient_id: profile.id,
+                sender_id: senderId,
+                type: "session_comment",
+                source_id: commentId,
+                content: body,
+              }).then(({ error }) => {
+                if (error) {
+                  console.error(`Failed to insert session_comment notification for ${profile.id}:`, error.message);
+                }
+              });
+
+              // FCM 발송
+              const fcmSend = profile.fcm_token
+                ? sendFcmNotification(profile.fcm_token, title, body, { url: redirectUrl })
+                : Promise.resolve(null);
+
+              return Promise.allSettled([dbInsert, fcmSend]);
+            });
+
+            await Promise.allSettled(notificationPromises);
+          }
+        }
+
+        return NextResponse.json({ success: true, message: "Comment creation notification processed" }, { status: 200 });
+      }
+
+      if (type === "UPDATE" && record && old_record) {
+        const commentId = record.id;
+        const recipientId = record.user_id; // 댓글 원작자
+
+        // 답글(replies) 추가 이벤트 분석
+        const oldReplies = old_record.replies || [];
+        const newReplies = record.replies || [];
+
+        if (newReplies.length > oldReplies.length) {
+          const newReply = newReplies[newReplies.length - 1]; // 가장 최근 추가된 답글
+          const senderId = newReply.userId;
+
+          // 본인이 단 답글은 알림 제외
+          if (recipientId !== senderId) {
+            // 수신 유저 프로필 및 FCM 토큰, 알림 설정 조회
+            const { data: recipientProfile } = await supabase
+              .from("profiles")
+              .select("fcm_token, display_name, push_enabled, reply_alert")
+              .eq("id", recipientId)
+              .single();
+
+            const { data: senderProfile } = await supabase
+              .from("profiles")
+              .select("display_name")
+              .eq("id", senderId)
+              .single();
+
+            const senderName = senderProfile?.display_name || "알 수 없음";
+            const isPushEnabled = recipientProfile?.push_enabled ?? true;
+            const isReplyAlertEnabled = recipientProfile?.reply_alert ?? true;
+
+            if (isPushEnabled && isReplyAlertEnabled) {
+              const title = "새 답글 알림";
+              const body = `${senderName}님이 답글을 남겼습니다: "${newReply.text}"`;
+              const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
+
+              const dbInsert = supabase.from("notifications").insert({
+                recipient_id: recipientId,
+                sender_id: senderId,
+                type: "reply",
+                source_id: commentId,
+                content: body,
+              });
+
+              const fcmSend = recipientProfile?.fcm_token 
+                ? sendFcmNotification(recipientProfile.fcm_token, title, body, { url: redirectUrl })
+                : Promise.resolve(null);
+
+              const results = await Promise.allSettled([fcmSend, dbInsert]);
+              console.log("FCM & notification logging processes settled:", results);
+            }
+          }
+        }
+
+        // 이모지 반응(reactions) 변경 이벤트 분석
+        const oldReactions = old_record.reactions || {};
+        const newReactions = record.reactions || {};
+
+        // 추가된 반응 식별
+        let addedReactionEmoji = "";
+        let reactionSenderId = "";
+
+        for (const [emoji, users] of Object.entries(newReactions)) {
+          const oldUsers = oldReactions[emoji] || [];
+          const newUsers = users as string[];
+          
+          if (newUsers.length > oldUsers.length) {
+            const newlyAddedUser = newUsers.find(u => !oldUsers.includes(u));
+            if (newlyAddedUser) {
+              addedReactionEmoji = emoji;
+              reactionSenderId = newlyAddedUser;
+              break;
+            }
+          }
+        }
+
+        if (addedReactionEmoji && reactionSenderId && recipientId !== reactionSenderId) {
+          const { data: recipientProfile } = await supabase
+            .from("profiles")
+            .select("fcm_token, push_enabled, reaction_alert")
+            .eq("id", recipientId)
+            .single();
+
+          const { data: senderProfile } = await supabase
+            .from("profiles")
+            .select("display_name")
+            .eq("id", reactionSenderId)
+            .single();
+
+          const senderName = senderProfile?.display_name || "알 수 없음";
+          const isPushEnabled = recipientProfile?.push_enabled ?? true;
+          const isReactionAlertEnabled = recipientProfile?.reaction_alert ?? true;
+
+          if (isPushEnabled && isReactionAlertEnabled) {
+            const title = "새 반응 알림";
+            const body = `${senderName}님이 내 댓글에 반응(${addedReactionEmoji})을 남겼습니다.`;
+            const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
+
+            const dbInsert = supabase.from("notifications").insert({
               recipient_id: recipientId,
-              sender_id: senderId,
-              type: "reply",
+              sender_id: reactionSenderId,
+              type: "reaction",
               source_id: commentId,
               content: body,
-            })
-          ]);
-          console.log("FCM & notification logging processes settled:", results);
+            });
+
+            const fcmSend = recipientProfile?.fcm_token
+              ? sendFcmNotification(recipientProfile.fcm_token, title, body, { url: redirectUrl })
+              : Promise.resolve(null);
+
+            const results = await Promise.allSettled([fcmSend, dbInsert]);
+            console.log("FCM Reaction & notification logging processes settled:", results);
+          }
         }
-      }
-    }
 
-    // 3. 이모지 반응(reactions) 변경 이벤트 분석
-    const oldReactions = old_record.reactions || {};
-    const newReactions = record.reactions || {};
-
-    // 추가된 반응 식별
-    let addedReactionEmoji = "";
-    let reactionSenderId = "";
-
-    for (const [emoji, users] of Object.entries(newReactions)) {
-      const oldUsers = oldReactions[emoji] || [];
-      const newUsers = users as string[];
-      
-      if (newUsers.length > oldUsers.length) {
-        // 새로 반응을 추가한 유저 목록 필터링
-        const newlyAddedUser = newUsers.find(u => !oldUsers.includes(u));
-        if (newlyAddedUser) {
-          addedReactionEmoji = emoji;
-          reactionSenderId = newlyAddedUser;
-          break;
-        }
-      }
-    }
-
-    // 새 반응이 감지되었고, 수신자(원작자)가 반응 전송자와 다른 경우
-    if (addedReactionEmoji && reactionSenderId && recipientId !== reactionSenderId) {
-      // 수신 유저 FCM 토큰 및 프로필 조회
-      const { data: recipientProfile } = await supabase
-        .from("profiles")
-        .select("fcm_token")
-        .eq("id", recipientId)
-        .single();
-
-      const { data: senderProfile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", reactionSenderId)
-        .single();
-
-      const senderName = senderProfile?.display_name || "알 수 없음";
-
-      if (recipientProfile?.fcm_token) {
-        const title = "새 반응 알림";
-        const body = `${senderName}님이 내 댓글에 반응(${addedReactionEmoji})을 남겼습니다.`;
-        const redirectUrl = `/diary?id=${record.game_id || ""}&view=diary`;
-
-        // Vercel 서버리스 환경에서 함수가 조기 동결되는 것을 막기 위해 비동기 작업을 대기(await)합니다.
-        const results = await Promise.allSettled([
-          sendFcmNotification(recipientProfile.fcm_token, title, body, { url: redirectUrl }),
-          supabase.from("notifications").insert({
-            recipient_id: recipientId,
-            sender_id: reactionSenderId,
-            type: "reaction",
-            source_id: commentId,
-            content: body,
-          })
-        ]);
-        console.log("FCM Reaction & notification logging processes settled:", results);
+        return NextResponse.json({ success: true }, { status: 200 });
       }
     }
 

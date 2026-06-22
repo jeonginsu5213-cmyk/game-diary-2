@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Bell, User, Monitor, Info, HelpCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { supabase } from "@/src/lib/supabase";
 
 interface SettingsViewProps {
   onClose: () => void;
@@ -36,10 +37,51 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
   const [pushEnabled, setPushEnabled] = useState(true);
   const [diaryAlert, setDiaryAlert] = useState(true);
+  const [sessionCommentAlert, setSessionCommentAlert] = useState(true);
   const [replyAlert, setReplyAlert] = useState(true);
   const [reactionAlert, setReactionAlert] = useState(true);
   const [dailyAlert, setDailyAlert] = useState(true);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    
+    async function loadSettings() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('push_enabled, diary_alert, session_comment_alert, reply_alert, reaction_alert')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          if (data.push_enabled !== undefined && data.push_enabled !== null) setPushEnabled(data.push_enabled);
+          if (data.diary_alert !== undefined && data.diary_alert !== null) setDiaryAlert(data.diary_alert);
+          if (data.session_comment_alert !== undefined && data.session_comment_alert !== null) setSessionCommentAlert(data.session_comment_alert);
+          if (data.reply_alert !== undefined && data.reply_alert !== null) setReplyAlert(data.reply_alert);
+          if (data.reaction_alert !== undefined && data.reaction_alert !== null) setReactionAlert(data.reaction_alert);
+        }
+      } catch (err) {
+        console.error("Failed to load user notification settings:", err);
+      }
+    }
+    
+    loadSettings();
+  }, [session]);
+
+  const updateSetting = async (column: string, value: boolean) => {
+    if (!session?.user?.id) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [column]: value, updated_at: new Date().toISOString() })
+        .eq('id', session.user.id);
+      if (error) throw error;
+    } catch (err) {
+      console.error(`Failed to update setting ${column}:`, err);
+    }
+  };
 
   const handleBack = () => {
     if (subView === 'menu') {
@@ -220,7 +262,7 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   알림 설정
                 </h2>
                 <p className="text-[13px] text-muted-foreground/80 mt-2">
-                  여기서 끄면 비슷한 내용의 알림은 보내지 않아요.
+                  여기서 끄면 해당 내용의 알림은 보내지 않아요.
                 </p>
               </div>
 
@@ -234,7 +276,11 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                     <span className="text-[12px] text-muted-foreground leading-relaxed">기기에서 웹 알림을 수신합니다.</span>
                   </div>
                   <button 
-                    onClick={() => setPushEnabled(!pushEnabled)}
+                    onClick={() => {
+                      const next = !pushEnabled;
+                      setPushEnabled(next);
+                      updateSetting('push_enabled', next);
+                    }}
                     className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 focus:outline-none shrink-0 cursor-pointer ${pushEnabled ? 'bg-primary' : 'bg-muted-foreground/20'}`}
                   >
                     <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${pushEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -248,7 +294,11 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                     <span className="text-[12px] text-muted-foreground leading-relaxed">새로운 일기장이 생성되면 알려줍니다.</span>
                   </div>
                   <button 
-                    onClick={() => setDiaryAlert(!diaryAlert)}
+                    onClick={() => {
+                      const next = !diaryAlert;
+                      setDiaryAlert(next);
+                      updateSetting('diary_alert', next);
+                    }}
                     disabled={!pushEnabled}
                     className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 focus:outline-none shrink-0 cursor-pointer ${diaryAlert ? 'bg-primary' : 'bg-muted-foreground/20'}`}
                   >
@@ -256,14 +306,37 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   </button>
                 </div>
 
-                {/* 3. 답글 알림 */}
+                {/* 3. 참여한 일기장의 댓글 알림 */}
+                <div className={`bg-card rounded-2xl py-3 px-5 flex items-center justify-between gap-4 transition-opacity duration-200 ${pushEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[15px] font-bold text-foreground">참여한 일기장의 댓글 알림</span>
+                    <span className="text-[12px] text-muted-foreground leading-relaxed">내가 참여자로 포함된 일기장에 새 댓글이 달리면 알려줍니다.</span>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const next = !sessionCommentAlert;
+                      setSessionCommentAlert(next);
+                      updateSetting('session_comment_alert', next);
+                    }}
+                    disabled={!pushEnabled}
+                    className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 focus:outline-none shrink-0 cursor-pointer ${sessionCommentAlert ? 'bg-primary' : 'bg-muted-foreground/20'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${sessionCommentAlert ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+
+                {/* 4. 답글 알림 */}
                 <div className={`bg-card rounded-2xl py-3 px-5 flex items-center justify-between gap-4 transition-opacity duration-200 ${pushEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[15px] font-bold text-foreground">답글 알림</span>
                     <span className="text-[12px] text-muted-foreground leading-relaxed">내 댓글에 새로운 답글이 달리면 알려줍니다.</span>
                   </div>
                   <button 
-                    onClick={() => setReplyAlert(!replyAlert)}
+                    onClick={() => {
+                      const next = !replyAlert;
+                      setReplyAlert(next);
+                      updateSetting('reply_alert', next);
+                    }}
                     disabled={!pushEnabled}
                     className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 focus:outline-none shrink-0 cursor-pointer ${replyAlert ? 'bg-primary' : 'bg-muted-foreground/20'}`}
                   >
@@ -271,14 +344,18 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   </button>
                 </div>
 
-                {/* 4. 반응(이모지) 알림 */}
+                {/* 5. 반응(이모지) 알림 */}
                 <div className={`bg-card rounded-2xl py-3 px-5 flex items-center justify-between gap-4 transition-opacity duration-200 ${pushEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[15px] font-bold text-foreground">반응(이모지) 알림</span>
                     <span className="text-[12px] text-muted-foreground leading-relaxed">내 댓글에 이모지 반응이 달리면 알려줍니다.</span>
                   </div>
                   <button 
-                    onClick={() => setReactionAlert(!reactionAlert)}
+                    onClick={() => {
+                      const next = !reactionAlert;
+                      setReactionAlert(next);
+                      updateSetting('reaction_alert', next);
+                    }}
                     disabled={!pushEnabled}
                     className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 focus:outline-none shrink-0 cursor-pointer ${reactionAlert ? 'bg-primary' : 'bg-muted-foreground/20'}`}
                   >

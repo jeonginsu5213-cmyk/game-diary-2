@@ -1477,7 +1477,7 @@ function HomeContent() {
 
                           // Split for notifications to style the sub-content
                           const parts = notif.content.split(': "');
-                          const isReplyNotification = notif.type === 'reply' && parts.length > 1;
+                          const isReplyNotification = (notif.type === 'reply' || notif.type === 'session_comment') && parts.length > 1;
                           const isSessionCreatedNotification = notif.type === 'session_created' && parts.length > 1;
                           const targetSession = notif.type === 'session_created'
                             ? sessions.find(s => s.id === notif.source_id)
