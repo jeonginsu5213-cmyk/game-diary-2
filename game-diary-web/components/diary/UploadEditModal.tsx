@@ -49,7 +49,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-4">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 p-4 pt-4">
       {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
       <div className="relative w-full max-w-[860px] flex flex-col">
         {/* ㅇㅇ에 기록됩니다 문구: 카드 바깥 좌측 상단에 플로팅 */}
