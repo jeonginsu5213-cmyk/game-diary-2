@@ -282,7 +282,7 @@ export default function CommentItem({
             
             {/* Content Line */}
             <div className="flex items-baseline gap-2">
-              <p className="text-[12px] leading-snug break-words text-foreground/80 flex-1">{comment.text}</p>
+              <p className="text-[12px] leading-snug break-words text-foreground/80 flex-1 whitespace-pre-wrap">{comment.text}</p>
             </div>
 
             {/* Reactions Row */}

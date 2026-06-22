@@ -1477,8 +1477,8 @@ function HomeContent() {
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-[13px] font-medium text-foreground leading-relaxed break-all">
-                                    {notif.content}
+                                  <p className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
+                                    {notif.content.replace(': "', ':\n"')}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0 pt-0.5 select-none">
