@@ -1228,7 +1228,7 @@ function HomeContent() {
                 </div>
               )}
               <div 
-                className="flex-1 mt-2 md:mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide px-1 md:px-3 pt-0 pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch]"
+                className="flex-1 mt-2 md:mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide px-2 md:px-3 pt-0 pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch]"
               >
                 <div className="space-y-0 min-h-[396px] w-full">
                   {listTab === 'calendar' ? (
