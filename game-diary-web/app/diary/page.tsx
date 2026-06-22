@@ -1454,8 +1454,8 @@ function HomeContent() {
                             <div 
                               key={notif.id}
                               onClick={() => handleNotificationClick(notif)}
-                              className={`flex flex-col gap-1.5 p-4 rounded-2xl bg-card hover:bg-muted/30 cursor-pointer shadow-xs border border-transparent hover:border-border/40 transition-all duration-200 relative group overflow-hidden ${
-                                isUnread ? 'border-primary/20 bg-primary/[0.03] dark:bg-primary/[0.01]' : 'opacity-85'
+                              className={`flex flex-col gap-1.5 py-4 px-2 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden ${
+                                isUnread ? '' : 'opacity-75'
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2">
@@ -1485,7 +1485,7 @@ function HomeContent() {
                                 {notif.content}
                               </p>
                               {isUnread && (
-                                <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-primary" />
+                                <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                               )}
                             </div>
                           );
