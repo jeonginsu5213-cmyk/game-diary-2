@@ -1452,10 +1452,20 @@ function HomeContent() {
                           const isUnread = !notif.is_read;
                           const dateObj = new Date(notif.created_at);
                           const now = new Date();
-                          const isOver24Hours = now.getTime() - dateObj.getTime() > 24 * 60 * 60 * 1000;
-                          const formattedDate = isOver24Hours
-                            ? `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`
-                            : `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                          const diffMs = now.getTime() - dateObj.getTime();
+                          const diffMins = Math.floor(diffMs / (60 * 1000));
+                          const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+
+                          let formattedDate = "";
+                          if (diffMins < 1) {
+                            formattedDate = "방금 전";
+                          } else if (diffMins < 60) {
+                            formattedDate = `${diffMins}분 전`;
+                          } else if (diffHours < 24) {
+                            formattedDate = `${diffHours}시간 전`;
+                          } else {
+                            formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+                          }
 
                           return (
                             <div 
