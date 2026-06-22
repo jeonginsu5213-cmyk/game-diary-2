@@ -1228,7 +1228,7 @@ function HomeContent() {
                       <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
                     </>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-muted-foreground/60 select-none pl-1.5 md:pl-0">
+                    <div className="flex items-center gap-1.5 text-muted-foreground/60 select-none pl-3.5 md:pl-2">
                       <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                       <span className="text-[10px] font-bold">7일 후 영구 삭제됩니다.</span>
                     </div>
