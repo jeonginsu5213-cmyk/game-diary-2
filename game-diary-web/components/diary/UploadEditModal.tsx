@@ -49,20 +49,21 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
-      {/* 닫기 X 버튼: 완전히 패널 바깥 화면 우측 상단에 배치 */}
-      <button 
-        onClick={onClose}
-        className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-black/20 hover:bg-black/40 active:scale-95 border border-white/10 backdrop-blur-md rounded-full text-white transition-all shadow-lg z-[160] cursor-pointer"
-        title="닫기"
-      >
-        <X size={22} className="stroke-[2.5]" />
-      </button>
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-14 md:pt-4">
+      {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
+      <div className="relative w-full max-w-[860px] flex flex-col">
+        <button 
+          onClick={onClose}
+          className="absolute -top-9 right-1 md:right-0 p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white/85 hover:text-white transition-all shadow-lg z-[160] cursor-pointer"
+          title="닫기"
+        >
+          <X size={20} className="stroke-[2.5]" />
+        </button>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.98 }}
         className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
       >
         {/* Left: Preview Section */}
@@ -138,6 +139,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };
