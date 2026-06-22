@@ -1476,17 +1476,19 @@ function HomeContent() {
                               }`}
                             >
                               <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 flex gap-2 items-start min-w-0">
-                                  {isUnread && (
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0 mt-[7px]" />
-                                  )}
+                                <div className="flex-1 min-w-0">
                                   <p className="text-[13px] font-medium text-foreground leading-relaxed break-all">
                                     {notif.content}
                                   </p>
                                 </div>
-                                <span className="text-[10px] text-muted-foreground/50 font-mono shrink-0 pt-0.5 select-none">
-                                  {formattedDate}
-                                </span>
+                                <div className="flex items-center gap-1.5 shrink-0 pt-0.5 select-none">
+                                  <span className="text-[10px] text-muted-foreground/50 font-mono">
+                                    {formattedDate}
+                                  </span>
+                                  {isUnread && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+                                  )}
+                                </div>
                               </div>
                             </div>
                           );
