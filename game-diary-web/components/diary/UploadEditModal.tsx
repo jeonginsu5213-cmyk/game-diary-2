@@ -74,21 +74,32 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
               />
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+
+            {/* Mobile-only header elements floating on the image (aligned to top-right close button) */}
+            <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20 md:hidden pointer-events-none">
+              <div className="bg-black/50 border border-white/10 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full select-none shadow-md pointer-events-auto">
+                {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+              </div>
+              <button 
+                onClick={onClose}
+                className="p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all shadow-md cursor-pointer pointer-events-auto"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Right: Info Section */}
         <div className="w-full md:w-[45%] p-4 md:p-8 flex flex-col bg-white">
-          <div className="flex justify-between items-center md:items-start mb-3 md:mb-6">
+          {/* Desktop header (hidden on mobile) */}
+          <div className="hidden md:flex justify-between items-start mb-6">
             <div className="min-w-0 flex-1">
-              {/* Desktop-only title */}
-              <h2 className="hidden md:block text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
-              {/* Target text (Large/bold on mobile, smaller/muted on desktop) */}
-              <p className="text-[15px] md:text-[13px] font-bold md:font-normal text-[#333333] md:text-[#6b7280] mt-0.5 md:mt-1 truncate">
+              <h2 className="text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
+              <p className="text-[13px] text-[#6b7280] mt-1 truncate">
                 {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
               </p>
             </div>
-            {/* Close button (visible on all viewports) */}
             <button 
               onClick={onClose}
               className="p-1.5 hover:bg-[#f3f4f6] rounded-full transition-colors text-[#6b7280] ml-4 shrink-0 cursor-pointer"
