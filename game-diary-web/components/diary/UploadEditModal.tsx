@@ -49,7 +49,16 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
+      {/* 닫기 X 버튼: 완전히 패널 바깥 화면 우측 상단에 배치 */}
+      <button 
+        onClick={onClose}
+        className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-black/20 hover:bg-black/40 active:scale-95 border border-white/10 backdrop-blur-md rounded-full text-white transition-all shadow-lg z-[160] cursor-pointer"
+        title="닫기"
+      >
+        <X size={22} className="stroke-[2.5]" />
+      </button>
+
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -79,14 +88,6 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             <div className="absolute top-3 left-3 md:hidden bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1.25 rounded-full select-none shadow-sm z-20">
               {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
             </div>
-
-            {/* Mobile-only floating close button */}
-            <button 
-              onClick={onClose}
-              className="absolute top-3 right-3 md:hidden p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all shadow-md z-20 cursor-pointer"
-            >
-              <X size={18} />
-            </button>
           </div>
         </div>
 
@@ -99,12 +100,6 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
               </p>
             </div>
-            <button 
-              onClick={onClose}
-              className="p-1.5 hover:bg-[#f3f4f6] rounded-full transition-colors text-[#6b7280] ml-4 shrink-0"
-            >
-              <X size={18} />
-            </button>
           </div>
 
           <div className="flex-1 flex flex-col">
