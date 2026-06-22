@@ -1467,9 +1467,10 @@ function HomeContent() {
                             formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
                           }
 
-                          // Split for reply notifications to style the reply text lighter
+                          // Split for notifications to style the sub-content
                           const parts = notif.content.split(': "');
-                          const isReplyNotification = parts.length > 1;
+                          const isReplyNotification = notif.type === 'reply' && parts.length > 1;
+                          const isSessionCreatedNotification = notif.type === 'session_created' && parts.length > 1;
 
                           return (
                             <div 
@@ -1485,6 +1486,13 @@ function HomeContent() {
                                     <div className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
                                       <span>{parts[0]}:</span>
                                       <p className="text-[13px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-0.5 whitespace-pre-wrap">
+                                        &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
+                                      </p>
+                                    </div>
+                                  ) : isSessionCreatedNotification ? (
+                                    <div className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
+                                      <span>{parts[0]}</span>
+                                      <p className="text-[13px] text-primary font-bold mt-0.5 whitespace-pre-wrap">
                                         &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
                                       </p>
                                     </div>
