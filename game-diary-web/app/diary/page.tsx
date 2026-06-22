@@ -1487,22 +1487,20 @@ function HomeContent() {
                             <div 
                               key={notif.id}
                               onClick={() => handleNotificationClick(notif)}
-                              className={`flex flex-col py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden ${
-                                isUnread ? '' : 'opacity-75'
-                              }`}
+                              className="flex flex-col py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden"
                             >
                               {/* Top Line: Header & Date/Dot */}
                               <div className="flex items-center justify-between gap-3 w-full">
                                 {isReplyNotification ? (
-                                  <span className="text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1">
+                                  <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
                                     {parts[0]}:
                                   </span>
                                 ) : isSessionCreatedNotification ? (
-                                  <span className="text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1">
+                                  <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
                                     {parts[0].replace(/^\[.*?\]\s*/, '')}
                                   </span>
                                 ) : (
-                                  <span className="text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1">
+                                  <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
                                     {notif.content}
                                   </span>
                                 )}
@@ -1517,13 +1515,13 @@ function HomeContent() {
 
                               {/* Second Line (Sub-content) */}
                               {isReplyNotification && (
-                                <p className="text-[13px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-1 whitespace-pre-wrap w-full">
+                                <p className={`text-[13px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-1 whitespace-pre-wrap w-full ${isUnread ? '' : 'opacity-70'}`}>
                                   &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
                                 </p>
                               )}
 
                               {isSessionCreatedNotification && (
-                                <div className="mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1">
+                                <div className={`mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1 ${isUnread ? '' : 'opacity-70'}`}>
                                   {/* Guild Icon */}
                                   <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
                                     {targetSession?.guild_icon ? (
