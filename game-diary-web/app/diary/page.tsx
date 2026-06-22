@@ -1450,30 +1450,30 @@ function HomeContent() {
                       <div className="flex flex-col gap-2.5 px-1 pb-4 animate-in fade-in duration-300">
                         {notifications.map((notif) => {
                           const isUnread = !notif.is_read;
+                          const dateObj = new Date(notif.created_at);
+                          const formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+
                           return (
                             <div 
                               key={notif.id}
                               onClick={() => handleNotificationClick(notif)}
-                              className={`flex flex-col gap-1.5 py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden ${
+                              className={`flex flex-col py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden ${
                                 isUnread ? '' : 'opacity-75'
                               }`}
                             >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] text-muted-foreground/60 font-mono">
-                                  {new Date(notif.created_at).toLocaleString('ko-KR', { 
-                                    month: 'numeric', 
-                                    day: 'numeric', 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  })}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 flex gap-2 items-start min-w-0">
+                                  {isUnread && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0 mt-[7px]" />
+                                  )}
+                                  <p className="text-[13px] font-medium text-foreground leading-relaxed break-all">
+                                    {notif.content}
+                                  </p>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground/50 font-mono shrink-0 pt-0.5 select-none">
+                                  {formattedDate}
                                 </span>
                               </div>
-                              <p className="text-[13px] font-medium text-foreground leading-relaxed">
-                                {notif.content}
-                              </p>
-                              {isUnread && (
-                                <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                              )}
                             </div>
                           );
                         })}
