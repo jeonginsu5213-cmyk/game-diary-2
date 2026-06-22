@@ -1221,7 +1221,7 @@ function HomeContent() {
               className="absolute inset-0 flex flex-col pt-2 px-0 pb-0 min-h-0 md:relative md:flex-1 md:flex md:flex-col md:min-h-0"
             >
               {(listTab === 'active' || listTab === 'trash') && (
-                <div className="h-8 flex items-center justify-between pl-2 pr-6 md:pl-5 md:pr-8 shrink-0">
+                <div className="h-8 flex items-center justify-between pl-2 pr-[18px] md:pl-5 md:pr-[26px] shrink-0">
                   {listTab === 'active' ? (
                     <>
                       <div />
