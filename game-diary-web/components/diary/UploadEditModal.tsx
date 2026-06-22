@@ -53,16 +53,20 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
       {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
       <div className="relative w-full max-w-[860px] flex flex-col pt-10 md:pt-0">
         {/* 모바일용 이미지 섹션 상단(카드 바깥) 헤더 */}
-        <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-[160] md:hidden select-none">
-          <div className="text-white text-[13px] font-bold">
-            {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+        <div className="absolute top-1.5 left-2 right-2 z-[160] md:hidden select-none">
+          <div className="flex justify-between items-center pb-2">
+            <div className="text-white text-[13px] font-bold">
+              {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-1 text-white hover:text-white/80 transition-colors cursor-pointer"
+            >
+              <X size={20} className="stroke-[2.5]" />
+            </button>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-1 text-white hover:text-white/80 transition-colors cursor-pointer"
-          >
-            <X size={20} className="stroke-[2.5]" />
-          </button>
+          {/* 구분선 */}
+          <div className="h-[1px] bg-white/15 w-full" />
         </div>
 
         <motion.div 
