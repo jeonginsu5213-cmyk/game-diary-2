@@ -11,6 +11,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   const [comment, setComment] = useState("");
   const [selectedGame, setSelectedGame] = useState(defaultGame);
   const [isUploading, setIsUploading] = useState(false);
+  const matchedGame = games?.find((g: any) => g.title === selectedGame);
   const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
@@ -92,7 +93,15 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             <div className="min-w-0 flex-1">
               <h2 className="text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
               <p className="text-[13px] text-[#6b7280] mt-1 truncate flex items-center gap-1.5">
-                <Gamepad2 size={13} className="text-[#e05d38]/85 shrink-0" />
+                {matchedGame?.icon_url ? (
+                  <img 
+                    src={matchedGame.icon_url} 
+                    className="w-3.5 h-3.5 object-contain shrink-0 rounded-sm" 
+                    alt="" 
+                  />
+                ) : (
+                  <Gamepad2 size={13} className="text-[#e05d38]/85 shrink-0" />
+                )}
                 <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </p>
             </div>
@@ -109,7 +118,15 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             <div className="space-y-1.5 md:space-y-2 mb-4 flex-1 flex flex-col">
               {/* Mobile-only target text above the comment input */}
               <div className="md:hidden text-[14px] font-bold text-[#333333] mb-1.5 flex items-center gap-1.5">
-                <Gamepad2 size={14} className="text-[#e05d38] shrink-0" />
+                {matchedGame?.icon_url ? (
+                  <img 
+                    src={matchedGame.icon_url} 
+                    className="w-[15px] h-[15px] object-contain shrink-0 rounded-sm" 
+                    alt="" 
+                  />
+                ) : (
+                  <Gamepad2 size={14} className="text-[#e05d38] shrink-0" />
+                )}
                 <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </div>
               <label className="hidden md:flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-[#333333] uppercase tracking-wider">
