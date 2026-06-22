@@ -1454,7 +1454,7 @@ function HomeContent() {
                             <div 
                               key={notif.id}
                               onClick={() => handleNotificationClick(notif)}
-                              className={`flex flex-col gap-1.5 py-4 px-2 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden ${
+                              className={`flex flex-col gap-1.5 py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden ${
                                 isUnread ? '' : 'opacity-75'
                               }`}
                             >
