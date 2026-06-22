@@ -115,9 +115,9 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
 
             <div className="flex-1 flex flex-col">
             {/* Comment Input */}
-            <div className="space-y-1.5 md:space-y-2 mb-4 flex-1 flex flex-col">
+            <div className="space-y-1.5 md:space-y-2 mb-2 md:mb-4 flex-1 flex flex-col">
               {/* Mobile-only target text above the comment input */}
-              <div className="md:hidden text-[14px] font-bold text-[#333333] mb-1.5 flex items-center gap-1.5">
+              <div className="md:hidden text-[14px] font-bold text-[#333333] mb-2 flex items-center gap-1.5">
                 {matchedGame?.icon_url ? (
                   <img 
                     src={matchedGame.icon_url} 
