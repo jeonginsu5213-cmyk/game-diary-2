@@ -1484,7 +1484,7 @@ function HomeContent() {
                                   {isReplyNotification ? (
                                     <div className="text-[13px] font-medium text-foreground leading-relaxed break-all whitespace-pre-wrap">
                                       <span>{parts[0]}:</span>
-                                      <p className="text-[12px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-0.5 whitespace-pre-wrap">
+                                      <p className="text-[13px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-0.5 whitespace-pre-wrap">
                                         &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
                                       </p>
                                     </div>
