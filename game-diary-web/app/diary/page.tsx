@@ -1459,19 +1459,6 @@ function HomeContent() {
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                                  notif.type === 'session_created' 
-                                    ? 'text-primary bg-primary/10' 
-                                    : notif.type === 'reply' 
-                                      ? 'text-blue-500 bg-blue-500/10' 
-                                      : 'text-amber-500 bg-amber-500/10'
-                                }`}>
-                                  {notif.type === 'session_created' 
-                                    ? '새 일기장' 
-                                    : notif.type === 'reply' 
-                                      ? '답글' 
-                                      : '반응'}
-                                </span>
                                 <span className="text-[10px] text-muted-foreground/60 font-mono">
                                   {new Date(notif.created_at).toLocaleString('ko-KR', { 
                                     month: 'numeric', 
