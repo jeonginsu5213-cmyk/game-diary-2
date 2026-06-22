@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import { supabase } from "@/src/lib/supabase";
-import { X, ArrowRight, MessageSquare, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { X, ArrowRight, MessageSquare, Image as ImageIcon, Loader2, Gamepad2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, onComplete }: any) => {
@@ -91,8 +91,9 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           <div className="hidden md:flex justify-between items-start mb-6">
             <div className="min-w-0 flex-1">
               <h2 className="text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
-              <p className="text-[13px] text-[#6b7280] mt-1 truncate">
-                {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+              <p className="text-[13px] text-[#6b7280] mt-1 truncate flex items-center gap-1.5">
+                <Gamepad2 size={13} className="text-[#e05d38]/85 shrink-0" />
+                <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </p>
             </div>
             <button 
@@ -107,8 +108,9 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             {/* Comment Input */}
             <div className="space-y-1.5 md:space-y-2 mb-4 flex-1 flex flex-col">
               {/* Mobile-only target text above the comment input */}
-              <div className="md:hidden text-[14px] font-bold text-[#333333] mb-1.5">
-                {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+              <div className="md:hidden text-[14px] font-bold text-[#333333] mb-1.5 flex items-center gap-1.5">
+                <Gamepad2 size={14} className="text-[#e05d38] shrink-0" />
+                <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </div>
               <label className="hidden md:flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-[#333333] uppercase tracking-wider">
                 <MessageSquare size={13} className="text-[#e05d38]" />
