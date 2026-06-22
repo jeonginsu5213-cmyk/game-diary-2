@@ -1128,16 +1128,16 @@ function HomeContent() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -4, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute top-4 left-4 z-50 w-44 overflow-hidden rounded-lg bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-top-left"
+                  className="absolute top-4 left-4 z-50 w-48 overflow-hidden rounded-xl bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-top-left border border-border/30"
                 >
                   <button 
                     onClick={() => {
                       setIsProfileOpen(false);
                       setIsSettingsOpen(true);
                     }}
-                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
+                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2.5 focus:outline-none"
                   >
-                    <Settings className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                    <Settings className="w-4 h-4 opacity-60 shrink-0" />
                     <span>설정</span>
                   </button>
                   <button 
@@ -1145,9 +1145,9 @@ function HomeContent() {
                       setIsProfileOpen(false);
                       setIsHelpOpen(true);
                     }}
-                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
+                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2.5 focus:outline-none"
                   >
-                    <HelpCircle className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                    <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
                     <span>도움말 및 지원</span>
                   </button>
                   <div className="h-[1px] bg-border/40 my-1 mx-2" />
@@ -1156,9 +1156,9 @@ function HomeContent() {
                       setIsProfileOpen(false);
                       signOut();
                     }}
-                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-red-500 hover:bg-red-500/10 hover:text-red-600 flex items-center gap-2 focus:outline-none"
+                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-red-500 hover:bg-red-500/10 hover:text-red-600 flex items-center gap-2.5 focus:outline-none"
                   >
-                    <LogOut className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                    <LogOut className="w-4 h-4 opacity-80 shrink-0" />
                     <span>로그아웃</span>
                   </button>
                 </motion.div>
