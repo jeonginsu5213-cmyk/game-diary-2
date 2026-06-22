@@ -64,7 +64,7 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
       </header>
       
       {/* Content */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 max-w-[1192px] w-full mx-auto pb-24">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-4 px-4 max-w-[1192px] w-full mx-auto pb-24">
         <div className="max-w-2xl mx-auto relative">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             {subView === 'menu' && (

@@ -338,6 +338,7 @@ function HomeContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(new Date());
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const tabIndices: Record<string, number> = {
     active: 0,
@@ -438,6 +439,21 @@ function HomeContent() {
       console.log("Data fetched successfully:", data.length, "sessions found.");
       setSessions(data);
     }
+
+    // Fetch notifications for current user
+    const currentUserId = session?.user?.id;
+    if (currentUserId) {
+      const { data: notifData, error: notifError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', currentUserId)
+        .order('created_at', { ascending: false });
+
+      if (!notifError && notifData) {
+        setNotifications(notifData);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -447,6 +463,7 @@ function HomeContent() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'screenshots' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_favorites' }, fetchFavorites)
       .subscribe();
     return () => { supabase.removeChannel(channels); };
@@ -629,6 +646,46 @@ function HomeContent() {
     if (window.innerWidth < 768) {
       setViewMode('diary');
       router.push(`/diary?id=${id}&view=diary`);
+    }
+  };
+
+  const findSessionIdForNotification = (notif: any) => {
+    if (notif.type === 'session_created') {
+      return notif.source_id;
+    }
+    const commentId = notif.source_id;
+    for (const s of sessions) {
+      for (const sg of s.session_games || []) {
+        for (const c of sg.comments || []) {
+          if (c.id === commentId) {
+            return s.id;
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleNotificationClick = async (notif: any) => {
+    try {
+      if (!notif.is_read) {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('id', notif.id);
+        if (error) throw error;
+        fetchData();
+      }
+
+      const sessionId = findSessionIdForNotification(notif);
+      if (sessionId) {
+        handleTabChange('active');
+        handleDiarySelect(sessionId);
+      } else {
+        alert("관련된 일기장을 찾을 수 없습니다.");
+      }
+    } catch (err: any) {
+      console.error("Failed to handle notification click:", err.message);
     }
   };
 
@@ -1042,7 +1099,9 @@ function HomeContent() {
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <span className="relative">
                 <Bell className={`w-4 h-4 ${listTab === 'notifications' ? 'fill-foreground text-foreground' : ''}`} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#ef4444] rounded-full border border-white dark:border-muted z-20 pointer-events-none" />
+                {notifications.some(n => !n.is_read) && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#ef4444] rounded-full border border-white dark:border-muted z-20 pointer-events-none" />
+                )}
               </span>
               {listTab === 'notifications' && <span>알림</span>}
             </span>
@@ -1382,10 +1441,57 @@ function HomeContent() {
                       )}
                     </div>
                   ) : listTab === 'notifications' ? (
-                    <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
-                      <Bell className="w-8 h-8 opacity-50" />
-                      <p className="text-[12px] font-bold tracking-tight">새로운 알림이 없습니다</p>
-                    </div>
+                    notifications.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
+                        <Bell className="w-8 h-8 opacity-50" />
+                        <p className="text-[12px] font-bold tracking-tight">새로운 알림이 없습니다</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2.5 px-1 pb-4 animate-in fade-in duration-300">
+                        {notifications.map((notif) => {
+                          const isUnread = !notif.is_read;
+                          return (
+                            <div 
+                              key={notif.id}
+                              onClick={() => handleNotificationClick(notif)}
+                              className={`flex flex-col gap-1.5 p-4 rounded-2xl bg-card hover:bg-muted/30 cursor-pointer shadow-xs border border-transparent hover:border-border/40 transition-all duration-200 relative group overflow-hidden ${
+                                isUnread ? 'border-primary/20 bg-primary/[0.03] dark:bg-primary/[0.01]' : 'opacity-85'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                  notif.type === 'session_created' 
+                                    ? 'text-primary bg-primary/10' 
+                                    : notif.type === 'reply' 
+                                      ? 'text-blue-500 bg-blue-500/10' 
+                                      : 'text-amber-500 bg-amber-500/10'
+                                }`}>
+                                  {notif.type === 'session_created' 
+                                    ? '새 일기장' 
+                                    : notif.type === 'reply' 
+                                      ? '답글' 
+                                      : '반응'}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground/60 font-mono">
+                                  {new Date(notif.created_at).toLocaleString('ko-KR', { 
+                                    month: 'numeric', 
+                                    day: 'numeric', 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })}
+                                </span>
+                              </div>
+                              <p className="text-[13px] font-medium text-foreground leading-relaxed">
+                                {notif.content}
+                              </p>
+                              {isUnread && (
+                                <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-primary" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )
                   ) : (
                     sortedSessions.length === 0 ? (
                       listTab === 'trash' ? (
