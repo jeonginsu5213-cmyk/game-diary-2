@@ -50,31 +50,12 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-4">
-      {/* 카드 영역 바깥이되 카드와 붙어있도록 배치 */}
-      <div className="relative w-full max-w-[860px] flex flex-col">
-        {/* 모바일용 이미지 섹션 상단(카드 바깥) 헤더 - absolute를 제거하여 패널 위에 겹치지 않게 자연스러운 flow로 배치 */}
-        <div className="w-full pb-3 md:hidden select-none">
-          <div className="flex justify-between items-center pb-2 px-1">
-            <div className="text-white text-[13px] font-bold">
-              {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
-            </div>
-            <button 
-              onClick={onClose}
-              className="p-1 text-white hover:text-white/80 transition-colors cursor-pointer"
-            >
-              <X size={20} className="stroke-[2.5]" />
-            </button>
-          </div>
-          {/* 구분선 */}
-          <div className="h-[1px] bg-white/15 w-full" />
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.98 }}
-          className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
-        >
+      <motion.div 
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
+      >
           {/* Left: Preview Section */}
           <div className="w-full md:w-[55%] bg-[#f9fafb] border-b md:border-b-0 md:border-r border-[#dcdfe2] p-0 md:p-8 flex flex-col">
             <div className="hidden md:flex items-center gap-2 mb-6">
@@ -93,6 +74,14 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 />
               )}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+
+              {/* Mobile-only close button floating on top-right of the image, wrapped in background */}
+              <button 
+                onClick={onClose}
+                className="absolute top-3 right-3 md:hidden p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all shadow-md z-20 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
 
@@ -117,6 +106,10 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             <div className="flex-1 flex flex-col">
             {/* Comment Input */}
             <div className="space-y-1.5 md:space-y-2 mb-4 flex-1 flex flex-col">
+              {/* Mobile-only target text above the comment input */}
+              <div className="md:hidden text-[14px] font-bold text-[#333333] mb-1.5">
+                {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+              </div>
               <label className="hidden md:flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-[#333333] uppercase tracking-wider">
                 <MessageSquare size={13} className="text-[#e05d38]" />
                 코멘트
@@ -150,7 +143,6 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           </div>
         </div>
       </motion.div>
-      </div>
     </div>
   );
 };
