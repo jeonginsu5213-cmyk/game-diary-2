@@ -74,6 +74,14 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
               />
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+            
+            {/* Mobile-only floating close button */}
+            <button 
+              onClick={onClose}
+              className="absolute top-3 right-3 md:hidden p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all shadow-md z-20 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
           </div>
         </div>
 
@@ -88,7 +96,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             </div>
             <button 
               onClick={onClose}
-              className="p-1.5 hover:bg-[#f3f4f6] rounded-full transition-colors text-[#6b7280] ml-4 shrink-0"
+              className="hidden md:block p-1.5 hover:bg-[#f3f4f6] rounded-full transition-colors text-[#6b7280] ml-4 shrink-0"
             >
               <X size={18} />
             </button>
@@ -97,7 +105,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           <div className="flex-1 flex flex-col">
             {/* Comment Input */}
             <div className="space-y-1.5 md:space-y-2 mb-4 flex-1 flex flex-col">
-              <label className="flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-[#333333] uppercase tracking-wider">
+              <label className="hidden md:flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-[#333333] uppercase tracking-wider">
                 <MessageSquare size={13} className="text-[#e05d38]" />
                 코멘트
               </label>
