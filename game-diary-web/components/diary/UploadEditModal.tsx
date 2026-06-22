@@ -75,6 +75,11 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
             
+            {/* Mobile-only floating record-target badge */}
+            <div className="absolute top-3 left-3 md:hidden bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1.25 rounded-full select-none shadow-sm z-20">
+              {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
+            </div>
+
             {/* Mobile-only floating close button */}
             <button 
               onClick={onClose}
@@ -87,16 +92,16 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
 
         {/* Right: Info Section */}
         <div className="w-full md:w-[45%] p-4 md:p-8 flex flex-col bg-white">
-          <div className="flex justify-between items-start mb-3 md:mb-6">
+          <div className="hidden md:flex justify-between items-start mb-6">
             <div className="min-w-0 flex-1">
-              <h2 className="hidden md:block text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
-              <p className="text-[15px] md:text-[13px] font-bold md:font-normal text-[#333333] md:text-[#6b7280] mt-0.5 md:mt-1 truncate">
+              <h2 className="text-[20px] font-bold text-[#333333] tracking-tight leading-tight truncate">새로운 순간 기록</h2>
+              <p className="text-[13px] text-[#6b7280] mt-1 truncate">
                 {selectedGame || "분류되지 않은 순간"}에 기록됩니다.
               </p>
             </div>
             <button 
               onClick={onClose}
-              className="hidden md:block p-1.5 hover:bg-[#f3f4f6] rounded-full transition-colors text-[#6b7280] ml-4 shrink-0"
+              className="p-1.5 hover:bg-[#f3f4f6] rounded-full transition-colors text-[#6b7280] ml-4 shrink-0"
             >
               <X size={18} />
             </button>
