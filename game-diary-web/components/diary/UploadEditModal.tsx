@@ -145,7 +145,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             <button 
               onClick={handleUpload}
               disabled={isUploading}
-              className="w-full bg-[#e05d38] text-white py-2.5 md:py-3.5 rounded-[0.75rem] text-[14px] md:text-[15px] font-bold flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(224,93,56,0.15)] hover:shadow-[0_15px_30px_rgba(224,93,56,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full bg-[#e05d38] text-white py-3 md:py-4 rounded-[0.75rem] text-[15px] md:text-[16px] font-bold flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(224,93,56,0.15)] hover:shadow-[0_15px_30px_rgba(224,93,56,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:hover:scale-100"
             >
               {isUploading ? (
                 <>
@@ -155,7 +155,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
               ) : (
                 <>
                   업로드 완료
-                  <ArrowRight size={16} />
+                  <ArrowRight size={18} />
                 </>
               )}
             </button>
