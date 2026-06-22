@@ -100,7 +100,7 @@ function DiaryListItem({
               onSelect(s.id);
             }
           }}
-          className="w-full text-left pl-3.5 pr-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground active:scale-[0.97] active:bg-muted/80 origin-center cursor-pointer select-none"
+          className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground active:scale-[0.97] active:bg-muted/80 origin-center cursor-pointer select-none"
         >
           <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
             {s.guild_icon ? (
