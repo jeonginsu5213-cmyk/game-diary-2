@@ -59,10 +59,10 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
   const remainingCount = sortedParticipants.length - maxVisible;
 
   return (
-    <header className="h-16 flex items-center justify-between px-3 md:px-6 bg-card/70 backdrop-blur-xl sticky top-0 z-30">
+    <header className="h-16 flex items-center justify-between px-3 md:px-6 bg-card/80 backdrop-blur-2xl sticky top-0 z-30">
       <div className="flex items-center gap-1.5 md:gap-6 min-w-0 flex-1">
         {/* 1. Members & Title Section */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
           {/* Mobile Back Button */}
           {viewMode === 'diary' && (
             <button 
@@ -164,12 +164,12 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                 onKeyDown={(e) => e.key === 'Enter' && onTitleUpdate()} 
                 onBlur={onTitleUpdate} 
                 autoFocus 
-                className="bg-background text-foreground font-semibold text-xl tracking-tight outline-none px-3 py-1 rounded-lg w-full translate-y-[1px]" 
+                className="bg-background text-foreground font-semibold text-xl tracking-tight outline-none px-3 py-1 rounded-lg w-full" 
               />
             ) : (
               <h2 
                 className={cn(
-                  "text-foreground font-semibold text-xl tracking-tight translate-y-[1px] md:pl-0 min-w-0 truncate",
+                  "text-foreground font-semibold text-xl tracking-tight md:pl-0 min-w-0 truncate",
                   !isDeleted ? "cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group" : ""
                 )}
                 onClick={!isDeleted ? onTitleClick : undefined}
