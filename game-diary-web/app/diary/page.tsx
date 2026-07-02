@@ -43,6 +43,7 @@ interface DiaryListItemProps {
   currentUserId?: string;
   onRestore?: (id: string) => Promise<void>;
   onPermanentDelete?: (id: string) => Promise<void>;
+  creatorAvatarUrl?: string;
 }
 
 function DiaryListItem({ 
@@ -54,7 +55,8 @@ function DiaryListItem({
   isTrash = false, 
   currentUserId,
   onRestore,
-  onPermanentDelete
+  onPermanentDelete,
+  creatorAvatarUrl
 }: DiaryListItemProps) {
   const x = useMotionValue(0);
   const iconScale = useTransform(x, [0, -50], [0.6, 1.15]);
@@ -103,12 +105,20 @@ function DiaryListItem({
           className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground active:scale-[0.97] active:bg-muted/80 origin-center cursor-pointer select-none"
         >
           <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
-            {s.guild_icon ? (
-              <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
+            {s.guild_name && s.guild_name !== '개인' ? (
+              s.guild_icon ? (
+                <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                  {s.guild_name.charAt(0)}
+                </div>
+              )
             ) : (
-              <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
-                {s.guild_name?.charAt(0) || 'G'}
-              </div>
+              <img 
+                src={creatorAvatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${s.session_participants?.[0]?.user_id || s.id}`} 
+                className="w-full h-full object-cover" 
+                alt="" 
+              />
             )}
           </div>
           <span className="text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium">{s.title}</span>
@@ -259,6 +269,11 @@ function HomeContent() {
     };
   }, []);
 
+  const [isCalendarMounted, setIsCalendarMounted] = useState(false);
+  useEffect(() => {
+    setIsCalendarMounted(true);
+  }, []);
+
   const [sessions, setSessions] = useState<any[]>([]);
   const [favoriteSessionIds, setFavoriteSessionIds] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -290,6 +305,168 @@ function HomeContent() {
   const [reactionDetailOpen, setReactionDetailOpen] = useState(false);
   const [reactionDetailCommentId, setReactionDetailCommentId] = useState<string | null>(null);
   const [reactionDetailEmoji, setReactionDetailEmoji] = useState<string | null>(null);
+
+  // Pull-to-refresh state & refs
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isRefreshingRef = useRef(false);
+  const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
+  const isPulling = useRef(false);
+  const pullDistanceRef = useRef(0);
+
+  const sidebarNodeRef = useRef<HTMLDivElement | null>(null);
+  const detailNodeRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync state values to refs
+  useEffect(() => {
+    isRefreshingRef.current = isRefreshing;
+  }, [isRefreshing]);
+
+  const handleTouchStartNative = useCallback((e: TouchEvent) => {
+    const parent = e.currentTarget as HTMLElement;
+    const scrollContainer = parent.querySelector('[data-scroll-container="true"]') as HTMLDivElement;
+    if (!scrollContainer) return;
+
+    if (scrollContainer.scrollTop === 0 && !isRefreshingRef.current) {
+      touchStartY.current = e.touches[0].clientY;
+      touchStartX.current = e.touches[0].clientX;
+      isPulling.current = true;
+      pullDistanceRef.current = 0;
+
+      const indicator = scrollContainer.querySelector('[data-pull-indicator="true"]') as HTMLDivElement;
+      const icon = scrollContainer.querySelector('[data-pull-icon="true"]') as HTMLElement;
+      if (indicator) {
+        indicator.style.transition = 'none';
+      }
+      if (icon) {
+        icon.style.transition = 'none';
+        icon.style.removeProperty('--start-angle');
+      }
+    } else {
+      isPulling.current = false;
+    }
+  }, []);
+
+  const handleTouchMoveNative = useCallback((e: TouchEvent) => {
+    if (!isPulling.current || isRefreshingRef.current) return;
+    
+    const parent = e.currentTarget as HTMLElement;
+    const scrollContainer = parent.querySelector('[data-scroll-container="true"]') as HTMLDivElement;
+    if (!scrollContainer) return;
+
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - touchStartX.current;
+    const diffY = currentY - touchStartY.current;
+
+    // Resolve horizontal gesture conflict:
+    // If movement is primarily horizontal, cancel vertical pull-to-refresh
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      isPulling.current = false;
+      pullDistanceRef.current = 0;
+      const indicator = scrollContainer.querySelector('[data-pull-indicator="true"]') as HTMLDivElement;
+      if (indicator) {
+        indicator.style.transition = 'height 0.2s ease-out, opacity 0.2s ease-out';
+        indicator.style.height = '0px';
+        indicator.style.opacity = '0';
+      }
+      return;
+    }
+
+    if (scrollContainer.scrollTop > 0) {
+      isPulling.current = false;
+      pullDistanceRef.current = 0;
+      const indicator = scrollContainer.querySelector('[data-pull-indicator="true"]') as HTMLDivElement;
+      if (indicator) {
+        indicator.style.transition = 'height 0.2s ease-out, opacity 0.2s ease-out';
+        indicator.style.height = '0px';
+        indicator.style.opacity = '0';
+      }
+      return;
+    }
+
+    if (diffY > 0) {
+      const distance = diffY * 0.4;
+      pullDistanceRef.current = distance;
+
+      const indicator = scrollContainer.querySelector('[data-pull-indicator="true"]') as HTMLDivElement;
+      const icon = scrollContainer.querySelector('[data-pull-icon="true"]') as HTMLElement;
+      if (indicator) {
+        indicator.style.height = `${distance}px`;
+        indicator.style.opacity = `${Math.min(1, distance / 40)}`;
+      }
+      if (icon) {
+        icon.style.transform = `rotate(${-distance * 6}deg)`;
+      }
+      
+      if (diffY > 10 && e.cancelable) {
+        e.preventDefault();
+      }
+    } else {
+      pullDistanceRef.current = 0;
+      const indicator = scrollContainer.querySelector('[data-pull-indicator="true"]') as HTMLDivElement;
+      if (indicator) {
+        indicator.style.height = '0px';
+        indicator.style.opacity = '0';
+      }
+    }
+  }, []);
+
+  const handleTouchEndNative = useCallback(async (e: TouchEvent) => {
+    if (!isPulling.current || isRefreshingRef.current) return;
+    isPulling.current = false;
+
+    const parent = e.currentTarget as HTMLElement;
+    const scrollContainer = parent.querySelector('[data-scroll-container="true"]') as HTMLDivElement;
+    if (!scrollContainer) return;
+
+    const indicator = scrollContainer.querySelector('[data-pull-indicator="true"]') as HTMLDivElement;
+    const icon = scrollContainer.querySelector('[data-pull-icon="true"]') as HTMLElement;
+    const finalDistance = pullDistanceRef.current;
+
+    if (finalDistance >= 50) {
+      setIsRefreshing(true);
+      if (indicator) {
+        indicator.style.transition = 'height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+        indicator.style.height = '50px';
+        indicator.style.opacity = '1';
+      }
+      if (icon) {
+        icon.style.setProperty('--start-angle', `${-finalDistance * 6}deg`);
+        icon.style.transform = '';
+      }
+      try {
+        await fetchData();
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } catch (err) {
+        console.error("Refresh failed:", err);
+      } finally {
+        setIsRefreshing(false);
+        pullDistanceRef.current = 0;
+        if (indicator) {
+          indicator.style.transition = 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+          indicator.style.height = '0px';
+          indicator.style.opacity = '0';
+        }
+        if (icon) {
+          icon.style.transform = '';
+          icon.style.removeProperty('--start-angle');
+        }
+      }
+    } else {
+      pullDistanceRef.current = 0;
+      if (indicator) {
+        indicator.style.transition = 'height 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1)';
+        indicator.style.height = '0px';
+        indicator.style.opacity = '0';
+      }
+      if (icon) {
+        icon.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+  }, []);
+
 
   const activeReactionComment = useMemo(() => {
     if (!reactionDetailCommentId) return null;
@@ -597,6 +774,40 @@ function HomeContent() {
   }, [current?.session_participants]);
 
   // 3. Dependent Side Effects (Placed AFTER 'current' definition)
+  
+  // Dynamic native touch listeners for Sidebar parent container
+  useEffect(() => {
+    const parentEl = sidebarNodeRef.current;
+    if (parentEl) {
+      parentEl.addEventListener('touchstart', handleTouchStartNative, { passive: true });
+      parentEl.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
+      parentEl.addEventListener('touchend', handleTouchEndNative, { passive: true });
+    }
+    return () => {
+      if (parentEl) {
+        parentEl.removeEventListener('touchstart', handleTouchStartNative);
+        parentEl.removeEventListener('touchmove', handleTouchMoveNative);
+        parentEl.removeEventListener('touchend', handleTouchEndNative);
+      }
+    };
+  }, [listTab, handleTouchStartNative, handleTouchMoveNative, handleTouchEndNative]);
+
+  // Dynamic native touch listeners for Detail parent container
+  useEffect(() => {
+    const parentEl = detailNodeRef.current;
+    if (parentEl) {
+      parentEl.addEventListener('touchstart', handleTouchStartNative, { passive: true });
+      parentEl.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
+      parentEl.addEventListener('touchend', handleTouchEndNative, { passive: true });
+    }
+    return () => {
+      if (parentEl) {
+        parentEl.removeEventListener('touchstart', handleTouchStartNative);
+        parentEl.removeEventListener('touchmove', handleTouchMoveNative);
+        parentEl.removeEventListener('touchend', handleTouchEndNative);
+      }
+    };
+  }, [current?.id, viewMode, handleTouchStartNative, handleTouchMoveNative, handleTouchEndNative]);
   
   // Reset pagination when search or sort changes
   useEffect(() => { setCurrentPage(1); }, [searchTerm, sortBy]);
@@ -1280,6 +1491,7 @@ function HomeContent() {
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
+              ref={sidebarNodeRef}
               key={listTab}
               custom={direction}
               variants={{
@@ -1318,7 +1530,7 @@ function HomeContent() {
                         onClick={() => setNotifFilter('all')}
                         className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
                           notifFilter === 'all'
-                            ? 'bg-[#e05d38] text-white font-bold shadow-xs'
+                            ? 'bg-[#e94a44] text-white font-bold shadow-xs'
                             : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs'
                         }`}
                       >
@@ -1328,7 +1540,7 @@ function HomeContent() {
                         onClick={() => setNotifFilter('unread')}
                         className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
                           notifFilter === 'unread'
-                            ? 'bg-[#e05d38] text-white font-bold shadow-xs'
+                            ? 'bg-[#e94a44] text-white font-bold shadow-xs'
                             : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs'
                         }`}
                       >
@@ -1337,7 +1549,7 @@ function HomeContent() {
                     </div>
                     <button
                       onClick={handleMarkAllAsRead}
-                      className="text-[11px] font-bold text-muted-foreground/60 hover:text-[#e05d38] underline transition-colors px-1 select-none cursor-pointer active:scale-95 mr-1"
+                      className="text-[11px] font-bold text-muted-foreground/60 hover:text-[#e94a44] underline transition-colors px-1 select-none cursor-pointer active:scale-95 mr-1"
                     >
                       모두 확인
                     </button>
@@ -1365,477 +1577,509 @@ function HomeContent() {
                 </div>
               )}
 
-              <div 
-                className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
-                  listTab === 'notifications' 
-                    ? 'px-1 pt-12' 
-                    : (listTab === 'active' || listTab === 'trash') 
-                      ? 'px-2 md:px-3 pt-8 md:pt-1' 
-                      : 'px-2 md:px-3 pt-0'
-                }`}
-              >
-                <div className="space-y-0 min-h-[396px] w-full">
-                  {listTab === 'calendar' ? (
-                    <div className="flex flex-col px-2 pt-2 pb-1.5 animate-in fade-in duration-300 select-none">
-                      {/* Calendar Header */}
-                      <div className="flex items-center justify-between mb-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-bold text-foreground">
+              {listTab === 'calendar' ? (
+                <div className="flex-1 flex flex-col overflow-hidden min-h-0 pt-4 md:pt-2 px-2 md:px-3">
+                  {/* Calendar Widget (Fixed at the top) */}
+                  <div className="shrink-0 animate-in fade-in duration-300 select-none pb-3">
+                    {/* Calendar Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-foreground px-3 h-[28px] rounded-full select-none ml-2">
+                          <span className="text-[12.5px] font-bold">
                             {calendarMonth.getFullYear()}년 {calendarMonth.getMonth() + 1}월
                           </span>
-                          <div className="flex items-center gap-1 bg-muted/20 p-0.5 rounded-lg h-7">
-                            <button
-                              onClick={() => setCalendarViewMode('week')}
-                              className={`px-2 rounded-md text-[11px] h-6 flex items-center justify-center transition-all ${
-                                calendarViewMode === 'week'
-                                  ? 'bg-[#e05d38]/15 text-[#e05d38] font-bold shadow-xs'
-                                  : 'text-muted-foreground/60 hover:text-foreground/80'
-                              }`}
-                            >
-                              주간
-                            </button>
-                            <button
-                              onClick={() => setCalendarViewMode('month')}
-                              className={`px-2 rounded-md text-[11px] h-6 flex items-center justify-center transition-all ${
-                                calendarViewMode === 'month'
-                                  ? 'bg-[#e05d38]/15 text-[#e05d38] font-bold shadow-xs'
-                                  : 'text-muted-foreground/60 hover:text-foreground/80'
-                              }`}
-                            >
-                              월간
-                            </button>
-                          </div>
                         </div>
-                        <div className="flex items-center gap-3.5">
+                        <div className="flex items-center gap-1 p-0 rounded-full h-[28px] select-none">
                           <button
                             onClick={() => {
-                              setCalendarDirection(-1);
-                              if (calendarViewMode === 'week') {
-                                setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7));
-                                setSelectedCalendarDate(prev => prev ? new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7) : null);
-                              } else {
-                                setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-                              }
+                              setCalendarDirection(0);
+                              setCalendarViewMode('week');
                             }}
-                            className="w-7 h-7 rounded-full text-muted-foreground flex items-center justify-center transition-all hover:bg-muted/50 hover:text-foreground active:scale-95"
+                            className={`px-3 rounded-full text-[11.5px] h-[28px] flex items-center justify-center transition-all cursor-pointer ${
+                              calendarViewMode === 'week'
+                                ? 'bg-[#e94a44] text-white font-bold shadow-xs'
+                                : 'bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground/75 hover:text-foreground/80'
+                            }`}
                           >
-                            <ChevronLeft className="w-4 h-4" />
+                            주간
                           </button>
                           <button
                             onClick={() => {
                               setCalendarDirection(0);
-                              const today = new Date();
-                              setCalendarMonth(today);
-                              setSelectedCalendarDate(today);
+                              setCalendarViewMode('month');
                             }}
-                            className="px-1 py-1 text-[12px] font-bold text-muted-foreground transition-colors hover:text-foreground active:scale-95"
+                            className={`px-3 rounded-full text-[11.5px] h-[28px] flex items-center justify-center transition-all cursor-pointer ${
+                              calendarViewMode === 'month'
+                                ? 'bg-[#e94a44] text-white font-bold shadow-xs'
+                                : 'bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground/75 hover:text-foreground/80'
+                            }`}
                           >
-                            오늘
-                          </button>
-                          <button
-                            onClick={() => {
-                              setCalendarDirection(1);
-                              if (calendarViewMode === 'week') {
-                                setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7));
-                                setSelectedCalendarDate(prev => prev ? new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7) : null);
-                              } else {
-                                setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-                              }
-                            }}
-                            className="w-7 h-7 rounded-full text-muted-foreground flex items-center justify-center transition-all hover:bg-muted/50 hover:text-foreground active:scale-95"
-                          >
-                            <ChevronRight className="w-4 h-4" />
+                            월간
                           </button>
                         </div>
                       </div>
+                      <div className="flex items-center gap-3.5">
+                        <button
+                          onClick={() => {
+                            setCalendarDirection(-1);
+                            if (calendarViewMode === 'week') {
+                              setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7));
+                              setSelectedCalendarDate(prev => prev ? new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7) : null);
+                            } else {
+                              setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+                            }
+                          }}
+                          className="w-7 h-7 rounded-full text-muted-foreground flex items-center justify-center transition-all hover:bg-muted/50 hover:text-foreground active:scale-95"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCalendarDirection(0);
+                            const today = new Date();
+                            setCalendarMonth(today);
+                            setSelectedCalendarDate(today);
+                          }}
+                          className="px-1 py-1 text-[12px] font-bold text-muted-foreground transition-colors hover:text-foreground active:scale-95 underline"
+                        >
+                          오늘
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCalendarDirection(1);
+                            if (calendarViewMode === 'week') {
+                              setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7));
+                              setSelectedCalendarDate(prev => prev ? new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7) : null);
+                            } else {
+                              setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+                            }
+                          }}
+                          className="w-7 h-7 rounded-full text-muted-foreground flex items-center justify-center transition-all hover:bg-muted/50 hover:text-foreground active:scale-95"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
 
-                      {/* Swipable Calendar Content Block */}
-                      <div 
-                        className="flex flex-col flex-1 overflow-hidden"
-                        onTouchStart={handleCalendarTouchStart}
-                        onTouchEnd={handleCalendarTouchEnd}
-                      >
-                        <AnimatePresence mode="popLayout" custom={calendarDirection}>
-                          <motion.div
-                            key={(() => {
-                              if (calendarViewMode === 'week') {
-                                const baseDate = selectedCalendarDate || new Date();
-                                const day = baseDate.getDay();
-                                const Sunday = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - day);
-                                return 'week-' + Sunday.toDateString();
-                              }
-                              return 'month-' + calendarMonth.toISOString();
-                            })()}
-                            custom={calendarDirection}
-                            variants={{
-                              enter: (dir: number) => ({
-                                x: dir === 0 ? 0 : (dir > 0 ? '100%' : '-100%'),
-                                opacity: 0
-                              }),
-                              center: {
-                                x: 0,
-                                opacity: 1
-                              },
-                              exit: (dir: number) => ({
-                                x: dir === 0 ? 0 : (dir > 0 ? '-100%' : '100%'),
-                                opacity: 0
-                              })
-                            }}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{
-                              x: { type: "spring", stiffness: 380, damping: 30 },
-                              opacity: { duration: 0.2 }
-                            }}
-                            className="flex flex-col w-full"
-                          >
-                            {/* Day Headers */}
-                            <div className="grid grid-cols-7 gap-1 text-center select-none mb-0.5 pb-0 border-none">
-                              {['일', '월', '화', '수', '목', '금', '토'].map((d) => (
-                                <span 
-                                  key={d} 
-                                  className="font-bold tracking-tight text-[11px] font-medium text-foreground"
-                                >
-                                  {d}
-                                </span>
-                              ))}
-                            </div>
+                    {/* Day Headers */}
+                    <div className="grid grid-cols-7 gap-1 text-center select-none mb-2.5 pb-0 border-none">
+                      {['일', '월', '화', '수', '목', '금', '토'].map((d) => (
+                        <span 
+                          key={d} 
+                          className="font-bold tracking-tight text-[11px] font-medium text-foreground"
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
 
-                            {/* Date Grid */}
-                            {(() => {
-                              if (calendarViewMode === 'week') {
-                                // Weekly view: Render just 7 days of the selected week
-                                const baseDate = selectedCalendarDate || new Date();
-                                const day = baseDate.getDay();
-                                const Sunday = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - day);
-                                
+                    {/* Swipable Calendar Content Block */}
+                    <div 
+                      className="flex flex-col overflow-hidden"
+                      onTouchStart={handleCalendarTouchStart}
+                      onTouchEnd={handleCalendarTouchEnd}
+                    >
+                      <AnimatePresence mode="popLayout" initial={false} custom={calendarDirection}>
+                        <motion.div
+                          key={(() => {
+                            if (calendarViewMode === 'week') {
+                              const baseDate = selectedCalendarDate || new Date();
+                              const day = baseDate.getDay();
+                              const Sunday = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - day);
+                              return 'week-' + Sunday.toDateString();
+                            }
+                            return 'month-' + calendarMonth.getFullYear() + '-' + calendarMonth.getMonth();
+                          })()}
+                          custom={calendarDirection}
+                          variants={{
+                            enter: (dir: number) => ({
+                              x: dir === 0 ? 0 : (dir > 0 ? '100%' : '-100%'),
+                              opacity: 0
+                            }),
+                            center: {
+                              x: 0,
+                              opacity: 1
+                            },
+                            exit: (dir: number) => ({
+                              x: dir === 0 ? 0 : (dir > 0 ? '-100%' : '100%'),
+                              opacity: 0
+                            })
+                          }}
+                          initial="enter"
+                          animate="center"
+                          exit="exit"
+                          transition={{
+                            x: { type: "spring", stiffness: 400, damping: 38 },
+                            opacity: { duration: 0.25 }
+                          }}
+                          className="flex flex-col w-full"
+                        >
+
+                          {/* Date Grid */}
+                          {(() => {
+                            const renderCell = (cell: any) => {
+                              if (cell.type === 'empty') {
                                 return (
-                                  <div className="grid grid-cols-7 gap-x-1 gap-y-0">
-                                    {Array.from({ length: 7 }).map((_, i) => {
-                                      const dateObj = new Date(Sunday.getFullYear(), Sunday.getMonth(), Sunday.getDate() + i);
-                                      const isToday = new Date().toDateString() === dateObj.toDateString();
-                                      const isSelected = selectedCalendarDate && selectedCalendarDate.toDateString() === dateObj.toDateString();
-                                      
-                                      // Count sessions for this day
-                                      const daySessions = sortedSessions.filter(s => {
-                                        const dateStr = s.start_time || s.date;
-                                        if (!dateStr) return false;
-                                        const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
-                                        if (isNaN(d.getTime())) return false;
-                                        return d.getFullYear() === dateObj.getFullYear() &&
-                                               d.getMonth() === dateObj.getMonth() &&
-                                               d.getDate() === dateObj.getDate();
-                                      }).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-
-                                      const hasDiaries = daySessions.length > 0;
-                                      const dayOfWeek = dateObj.getDay();
-                                      
-                                      return (
-                                        <div 
-                                          key={`day-week-${i}`} 
-                                          className="h-10 flex items-center justify-center p-0.5 relative z-10"
-                                        >
-                                          <button
-                                            onClick={() => {
-                                              setSelectedCalendarDate(dateObj);
-                                              setCalendarMonth(dateObj);
-                                            }}
-                                            className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
-                                              isSelected 
-                                                ? isToday
-                                                  ? 'bg-[#e05d38] text-white font-bold shadow-sm z-10'
-                                                  : 'bg-[#e05d38]/15 text-[#e05d38] font-bold shadow-xs z-10' 
-                                                : isToday
-                                                  ? 'text-[#e05d38] font-bold hover:bg-muted/30 z-10'
-                                                  : dayOfWeek === 0 || dayOfWeek === 6
-                                                    ? 'text-[#999999] hover:bg-muted/30 font-medium'
-                                                    : 'text-[#222222] hover:bg-muted/30 font-medium'
-                                            }`}
-                                            style={{ fontSize: '17px' }}
-                                          >
-                                            {dateObj.getDate()}
-                                            {hasDiaries && (
-                                              <span className={`w-1 h-1 rounded-full absolute bottom-1 ${
-                                                isSelected && isToday ? 'bg-white' : 'bg-[#e05d38]'
-                                              }`} />
-                                            )}
-                                          </button>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
+                                  <div 
+                                    key={cell.id} 
+                                    className="h-[52px] flex items-center justify-center p-0.5" 
+                                  />
                                 );
                               }
-
-                              const emptyDays = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay();
-                              const totalDays = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0).getDate();
-
+                              const dateObj = cell.dateObj;
+                              const isToday = new Date().toDateString() === dateObj.toDateString();
+                              const isSelected = selectedCalendarDate && selectedCalendarDate.toDateString() === dateObj.toDateString();
+                              const dayOfWeek = dateObj.getDay();
                               return (
-                                <div className="grid grid-cols-7 gap-x-1 gap-y-0">
-                                  {/* Spacers */}
-                                  {Array.from({ length: emptyDays }).map((_, i) => (
-                                    <div 
-                                      key={`empty-${i}`} 
-                                      className="h-10 flex items-center justify-center p-0.5" 
-                                    />
-                                  ))}
-
-                                  {/* Actual Days */}
-                                  {Array.from({ length: totalDays }).map((_, i) => {
-                                    const day = i + 1;
-                                    const dateObj = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
-                                    const isToday = new Date().toDateString() === dateObj.toDateString();
-                                    const isSelected = selectedCalendarDate && selectedCalendarDate.toDateString() === dateObj.toDateString();
-                                    
-                                    // Count sessions for this day
-                                    const daySessions = sortedSessions.filter(s => {
-                                      const dateStr = s.start_time || s.date;
-                                      if (!dateStr) return false;
-                                      const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
-                                      if (isNaN(d.getTime())) return false;
-                                      return d.getFullYear() === dateObj.getFullYear() &&
-                                             d.getMonth() === dateObj.getMonth() &&
-                                             d.getDate() === dateObj.getDate();
-                                    }).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-
-                                    const hasDiaries = daySessions.length > 0;
-                                    const dayOfWeek = dateObj.getDay();
-
-                                    return (
-                                      <div 
-                                        key={`day-${day}`} 
-                                        className="h-10 flex items-center justify-center p-0.5 relative z-10"
-                                      >
-                                        <button
-                                          onClick={() => {
-                                            setSelectedCalendarDate(dateObj);
-                                            setCalendarMonth(dateObj);
-                                          }}
-                                          className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
-                                            isSelected 
-                                              ? isToday
-                                                ? 'bg-[#e05d38] text-white font-bold shadow-sm z-10'
-                                                : 'bg-[#e05d38]/15 text-[#e05d38] font-bold shadow-xs z-10' 
-                                              : isToday
-                                                ? 'text-[#e05d38] font-bold hover:bg-muted/30 z-10'
-                                                : dayOfWeek === 0 || dayOfWeek === 6
-                                                  ? 'text-[#999999] hover:bg-muted/30 font-medium'
-                                                  : 'text-[#222222] hover:bg-muted/30 font-medium'
-                                          }`}
-                                          style={{ fontSize: '17px' }}
-                                        >
-                                          {day}
-                                          {hasDiaries && (
-                                            <span className={`w-1 h-1 rounded-full absolute bottom-1 ${
-                                              isSelected && isToday ? 'bg-white' : 'bg-[#e05d38]'
-                                            }`} />
-                                          )}
-                                        </button>
-                                      </div>
-                                    );
-                                  })}
-
-                                  {/* Trailing Spacers to reach 42 cells (6 rows) */}
-                                  {Array.from({ length: 42 - emptyDays - totalDays }).map((_, i) => (
-                                    <div 
-                                      key={`trailing-empty-${i}`} 
-                                      className="h-10 flex items-center justify-center p-0.5" 
-                                    />
-                                  ))}
+                                <div 
+                                  key={cell.id} 
+                                  className="h-[52px] flex items-center justify-center p-0.5 relative z-10"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      setSelectedCalendarDate(dateObj);
+                                      setCalendarMonth(dateObj);
+                                    }}
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
+                                      isSelected 
+                                        ? isToday
+                                          ? 'bg-[#e94a44] text-white font-bold shadow-sm z-10'
+                                          : 'bg-black text-white font-bold shadow-sm z-10' 
+                                        : isToday
+                                          ? 'text-[#e94a44] font-bold hover:bg-muted/30 z-10'
+                                          : dayOfWeek === 0 || dayOfWeek === 6
+                                            ? 'text-[#999999] hover:bg-muted/30 font-medium'
+                                            : 'text-[#222222] hover:bg-muted/30 font-medium'
+                                    }`}
+                                    style={{ fontSize: '17px' }}
+                                  >
+                                    {cell.day}
+                                  </button>
                                 </div>
                               );
-                            })()}
-                          </motion.div>
-                        </AnimatePresence>
-                      </div>
+                            };
 
-                      {/* Daily Diary List */}
-                      {selectedCalendarDate && (
-                        <div className="mt-4 pt-0 -mx-2 animate-in slide-in-from-bottom-1 duration-200">
-                          <h4 className="text-[12px] font-semibold text-muted-foreground/60 tracking-tight mb-2 pl-2 select-none">
-                            {selectedCalendarDate.getFullYear()}년 {selectedCalendarDate.getMonth() + 1}월 {selectedCalendarDate.getDate()}일의 일기
-                          </h4>
-                          <div className="space-y-1">
-                            {(() => {
-                              const selectedDateSessions = sortedSessions.filter(s => {
-                                const dateStr = s.start_time || s.date;
-                                if (!dateStr) return false;
-                                const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
-                                if (isNaN(d.getTime())) return false;
-                                return d.getFullYear() === selectedCalendarDate.getFullYear() &&
-                                       d.getMonth() === selectedCalendarDate.getMonth() &&
-                                       d.getDate() === selectedCalendarDate.getDate();
-                              });
-
-                              if (selectedDateSessions.length === 0) {
-                                return (
-                                  <p className="text-[11px] font-bold text-muted-foreground/30 text-center py-4 select-none">생성된 일기가 없습니다.</p>
-                                );
-                              }
-
-                              return selectedDateSessions.map(s => (
-                                <DiaryListItem 
-                                  key={s.id}
-                                  session={s}
-                                  isSelected={selectedId === s.id}
-                                  isFavorite={favoriteSessionIds.has(s.id)}
-                                  onSelect={handleDiarySelect}
-                                  onToggleFavorite={handleToggleFavorite}
-                                  isTrash={false}
-                                  currentUserId={session?.user?.id}
-                                />
-                              ));
-                            })()}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : listTab === 'notifications' ? (
-                    <div className="flex flex-col gap-3.5 px-1 pb-4 animate-in fade-in duration-300 select-none relative">
-                      {filteredNotifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center min-h-[320px] text-muted-foreground/40 gap-2 select-none">
-                          <Bell className="w-8 h-8 opacity-50" />
-                          <p className="text-[12px] font-bold tracking-tight">
-                            {notifFilter === 'unread' ? '읽지 않은 알림이 없습니다' : '새로운 알림이 없습니다'}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-2.5">
-                          {filteredNotifications.map((notif) => {
-                            const isUnread = !notif.is_read;
-                            const dateObj = new Date(notif.created_at);
-                            const now = new Date();
-                            const diffMs = now.getTime() - dateObj.getTime();
-                            const diffMins = Math.floor(diffMs / (60 * 1000));
-                            const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
-
-                            let formattedDate = "";
-                            if (diffMins < 1) {
-                              formattedDate = "방금 전";
-                            } else if (diffMins < 60) {
-                              formattedDate = `${diffMins}분 전`;
-                            } else if (diffHours < 24) {
-                              formattedDate = `${diffHours}시간 전`;
-                            } else {
-                              formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+                            let firstRowCells: any[] = [];
+                            
+                            // Generate monthly grid cells to always have them available for smooth collapse transitions
+                            const emptyDays = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay();
+                            const totalDays = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0).getDate();
+                            
+                            const allCells: any[] = [];
+                            for (let i = 0; i < emptyDays; i++) {
+                              allCells.push({ type: 'empty', id: `empty-${i}` });
+                            }
+                            for (let i = 1; i <= totalDays; i++) {
+                              const dateObj = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), i);
+                              allCells.push({ type: 'day', day: i, dateObj, id: `day-${i}` });
+                            }
+                            const trailingCount = 42 - emptyDays - totalDays;
+                            for (let i = 0; i < trailingCount; i++) {
+                              allCells.push({ type: 'empty', id: `trailing-empty-${i}` });
                             }
 
-                            // Split for notifications to style the sub-content
-                            const parts = notif.content.split(': "');
-                            const isReplyNotification = (notif.type === 'reply' || notif.type === 'session_comment') && parts.length > 1;
-                            const isSessionCreatedNotification = notif.type === 'session_created' && parts.length > 1;
-                            const targetSession = notif.type === 'session_created'
-                              ? sessions.find(s => s.id === notif.source_id)
-                              : null;
+                            const remainingCells = allCells.slice(7);
+                            const totalRowsCount = Math.ceil((emptyDays + totalDays) / 7);
+                            const remainingHeight = (totalRowsCount - 1) * 52;
+
+                            if (calendarViewMode === 'week') {
+                              const baseDate = selectedCalendarDate || new Date();
+                              const day = baseDate.getDay();
+                              const Sunday = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - day);
+                              for (let i = 0; i < 7; i++) {
+                                const dateObj = new Date(Sunday.getFullYear(), Sunday.getMonth(), Sunday.getDate() + i);
+                                firstRowCells.push({
+                                  type: 'day',
+                                  day: dateObj.getDate(),
+                                  dateObj,
+                                  id: `day-week-${i}`
+                                });
+                              }
+                            } else {
+                              firstRowCells = allCells.slice(0, 7);
+                            }
 
                             return (
-                              <div 
-                                key={notif.id}
-                                onClick={() => handleNotificationClick(notif)}
-                                className="flex flex-col py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden"
-                              >
-                                {/* Top Line: Header & Date/Dot */}
-                                <div className="flex items-center justify-between gap-3 w-full">
-                                  {isReplyNotification ? (
-                                    <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
-                                      {parts[0]}:
-                                    </span>
-                                  ) : isSessionCreatedNotification ? (
-                                    <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
-                                      {parts[0].replace(/^\[.*?\]\s*/, '')}
-                                    </span>
-                                  ) : (
-                                    <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
-                                      {notif.content}
-                                    </span>
-                                  )}
-
-                                  <div className="flex items-center gap-1.5 shrink-0 select-none">
-                                    <span className="text-[10px] text-muted-foreground/45 font-sans font-medium">
-                                      {formattedDate}
-                                    </span>
-                                    {isUnread && (
-                                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
-                                    )}
-                                  </div>
+                              <div className="flex flex-col w-full">
+                                {/* First Row (Static height) */}
+                                <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[52px] shrink-0">
+                                  {firstRowCells.map(renderCell)}
                                 </div>
 
-                                {/* Second Line (Sub-content) */}
-                                {isReplyNotification && (
-                                  <p className={`text-[13px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-1 whitespace-pre-wrap w-full ${isUnread ? '' : 'opacity-70'}`}>
-                                    &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
-                                  </p>
-                                )}
-
-                                {isSessionCreatedNotification && (
-                                  <div className={`mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1 ${isUnread ? '' : 'opacity-70'}`}>
-                                    {/* Guild Icon */}
-                                    <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
-                                      {targetSession?.guild_icon ? (
-                                        <img src={targetSession.guild_icon} className="w-full h-full object-cover" alt="" />
-                                      ) : (
-                                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
-                                          {targetSession?.guild_name?.charAt(0) || 'G'}
-                                        </div>
-                                      )}
-                                    </div>
-                                    {/* Diary Title */}
-                                    <span className="text-[13px] font-bold text-foreground/90 truncate flex-1">
-                                      {targetSession?.title || parts.slice(1).join(': "').slice(0, -1)}
-                                    </span>
+                                {/* Remaining Rows (Animate height via parent layout="size") */}
+                                {calendarViewMode === 'month' && remainingCells.length > 0 && (
+                                  <div className="grid grid-cols-7 gap-x-1 gap-y-0 shrink-0">
+                                    {remainingCells.map(renderCell)}
                                   </div>
                                 )}
                               </div>
                             );
-                          })}
+                          })()}
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  {/* Fixed Date Label & Divider Wrapper (Fades in when view/date changes) */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={calendarViewMode + '-' + (selectedCalendarDate ? selectedCalendarDate.toDateString() : '')}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="shrink-0"
+                    >
+                      {selectedCalendarDate && (
+                        <div className={`shrink-0 pb-2.5 pl-3 md:pl-2 select-none transition-all duration-200 ${
+                          calendarViewMode === 'week' ? 'pt-[24px]' : 'pt-3.5'
+                        }`}>
+                          <h4 className="text-[14px] font-semibold text-black dark:text-white tracking-tight">
+                            {selectedCalendarDate.getFullYear()}년 {selectedCalendarDate.getMonth() + 1}월 {selectedCalendarDate.getDate()}일의 일기
+                          </h4>
                         </div>
                       )}
-                    </div>
-                  ) : (
-                    sortedSessions.length === 0 ? (
-                      listTab === 'trash' ? (
-                        <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
-                          <Trash2 className="w-8 h-8 opacity-50" />
-                          <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
-                          <Inbox className="w-8 h-8 opacity-50" />
-                          <p className="text-[12px] font-bold tracking-tight">작성된 일기가 없습니다</p>
-                        </div>
-                      )
-                    ) : (
-                      (isMobile ? mobileSessions : paginatedSessions).map(s => (
-                        <DiaryListItem 
-                          key={s.id}
-                          session={s}
-                          isSelected={selectedId === s.id}
-                          isFavorite={favoriteSessionIds.has(s.id)}
-                          onSelect={handleDiarySelect}
-                          onToggleFavorite={handleToggleFavorite}
-                          isTrash={listTab === 'trash'}
-                          currentUserId={session?.user?.id}
-                          onRestore={handleRestoreDiary}
-                          onPermanentDelete={handlePermanentDeleteDiary}
+
+                      {/* Divider with 8px margin on each side */}
+                      <div className="mx-2 border-b border-border/60 shrink-0" />
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Daily Diary List (Scrollable) */}
+                  <div 
+                    data-scroll-container="true"
+                    className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] pt-1"
+                  >
+                    {/* Pull-to-refresh Indicator */}
+                    <div 
+                      data-pull-indicator="true"
+                      className="w-full flex items-center justify-center overflow-hidden h-0 opacity-0"
+                      style={{
+                        height: isRefreshing ? '50px' : undefined,
+                        opacity: isRefreshing ? 1 : undefined
+                      }}
+                    >
+                      <div className="flex items-center justify-center py-2">
+                        <RotateCcw 
+                          data-pull-icon="true"
+                          strokeWidth={2.75}
+                          className={`w-[22px] h-[22px] text-[#e94a44] ${isRefreshing ? 'animate-spin-reverse' : ''}`}
                         />
-                      ))
-                    )
-                  )}
+                      </div>
+                    </div>
+
+                    {selectedCalendarDate && (
+                      <div className="pt-0 animate-in slide-in-from-bottom-1 duration-200">
+                        <div className="space-y-1">
+                          {(() => {
+                            const selectedDateSessions = sortedSessions.filter(s => {
+                              const dateStr = s.start_time || s.date;
+                              if (!dateStr) return false;
+                              const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
+                              if (isNaN(d.getTime())) return false;
+                              return d.getFullYear() === selectedCalendarDate.getFullYear() &&
+                                     d.getMonth() === selectedCalendarDate.getMonth() &&
+                                     d.getDate() === selectedCalendarDate.getDate();
+                            });
+
+                            if (selectedDateSessions.length === 0) {
+                              return (
+                                <p className="text-[11px] font-bold text-muted-foreground/30 text-center pt-[130px] pb-4 select-none">생성된 일기가 없습니다.</p>
+                              );
+                            }
+
+                            return selectedDateSessions.map(s => (
+                              <DiaryListItem 
+                                key={s.id}
+                                session={s}
+                                isSelected={selectedId === s.id}
+                                isFavorite={favoriteSessionIds.has(s.id)}
+                                onSelect={handleDiarySelect}
+                                onToggleFavorite={handleToggleFavorite}
+                                isTrash={false}
+                                currentUserId={session?.user?.id}
+                                creatorAvatarUrl={profiles[s.session_participants?.[0]?.user_id]?.avatar_url}
+                              />
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Haptic/Visual spacer to push content above the 88px mobile dock */}
+                    <div className="h-40 md:hidden shrink-0" />
+                  </div>
                 </div>
+              ) : (
+                <div 
+                  data-scroll-container="true"
+                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
+                    listTab === 'notifications' 
+                      ? 'px-1 pt-12' 
+                      : 'px-2 md:px-3 pt-8 md:pt-1'
+                  }`}
+                >
+                  {/* Pull-to-refresh Indicator */}
+                  <div 
+                    data-pull-indicator="true"
+                    className="w-full flex items-center justify-center overflow-hidden h-0 opacity-0"
+                    style={{
+                      height: isRefreshing ? '50px' : undefined,
+                      opacity: isRefreshing ? 1 : undefined
+                    }}
+                  >
+                    <div className="flex items-center justify-center py-2">
+                      <RotateCcw 
+                        data-pull-icon="true"
+                        strokeWidth={2.75}
+                        className={`w-[22px] h-[22px] text-[#e94a44] ${isRefreshing ? 'animate-spin-reverse' : ''}`}
+                      />
+                    </div>
+                  </div>
 
-                {!isMobile && (
-                  <SidebarPagination 
-                    totalCount={sortedSessions.length} 
-                    pageSize={pageSize} 
-                    page={currentPage} 
-                    onPageChange={setCurrentPage} 
-                  />
-                )}
+                  <div className="space-y-0 min-h-[396px] w-full">
+                    {listTab === 'notifications' ? (
+                      <div className="flex flex-col gap-3.5 px-1 pb-4 animate-in fade-in duration-300 select-none relative">
+                        {filteredNotifications.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center min-h-[320px] text-muted-foreground/40 gap-2 select-none">
+                            <Bell className="w-8 h-8 opacity-50" />
+                            <p className="text-[12px] font-bold tracking-tight">
+                              {notifFilter === 'unread' ? '읽지 않은 알림이 없습니다' : '새로운 알림이 없습니다'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2.5">
+                            {filteredNotifications.map((notif) => {
+                              const isUnread = !notif.is_read;
+                              const dateObj = new Date(notif.created_at);
+                              const now = new Date();
+                              const diffMs = now.getTime() - dateObj.getTime();
+                              const diffMins = Math.floor(diffMs / (60 * 1000));
+                              const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
 
-                {/* Haptic/Visual spacer to push content above the 88px mobile dock */}
-                <div className="h-40 md:hidden shrink-0" />
-              </div>
+                              let formattedDate = "";
+                              if (diffMins < 1) {
+                                formattedDate = "방금 전";
+                              } else if (diffMins < 60) {
+                                formattedDate = `${diffMins}분 전`;
+                              } else if (diffHours < 24) {
+                                formattedDate = `${diffHours}시간 전`;
+                              } else {
+                                formattedDate = `${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+                              }
+
+                              const parts = notif.content.split(': "');
+                              const isReplyNotification = (notif.type === 'reply' || notif.type === 'session_comment') && parts.length > 1;
+                              const isSessionCreatedNotification = notif.type === 'session_created' && parts.length > 1;
+                              const targetSession = notif.type === 'session_created'
+                                ? sessions.find(s => s.id === notif.source_id)
+                                : null;
+
+                              return (
+                                <div 
+                                  key={notif.id}
+                                  onClick={() => handleNotificationClick(notif)}
+                                  className="flex flex-col py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden"
+                                >
+                                  <div className="flex items-center justify-between gap-3 w-full">
+                                    {isReplyNotification ? (
+                                      <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
+                                        {parts[0]}:
+                                      </span>
+                                    ) : isSessionCreatedNotification ? (
+                                      <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
+                                        {parts[0].replace(/^\[.*?\]\s*/, '')}
+                                      </span>
+                                    ) : (
+                                      <span className={`text-[13px] font-medium text-foreground leading-relaxed break-all truncate flex-1 ${isUnread ? '' : 'opacity-70'}`}>
+                                        {notif.content}
+                                      </span>
+                                    )}
+
+                                    <div className="flex items-center gap-1.5 shrink-0 select-none">
+                                      <span className="text-[10px] text-muted-foreground/45 font-sans font-medium">
+                                        {formattedDate}
+                                      </span>
+                                      {isUnread && (
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {isReplyNotification && (
+                                    <p className={`text-[13px] text-muted-foreground/75 dark:text-muted-foreground/65 mt-1 whitespace-pre-wrap w-full ${isUnread ? '' : 'opacity-70'}`}>
+                                      &ldquo;{parts.slice(1).join(': "').slice(0, -1)}&rdquo;
+                                    </p>
+                                  )}
+
+                                  {isSessionCreatedNotification && (
+                                    <div className={`mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1 ${isUnread ? '' : 'opacity-70'}`}>
+                                      <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
+                                        {targetSession?.guild_icon ? (
+                                          <img src={targetSession.guild_icon} className="w-full h-full object-cover" alt="" />
+                                        ) : (
+                                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                                            {targetSession?.guild_name?.charAt(0) || 'G'}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <span className="text-[13px] font-bold text-foreground/90 truncate flex-1">
+                                        {targetSession?.title || parts.slice(1).join(': "').slice(0, -1)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      sortedSessions.length === 0 ? (
+                        listTab === 'trash' ? (
+                          <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
+                            <Trash2 className="w-8 h-8 opacity-50" />
+                            <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
+                            <Inbox className="w-8 h-8 opacity-50" />
+                            <p className="text-[12px] font-bold tracking-tight">작성된 일기가 없습니다</p>
+                          </div>
+                        )
+                      ) : (
+                        (isMobile ? mobileSessions : paginatedSessions).map(s => (
+                          <DiaryListItem 
+                            key={s.id}
+                            session={s}
+                            isSelected={selectedId === s.id}
+                            isFavorite={favoriteSessionIds.has(s.id)}
+                            onSelect={handleDiarySelect}
+                            onToggleFavorite={handleToggleFavorite}
+                            isTrash={listTab === 'trash'}
+                            currentUserId={session?.user?.id}
+                            onRestore={handleRestoreDiary}
+                            onPermanentDelete={handlePermanentDeleteDiary}
+                            creatorAvatarUrl={profiles[s.session_participants?.[0]?.user_id]?.avatar_url}
+                          />
+                        ))
+                      )
+                    )}
+                  </div>
+
+                  {!isMobile && (
+                    <SidebarPagination 
+                      totalCount={sortedSessions.length} 
+                      pageSize={pageSize} 
+                      page={currentPage} 
+                      onPageChange={setCurrentPage} 
+                    />
+                  )}
+
+                  {/* Haptic/Visual spacer to push content above the 88px mobile dock */}
+                  <div className="h-40 md:hidden shrink-0" />
+                </div>
+              )}
 
             </motion.div>
           </AnimatePresence>
@@ -1856,9 +2100,12 @@ function HomeContent() {
       </aside>
 
       {/* 3. Main Content Area */}
-      <section className={`flex-1 flex flex-col min-w-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 w-full h-full md:relative md:left-auto md:top-auto md:w-auto md:h-full bg-background ${
-        viewMode === 'diary' ? 'translate-x-0 pointer-events-auto z-20 md:z-auto' : 'translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
-      }`}>
+      <section 
+        ref={detailNodeRef}
+        className={`flex-1 flex flex-col min-w-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 w-full h-full md:relative md:left-auto md:top-auto md:w-auto md:h-full bg-background ${
+          viewMode === 'diary' ? 'translate-x-0 pointer-events-auto z-20 md:z-auto' : 'translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
+        }`}
+      >
         {(!isMobile || viewMode === 'diary') ? (
           <>
             <div className="absolute top-0 left-0 right-0 z-30 flex flex-col">
@@ -1884,7 +2131,7 @@ function HomeContent() {
 
               {/* Restore/Permanent Delete Warning Banner for Deleted Diaries */}
               {isDeleted && current && (
-                <div className="bg-[#e05d38] px-4 py-1.5 flex items-center justify-center gap-3 animate-in fade-in duration-200 shrink-0 shadow-sm">
+                <div className="bg-[#e94a44] px-4 py-1.5 flex items-center justify-center gap-3 animate-in fade-in duration-200 shrink-0 shadow-sm">
                   <button 
                     onClick={() => handleRestoreDiary(current.id)}
                     className="px-3.5 py-1.5 bg-white/15 text-white rounded-lg text-[11px] font-black hover:bg-white/25 transition-colors active:scale-[0.98] origin-center flex items-center gap-1.5"
@@ -1903,7 +2150,28 @@ function HomeContent() {
               )}
             </div>
 
-            <div className={`flex-1 overflow-y-auto scrollbar-hide ${isDeleted && current ? 'pt-[100px]' : 'pt-16'}`}>
+            <div 
+              data-scroll-container="true"
+              className={`flex-1 overflow-y-auto scrollbar-hide ${isDeleted && current ? 'pt-[100px]' : 'pt-16'}`}
+            >
+              {/* Pull-to-refresh Indicator */}
+              <div 
+                data-pull-indicator="true"
+                className="w-full flex items-center justify-center overflow-hidden h-0 opacity-0"
+                style={{
+                  height: isRefreshing ? '50px' : undefined,
+                  opacity: isRefreshing ? 1 : undefined
+                }}
+              >
+                <div className="flex items-center justify-center py-2">
+                  <RotateCcw 
+                    data-pull-icon="true"
+                    strokeWidth={2.75}
+                    className={`w-[22px] h-[22px] text-[#e94a44] ${isRefreshing ? 'animate-spin-reverse' : ''}`}
+                  />
+                </div>
+              </div>
+
               <div className="w-full pb-72">
                 {current ? (
                   <div className="w-full">
@@ -1917,7 +2185,7 @@ function HomeContent() {
                       >
                         {/* Background Pattern (Subtle dots) */}
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(224,93,56,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(233,74,68,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
                         </div>
                         
                         {/* Content */}
@@ -1939,7 +2207,7 @@ function HomeContent() {
                                 <motion.span 
                                   layoutId="duration-badge"
                                   transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                                  className="inline-flex items-center justify-center bg-[#e05d38] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none shrink-0"
+                                  className="inline-flex items-center justify-center bg-[#e94a44] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none shrink-0"
                                 >
                                   <span className="translate-y-[-0.5px]">{formatDurationText(current.total_duration_min)}</span>
                                 </motion.span>
@@ -1959,7 +2227,7 @@ function HomeContent() {
                                   <motion.span 
                                     layoutId="duration-badge"
                                     transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                                    className="inline-flex items-center justify-center bg-[#e05d38] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none"
+                                    className="inline-flex items-center justify-center bg-[#e94a44] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none"
                                   >
                                     <span className="translate-y-[-0.5px]">{formatDurationText(current.total_duration_min)}</span>
                                   </motion.span>

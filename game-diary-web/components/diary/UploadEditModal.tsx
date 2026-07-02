@@ -60,8 +60,8 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           {/* Left: Preview Section */}
           <div className="w-full md:w-[55%] bg-[#f9fafb] border-b md:border-b-0 md:border-r border-[#dcdfe2] p-0 md:p-8 flex flex-col">
             <div className="hidden md:flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-full bg-[#e05d38]/10 flex items-center justify-center">
-                <ImageIcon size={16} className="text-[#e05d38]" />
+              <div className="w-8 h-8 rounded-full bg-[#e94a44]/10 flex items-center justify-center">
+                <ImageIcon size={16} className="text-[#e94a44]" />
               </div>
               <span className="text-[14px] font-bold text-[#333333] tracking-tight">이미지 미리보기</span>
             </div>
@@ -100,7 +100,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                     alt="" 
                   />
                 ) : (
-                  <Gamepad2 size={13} className="text-[#e05d38]/85 shrink-0" />
+                  <Gamepad2 size={13} className="text-[#e94a44]/85 shrink-0" />
                 )}
                 <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </p>
@@ -125,19 +125,19 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                     alt="" 
                   />
                 ) : (
-                  <Gamepad2 size={14} className="text-[#e05d38] shrink-0" />
+                  <Gamepad2 size={14} className="text-[#e94a44] shrink-0" />
                 )}
                 <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </div>
               <label className="hidden md:flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-[#333333] uppercase tracking-wider">
-                <MessageSquare size={13} className="text-[#e05d38]" />
+                <MessageSquare size={13} className="text-[#e94a44]" />
                 코멘트
               </label>
               <textarea 
                 value={comment} 
                 onChange={(e) => setComment(e.target.value)} 
                 placeholder="이 순간을 기억할 수 있는 짧은 글을 남겨주세요."
-                className="w-full bg-[#f4f5f7] border-none p-3 md:p-4 rounded-[0.75rem] text-[13px] md:text-[14px] text-[#333333] focus:ring-2 focus:ring-[#e05d38]/20 transition-all placeholder:text-[#6b7280]/50 flex-1 min-h-[60px] md:min-h-[80px] resize-none font-medium leading-relaxed"
+                className="w-full bg-[#f4f5f7] border-none p-3 md:p-4 rounded-[0.75rem] text-[13px] md:text-[14px] text-[#333333] focus:ring-2 focus:ring-[#e94a44]/20 transition-all placeholder:text-[#6b7280]/50 flex-1 min-h-[60px] md:min-h-[80px] resize-none font-medium leading-relaxed"
               />
             </div>
 
@@ -145,7 +145,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
             <button 
               onClick={handleUpload}
               disabled={isUploading}
-              className="w-full bg-[#e05d38] text-white py-3 md:py-4 rounded-[0.75rem] text-[15px] md:text-[16px] font-bold flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(224,93,56,0.15)] hover:shadow-[0_15px_30px_rgba(224,93,56,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full bg-[#e94a44] text-white py-3 md:py-4 rounded-[0.75rem] text-[15px] md:text-[16px] font-bold flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(233,74,68,0.15)] hover:shadow-[0_15px_30px_rgba(233,74,68,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:hover:scale-100"
             >
               {isUploading ? (
                 <>

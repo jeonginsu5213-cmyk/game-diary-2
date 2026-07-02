@@ -49,12 +49,22 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --animate-spin-reverse: spin-reverse 1s linear infinite;
+
+  @keyframes spin-reverse {
+    from {
+      transform: rotate(var(--start-angle, 360deg));
+    }
+    to {
+      transform: rotate(calc(var(--start-angle, 360deg) - 360deg));
+    }
+  }
 }
 
 :root {
   --card: #ffffff;
   --card-foreground: #333333;
-  --ring: #e05d38;
+  --ring: #e94a44;
   --input: #f4f5f7;
   --muted: #f9fafb;
   --muted-foreground: #6b7280;
@@ -69,16 +79,16 @@
   --chart-5: #334c82;
   --popover: #ffffff;
   --popover-foreground: #333333;
-  --primary: #e05d38;
+  --primary: #e94a44;
   --primary-foreground: #ffffff;
   --sidebar: #dddfe2;
   --sidebar-foreground: #333333;
-  --sidebar-primary: #e05d38;
+  --sidebar-primary: #e94a44;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #d6e4f0;
   --sidebar-accent-foreground: #1e3a8a;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: #e05d38;
+  --sidebar-ring: #e94a44;
   --secondary: #f3f4f6;
   --secondary-foreground: #4b5563;
   --background: #f2f4f6;
@@ -101,7 +111,7 @@
 .dark {
   --card: #2a3040;
   --card-foreground: #e5e5e5;
-  --ring: #e05d38;
+  --ring: #e94a44;
   --input: #3d4354;
   --muted: #2a303e;
   --muted-foreground: #a3a3a3;
@@ -110,16 +120,16 @@
   --border: #3d4354;
   --popover: #262b38;
   --popover-foreground: #e5e5e5;
-  --primary: #e05d38;
+  --primary: #e94a44;
   --primary-foreground: #ffffff;
   --sidebar: #2a303f;
   --sidebar-foreground: #e5e5e5;
-  --sidebar-primary: #e05d38;
+  --sidebar-primary: #e94a44;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #2a3656;
   --sidebar-accent-foreground: #bfdbfe;
   --sidebar-border: #3d4354;
-  --sidebar-ring: #e05d38;
+  --sidebar-ring: #e94a44;
   --secondary: #2a303e;
   --secondary-foreground: #e5e5e5;
   --background: #1c2433;
@@ -203,7 +213,7 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover,
   .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background-color: #fbece7; /* Your signature light orange */
+    background-color: #f7ced1; /* Your signature sub color */
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:active {
     border-width: 0px; /* Expands to full 8px on press */

@@ -7,7 +7,8 @@ This project uses a modern design system architecture inspired by shadcn/ui (Twe
 ### 1. Color System (HEX Based)
 The system uses HEX variables mapped to Tailwind via `@theme inline`.
 
-- **Primary:** `--primary` (#e05d38) - The main brand color (Orange).
+- **Primary:** `--primary` (#e94a44) - The main brand color (Vibrant Warm Red).
+- **Sub Color:** `#f7ced1` - Soft pinkish-peach accent.
 - **Background:** `--background` (#e8ebed) - High-contrast light grey.
 - **Card/Popover:** `--card`, `--popover` (#ffffff) - Standard container backgrounds.
 - **Accent/Sidebar:** `--accent` (#d6e4f0), `--sidebar` (#dddfe2).
