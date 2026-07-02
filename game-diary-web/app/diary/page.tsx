@@ -143,7 +143,7 @@ function DiaryListItem({
             ) : (
               <>
                 {isFavorite && (
-                  <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200" strokeWidth={2.5} />
+                  <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200 -translate-x-1" strokeWidth={2.5} />
                 )}
                 <span className="opacity-55">
                   {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
@@ -1241,15 +1241,27 @@ function HomeContent() {
               placeholder="일기 제목 검색..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white rounded-xl pl-9 pr-4 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none transition-all placeholder:text-muted-foreground/40"
+              className="w-full bg-white rounded-xl pl-9 pr-8 py-2 text-[16px] md:text-[12px] font-medium text-foreground focus:outline-none transition-all placeholder:text-muted-foreground/40"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-2.5 my-auto w-5 h-5 rounded-full bg-[#e8ebed] dark:bg-muted hover:bg-[#dddfe2] dark:hover:bg-muted/80 text-muted-foreground/60 hover:text-foreground flex items-center justify-center transition-colors focus:outline-none cursor-pointer active:scale-95 z-20"
+                title="검색어 지우기"
+              >
+                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
         <motion.div 
           animate={{ y: 0 }}
           transition={{ type: "spring", stiffness: 380, damping: 30 }}
-          className="flex-1 relative overflow-hidden md:overflow-visible min-h-0 md:flex md:flex-col bg-card rounded-t-2xl rounded-b-none mb-0 pt-2 px-0 pb-0 md:bg-transparent md:rounded-none md:border-none md:shadow-none md:mx-0 md:mb-0 md:p-0 z-20"
+          className="flex-1 relative overflow-hidden md:overflow-visible min-h-0 md:flex md:flex-col bg-card rounded-t-2xl rounded-b-none mb-0 pt-0 px-0 pb-0 md:bg-transparent md:rounded-none md:border-none md:shadow-none md:mx-0 md:mb-0 md:p-0 z-20"
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -1276,26 +1288,75 @@ function HomeContent() {
                 x: { type: "spring", stiffness: 380, damping: 30 },
                 opacity: { duration: 0.2 }
               }}
-              className={`absolute inset-0 flex flex-col px-0 pb-0 min-h-0 md:relative md:flex-1 md:flex md:flex-col md:min-h-0 ${(listTab === 'calendar' || listTab === 'notifications') ? 'pt-0' : 'pt-2'}`}
+              className="absolute inset-0 flex flex-col px-0 pb-0 min-h-0 md:relative md:flex-1 md:flex md:flex-col md:min-h-0 pt-0"
             >
+              {/* 1. If listTab === 'notifications', render absolute notification switcher header! */}
+              {listTab === 'notifications' && (
+                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 select-none pointer-events-auto">
+                  {/* Stationary Gradient Overlay */}
+                  <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
+
+                  {/* Switcher Buttons Row */}
+                  <div className="relative z-20 pt-3 pb-1.5 px-3 flex items-center justify-between w-full">
+                    <div className="flex items-center gap-1.5 w-max">
+                      <button
+                        onClick={() => setNotifFilter('all')}
+                        className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
+                          notifFilter === 'all'
+                            ? 'bg-[#e05d38] text-white font-bold shadow-xs'
+                            : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs'
+                        }`}
+                      >
+                        모든 알림
+                      </button>
+                      <button
+                        onClick={() => setNotifFilter('unread')}
+                        className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
+                          notifFilter === 'unread'
+                            ? 'bg-[#e05d38] text-white font-bold shadow-xs'
+                            : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs'
+                        }`}
+                      >
+                        읽지 않은 알림
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleMarkAllAsRead}
+                      className="text-[11px] font-bold text-muted-foreground/60 hover:text-[#e05d38] underline transition-colors px-1 select-none cursor-pointer active:scale-95 mr-1"
+                    >
+                      모두 확인
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. If listTab === 'active' || listTab === 'trash', render absolute sort bar! */}
               {(listTab === 'active' || listTab === 'trash') && (
-                <div className="h-8 flex items-center justify-between pl-2 pr-[18px] md:pl-5 md:pr-[26px] shrink-0">
+                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 h-8 flex items-center justify-between pl-2 pr-3 md:pl-5 md:pr-[26px] shrink-0">
+                  {/* Stationary Gradient Overlay */}
+                  <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
+
                   {listTab === 'active' ? (
                     <>
                       <div />
-                      <SidebarSortDropdown currentSort={sortBy} onSortChange={setSortBy} />
+                      <SidebarSortDropdown className="translate-y-2 z-20" currentSort={sortBy} onSortChange={setSortBy} />
                     </>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-muted-foreground/60 select-none pl-3.5 md:pl-2">
+                    <div className="flex items-center gap-1.5 text-muted-foreground/60 select-none pl-3.5 md:pl-2 relative z-20">
                       <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                       <span className="text-[10px] font-bold">7일 후 영구 삭제됩니다.</span>
                     </div>
                   )}
                 </div>
               )}
+
               <div 
-                className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pt-0 pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
-                  listTab === 'notifications' ? 'px-1' : 'px-2 md:px-3'
+                className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
+                  listTab === 'notifications' 
+                    ? 'px-1 pt-12' 
+                    : (listTab === 'active' || listTab === 'trash') 
+                      ? 'px-2 md:px-3 pt-8 md:pt-1' 
+                      : 'px-2 md:px-3 pt-0'
                 }`}
               >
                 <div className="space-y-0 min-h-[396px] w-full">
@@ -1617,44 +1678,6 @@ function HomeContent() {
                     </div>
                   ) : listTab === 'notifications' ? (
                     <div className="flex flex-col gap-3.5 px-1 pb-4 animate-in fade-in duration-300 select-none relative">
-                      {/* Sticky/Fixed Filter Switcher Container with Integrated Fading Gradient */}
-                      <div className="sticky top-0 bg-transparent z-20 -mx-1 select-none pointer-events-auto">
-                        {/* Stationary Gradient Overlay */}
-                        <div className="absolute top-0 left-[-4px] right-[-4px] h-20 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
-
-                        {/* Switcher Buttons Row */}
-                        <div className="relative z-20 pt-3 pb-1.5 px-2 flex items-center justify-between w-full">
-                          <div className="flex items-center gap-1.5 w-max">
-                            <button
-                              onClick={() => setNotifFilter('all')}
-                              className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
-                                notifFilter === 'all'
-                                  ? 'bg-[#e05d38] text-white font-bold shadow-xs'
-                                  : 'bg-muted/45 text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 shadow-xs'
-                              }`}
-                            >
-                              모든 알림
-                            </button>
-                            <button
-                              onClick={() => setNotifFilter('unread')}
-                              className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
-                                notifFilter === 'unread'
-                                  ? 'bg-[#e05d38] text-white font-bold shadow-xs'
-                                  : 'bg-muted/45 text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 shadow-xs'
-                              }`}
-                            >
-                              읽지 않은 알림
-                            </button>
-                          </div>
-                          <button
-                            onClick={handleMarkAllAsRead}
-                            className="text-[11px] font-bold text-muted-foreground/60 hover:text-[#e05d38] underline transition-colors px-1 select-none cursor-pointer active:scale-95 mr-1"
-                          >
-                            모두 확인
-                          </button>
-                        </div>
-                      </div>
-
                       {filteredNotifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center min-h-[320px] text-muted-foreground/40 gap-2 select-none">
                           <Bell className="w-8 h-8 opacity-50" />
@@ -1717,7 +1740,9 @@ function HomeContent() {
                                     <span className="text-[10px] text-muted-foreground/45 font-sans font-medium">
                                       {formattedDate}
                                     </span>
-                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isUnread ? 'bg-primary animate-pulse' : 'bg-transparent'}`} />
+                                    {isUnread && (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+                                    )}
                                   </div>
                                 </div>
 
@@ -1801,21 +1826,7 @@ function HomeContent() {
           </AnimatePresence>
         </motion.div>
 
-        {/* 4번 해결: 모바일 하단 틈새 메움용 흰색 고정 백그라운드 판 (z-0) */}
-        {(listTab === 'active' || listTab === 'trash') && (
-          <>
-            <div className="absolute left-0 right-0 bottom-0 h-16 bg-card pointer-events-none z-0 md:hidden" />
 
-            {/* 2번 해결: 모바일 하단 고정 블러 그라데이션 마스크 (z-30) */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-card via-card/50 to-transparent backdrop-blur-md pointer-events-none z-30 md:hidden"
-              style={{
-                WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 100%)',
-                maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 100%)'
-              }}
-            />
-          </>
-        )}
         <div className="hidden md:flex p-4 border-t border-border items-center gap-3 bg-card/20 backdrop-blur-sm">
           <div className="w-9 h-9 rounded-full overflow-hidden border border-border shadow-sm ring-2 ring-background/50 shrink-0">
             <img src={session?.user?.image || ""} alt="" className="w-full h-full object-cover" />
