@@ -1013,6 +1013,21 @@ function HomeContent() {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-playtime-toggle="true"]') && !target.closest('[data-playtime-dropdown="true"]')) {
+        setExpandedGames({});
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     if (target.scrollHeight - target.scrollTop - target.clientHeight < 100) {
@@ -1298,7 +1313,7 @@ function HomeContent() {
 
                   {/* Switcher Buttons Row */}
                   <div className="relative z-20 pt-3 pb-1.5 px-3 flex items-center justify-between w-full">
-                    <div className="flex items-center gap-1.5 w-max">
+                    <div className="flex items-center gap-1.5 w-max ml-1 mt-1">
                       <button
                         onClick={() => setNotifFilter('all')}
                         className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
@@ -1332,7 +1347,7 @@ function HomeContent() {
 
               {/* 2. If listTab === 'active' || listTab === 'trash', render absolute sort bar! */}
               {(listTab === 'active' || listTab === 'trash') && (
-                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 h-8 flex items-center justify-between pl-2 pr-3 md:pl-5 md:pr-[26px] shrink-0">
+                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 h-8 flex items-center justify-between pl-2 pr-[14px] md:pl-5 md:pr-[26px] shrink-0">
                   {/* Stationary Gradient Overlay */}
                   <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
 
@@ -2040,6 +2055,7 @@ function HomeContent() {
                                 <div className="relative">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); toggleGameStats(game.id); }}
+                                    data-playtime-toggle="true"
                                     className={`group/btn flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[10px] font-sans font-bold uppercase tracking-widest leading-none ${isExpanded ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
                                   >
                                     <span className="translate-y-[-0.5px]">{formatDurationText(game.play_time_min)}</span>
@@ -2058,6 +2074,7 @@ function HomeContent() {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -4, scale: 0.95 }}
                                         transition={{ duration: 0.15, ease: 'easeOut' }}
+                                        data-playtime-dropdown="true"
                                         className="absolute top-[calc(100%+0.25rem)] right-0 z-50 w-max max-w-[14rem] min-w-28 overflow-hidden rounded-2xl bg-card shadow-xl shadow-black/10"
                                       >
                                         <div className="flex flex-col p-1">

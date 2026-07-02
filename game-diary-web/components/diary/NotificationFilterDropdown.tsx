@@ -12,11 +12,15 @@ function cn(...inputs: ClassValue[]) {
 
 function useClickOutside(ref: React.RefObject<HTMLElement | null>, handler: () => void) {
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       if (ref.current && !ref.current.contains(event.target as Node)) handler();
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [ref, handler]);
 }
 
