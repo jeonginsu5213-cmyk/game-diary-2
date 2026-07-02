@@ -2058,7 +2058,7 @@ function HomeContent() {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -4, scale: 0.95 }}
                                         transition={{ duration: 0.15, ease: 'easeOut' }}
-                                        className="absolute top-[calc(100%+0.25rem)] right-0 z-50 w-max max-w-[14rem] min-w-28 overflow-hidden rounded-lg bg-card shadow-xl shadow-black/10 border border-border/30"
+                                        className="absolute top-[calc(100%+0.25rem)] right-0 z-50 w-max max-w-[14rem] min-w-28 overflow-hidden rounded-2xl bg-card shadow-xl shadow-black/10"
                                       >
                                         <div className="flex flex-col p-1">
                                           {[...(game.session_game_players || [])]
