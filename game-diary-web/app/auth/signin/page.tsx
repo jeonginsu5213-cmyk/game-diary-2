@@ -16,7 +16,7 @@ export default function SignInPage() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="absolute top-8 left-8 z-30"
+        className="absolute top-8 left-4 md:left-8 z-30"
       >
         <a 
           href="/" 
