@@ -278,7 +278,7 @@ const InteractiveHero: React.FC = () => {
                 {session ? (
                     <Link
                         href="/diary"
-                        className="w-full sm:w-auto bg-primary text-primary-foreground px-7 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all duration-200 whitespace-nowrap shadow-xl shadow-primary/20 flex-shrink-0 text-center"
+                        className="w-fit sm:w-auto bg-primary text-primary-foreground px-7 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all duration-200 whitespace-nowrap shadow-xl shadow-primary/20 flex-shrink-0 text-center"
                     >
                         내 일기장으로 이동
                     </Link>
@@ -286,7 +286,7 @@ const InteractiveHero: React.FC = () => {
                     <motion.button
                         whileHover="hover"
                         onClick={() => signIn('discord')}
-                        className="w-full sm:w-auto bg-primary text-primary-foreground px-7 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all duration-200 whitespace-nowrap shadow-xl shadow-primary/20 flex items-center justify-center gap-3 flex-shrink-0 group"
+                        className="w-fit sm:w-auto bg-primary text-primary-foreground px-7 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all duration-200 whitespace-nowrap shadow-xl shadow-primary/20 flex items-center justify-center gap-3 flex-shrink-0 group"
                     >
                         <motion.svg 
                             className="w-6 h-6" 
