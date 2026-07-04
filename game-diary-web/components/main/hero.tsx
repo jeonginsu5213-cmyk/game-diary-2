@@ -212,12 +212,6 @@ const InteractiveHero: React.FC = () => {
                             <NavLink href="/">홈</NavLink>
                             <NavLink href="/diary">일기장</NavLink>
                             <NavLink href="/stats">통계</NavLink>
-                            <hr className="w-full border-t border-border/20 my-2"/>
-                            {session ? (
-                                <button onClick={() => signOut()} className="text-sm font-bold text-muted-foreground hover:text-foreground">로그아웃</button>
-                            ) : (
-                                <button onClick={() => signIn('discord')} className="text-sm font-bold text-muted-foreground hover:text-foreground">로그인</button>
-                            )}
                         </div>
                     </motion.div>
                 )}
