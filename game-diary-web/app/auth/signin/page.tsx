@@ -42,11 +42,20 @@ export default function SignInPage() {
           
           <div className="space-y-10 relative z-10">
             {/* Header Section */}
-            <div className="space-y-3 text-center">
-              <h1 className="text-4xl font-medium tracking-tighter text-foreground">
-                Game Diary
-              </h1>
-              <p className="text-muted-foreground font-medium text-base leading-relaxed">
+            <div className="space-y-3 text-left">
+              <div className="flex items-center gap-2.5 justify-start">
+                <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-medium tracking-tighter text-foreground">
+                  Game Diary
+                </h1>
+              </div>
+              <p className="text-muted-foreground font-medium text-[14px] leading-relaxed">
                 디스코드 친구들과의 소중한 추억을 지금 확인해보세요.
               </p>
             </div>
