@@ -231,7 +231,7 @@ const InteractiveHero: React.FC = () => {
                 animate="visible"
                 className="mb-6"
             >
-                <ShinyText text="우리들의 게임 추억, 특별하게 기록하세요" className="text-primary font-bold cursor-pointer hover:bg-primary/10 transition-colors" />
+                <ShinyText text="우리들의 게임 추억, 특별하게 기록하세요" className="text-[14px] text-primary font-bold cursor-pointer hover:bg-primary/10 transition-colors" />
             </motion.div>
 
             <motion.h1
