@@ -54,7 +54,7 @@ export default function SignInPage() {
             {/* Action Section */}
             <div className="flex flex-col gap-6">
               <div className="space-y-2">
-                <p className="text-muted-foreground font-medium text-[12px] leading-relaxed ml-[2px]">
+                <p className="text-muted-foreground font-medium text-[12px] leading-relaxed ml-[4px]">
                   지금 로그인하여 소중한 게임 추억 기록을 시작하세요.
                 </p>
                 <motion.button
