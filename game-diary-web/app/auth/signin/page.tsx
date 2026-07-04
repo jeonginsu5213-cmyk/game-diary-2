@@ -42,13 +42,18 @@ export default function SignInPage() {
           
           <div className="space-y-4 relative z-10">
             {/* Header Section */}
-            <div className="flex items-center justify-start">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="text-xl font-bold text-foreground ml-2 tracking-tight">Game Diary</span>
+            <div className="space-y-2 text-left">
+              <div className="flex items-center justify-start">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 17L12 22L22 17" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 12L12 17L22 12" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xl font-bold text-foreground ml-2 tracking-tight">Game Diary</span>
+              </div>
+              <p className="text-muted-foreground font-medium text-[14px] leading-relaxed">
+                디스코드 친구들과의 소중한 추억을 지금 확인해보세요.
+              </p>
             </div>
 
             {/* Action Section */}
