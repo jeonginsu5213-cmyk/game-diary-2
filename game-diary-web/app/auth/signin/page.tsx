@@ -40,7 +40,7 @@ export default function SignInPage() {
           {/* Glass Reflection Highlight */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.3] via-transparent to-transparent pointer-events-none" />
           
-          <div className="space-y-10 relative z-10">
+          <div className="space-y-4 relative z-10">
             {/* Header Section */}
             <div className="flex items-center justify-start">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
