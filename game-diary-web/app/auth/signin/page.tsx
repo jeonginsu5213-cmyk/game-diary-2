@@ -51,7 +51,7 @@ export default function SignInPage() {
                 </svg>
                 <span className="text-xl font-bold text-foreground ml-2 tracking-tight">Game Diary</span>
               </div>
-              <p className="text-muted-foreground font-medium text-[14px] leading-relaxed">
+              <p className="text-muted-foreground font-medium text-[12px] leading-relaxed">
                 지금 로그인하여 소중한 게임 추억 기록을 시작하세요.
               </p>
             </div>
