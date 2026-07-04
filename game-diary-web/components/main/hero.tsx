@@ -143,7 +143,7 @@ const InteractiveHero: React.FC = () => {
     };
 
   return (
-    <div className="pt-[100px] relative bg-background text-foreground w-full flex flex-col overflow-x-hidden font-sans pb-32">
+    <div className="relative bg-background text-foreground w-full flex flex-col overflow-x-hidden font-sans min-h-screen">
         <BackgroundCanvas />
 
         <motion.header
@@ -268,7 +268,7 @@ const InteractiveHero: React.FC = () => {
                 variants={actionVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto mb-24 md:mb-32"
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto mb-0"
             >
                 {session ? (
                     <Link
