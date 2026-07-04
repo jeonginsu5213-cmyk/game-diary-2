@@ -98,13 +98,13 @@ const InteractiveHero: React.FC = () => {
 
    const headerVariants: Variants = {
        top: {
-           backgroundColor: "rgba(232, 235, 237, 0)",
+           backgroundColor: "rgba(242, 244, 246, 0)",
            borderBottomColor: "rgba(0, 0, 0, 0)",
            position: 'fixed',
            boxShadow: 'none',
        },
        scrolled: {
-           backgroundColor: "rgba(232, 235, 237, 0.8)",
+           backgroundColor: "rgba(242, 244, 246, 0.8)",
            borderBottomColor: "rgba(0, 0, 0, 0.05)",
            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
            position: 'fixed'
