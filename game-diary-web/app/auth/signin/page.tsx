@@ -76,8 +76,8 @@ export default function SignInPage() {
                 </motion.button>
               </div>
               
-              <p className="text-[11px] text-center text-muted-foreground px-2 whitespace-nowrap">
-                로그인 시 Game Diary의 이용 약관 및 개인정보 처리방침에 동의하게 됩니다.
+              <p className="text-[11px] text-center text-muted-foreground px-2 leading-relaxed">
+                로그인 시 Game Diary의 이용 약관 및 개인정보 처리방침에<br />동의하게 됩니다.
               </p>
             </div>
           </div>
