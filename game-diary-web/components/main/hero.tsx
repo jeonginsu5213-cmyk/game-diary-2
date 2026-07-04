@@ -210,9 +210,9 @@ const InteractiveHero: React.FC = () => {
                     >
                         <div className="flex flex-col items-center space-y-2 px-6">
                             <NavLink href="/">홈</NavLink>
-                            <hr className="w-full border-t border-border/10" />
+                            <hr className="w-full border-t border-border/30" />
                             <NavLink href="/diary">일기장</NavLink>
-                            <hr className="w-full border-t border-border/10" />
+                            <hr className="w-full border-t border-border/30" />
                             <NavLink href="/stats">통계</NavLink>
                         </div>
                     </motion.div>
