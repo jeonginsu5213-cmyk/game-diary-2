@@ -71,7 +71,7 @@ export default function SignInPage() {
                 디스코드로 시작하기
               </motion.button>
               
-              <p className="text-[10px] text-center text-muted-foreground px-2 leading-relaxed">
+              <p className="text-[9px] text-center text-muted-foreground px-2 leading-relaxed">
                 로그인 시 Game Diary의 이용 약관 및 개인정보 처리방침에 동의하게 됩니다.
               </p>
             </div>
