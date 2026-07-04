@@ -263,7 +263,7 @@ const InteractiveHero: React.FC = () => {
                 variants={subHeadlineVariants}
                 initial="hidden"
                 animate="visible"
-                className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium"
+                className="text-[14px] sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium"
             >
                 디스코드에서 나눈 즐거운 시간들을 자동으로 기록하고 공유하세요.<br />
                 함께 웃고 떠들던 그 순간들이 소중한 일기가 됩니다.
