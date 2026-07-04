@@ -53,11 +53,11 @@ export default function SignInPage() {
 
             {/* Action Section */}
             <div className="flex flex-col gap-2">
-              <motion.button
-                whileHover="hover"
-                whileTap={{ scale: 0.98 }}
-                onClick={() => signIn('discord', { callbackUrl: '/diary' })}
-                className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold text-lg transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 group"
+                <motion.button
+                  whileHover="hover"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => signIn('discord', { callbackUrl: '/diary' })}
+                  className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 group"
               >
                 <motion.svg 
                   className="w-6 h-6" 
