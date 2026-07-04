@@ -206,9 +206,9 @@ const InteractiveHero: React.FC = () => {
                     <motion.div
                         key="mobile-menu"
                         variants={mobileMenuVariants} initial="hidden" animate="visible" exit="exit"
-                        className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl shadow-lg py-6 border-t border-border/20"
+                        className="md:hidden absolute top-[calc(100%-6px)] right-6 w-[140px] bg-background/95 backdrop-blur-xl shadow-xl py-3 rounded-2xl border border-border/30"
                     >
-                        <div className="flex flex-col items-center space-y-5 px-6">
+                        <div className="flex flex-col items-center space-y-3 px-4">
                             <NavLink href="/">홈</NavLink>
                             <NavLink href="/diary">일기장</NavLink>
                             <NavLink href="/stats">통계</NavLink>
