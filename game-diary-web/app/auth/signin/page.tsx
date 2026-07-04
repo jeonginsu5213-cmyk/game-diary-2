@@ -11,36 +11,37 @@ export default function SignInPage() {
       {/* Shared Interactive Background */}
       <BackgroundCanvas />
 
-      {/* Back to Home Button (Top Left) */}
-      <motion.div 
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="absolute top-8 left-4 md:left-8 z-30"
-      >
-        <a 
-          href="/" 
-          className="group flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all text-sm font-medium"
-        >
-          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-          </svg>
-          메인으로 돌아가기
-        </a>
-      </motion.div>
-
       {/* Main Content Overlay */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-6 bg-black/5">
-        <motion.div 
-          initial={{ opacity: 0, y: 20, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[460px] bg-card/60 backdrop-blur-3xl border border-border/50 px-4 py-8 rounded-xl shadow-2xl relative overflow-hidden"
-        >
-          {/* Glass Reflection Highlight */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.3] via-transparent to-transparent pointer-events-none" />
-          
-          <div className="space-y-8 relative z-10">
+        <div className="relative w-full max-w-[460px]">
+          {/* Back to Home Button (Aligned with card's top-left) */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="absolute -top-8 left-0 z-30"
+          >
+            <a 
+              href="/" 
+              className="group flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all text-sm font-medium"
+            >
+              <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+              메인으로 돌아가기
+            </a>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full bg-card/60 backdrop-blur-3xl border border-border/50 px-4 py-8 rounded-xl shadow-2xl relative overflow-hidden"
+          >
+            {/* Glass Reflection Highlight */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.3] via-transparent to-transparent pointer-events-none" />
+            
+            <div className="space-y-8 relative z-10">
             {/* Header Section */}
             <div className="flex items-center justify-center">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
@@ -79,5 +80,6 @@ export default function SignInPage() {
         </motion.div>
       </div>
     </div>
+  </div>
   );
 }
