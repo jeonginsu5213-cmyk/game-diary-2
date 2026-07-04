@@ -149,7 +149,7 @@ const InteractiveHero: React.FC = () => {
         <motion.header
             variants={headerVariants}
             initial="top"
-            animate={isScrolled ? "scrolled" : "top"}
+            animate={(isScrolled || isMobileMenuOpen) ? "scrolled" : "top"}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="px-6 w-full md:px-10 lg:px-16 sticky top-0 z-30 backdrop-blur-md border-b border-border/10"
         >
