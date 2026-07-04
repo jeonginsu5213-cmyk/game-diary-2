@@ -43,7 +43,7 @@ export default function SignInPage() {
           <div className="space-y-10 relative z-10">
             {/* Header Section */}
             <div className="space-y-3 text-center">
-              <h1 className="text-4xl font-black tracking-tighter text-foreground">
+              <h1 className="text-4xl font-medium tracking-tighter text-foreground">
                 Game Diary
               </h1>
               <p className="text-muted-foreground font-medium text-base leading-relaxed">
