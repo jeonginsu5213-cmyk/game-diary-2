@@ -297,24 +297,6 @@ const InteractiveHero: React.FC = () => {
                 )}
             </motion.div>
 
-            <motion.div
-                variants={imageVariants}
-                initial="hidden"
-                animate="visible"
-                className="w-full max-w-5xl mx-auto px-4 sm:px-0 mt-8"
-            >
-                <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-border/50 bg-white/40 backdrop-blur-3xl aspect-video flex items-center justify-center group/preview">
-                    <div className="text-muted-foreground flex flex-col items-center space-y-6 relative z-10 transition-transform duration-700 group-hover/preview:scale-105">
-                        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center text-5xl animate-pulse shadow-lg shadow-primary/5 border border-primary/20">🎮</div>
-                        <div className="space-y-2 text-center">
-                            <p className="text-2xl font-black text-foreground tracking-tight">서비스 프리뷰 준비 중</p>
-                            <p className="text-sm font-medium opacity-60">우리들의 소중한 게임 일기장이 곧 더 멋진 모습으로 찾아옵니다.</p>
-                        </div>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
-                </div>
-            </motion.div>
         </main>
 
     </div>
