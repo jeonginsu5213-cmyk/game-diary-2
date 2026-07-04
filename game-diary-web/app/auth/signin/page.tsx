@@ -40,7 +40,7 @@ export default function SignInPage() {
           {/* Glass Reflection Highlight */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.3] via-transparent to-transparent pointer-events-none" />
           
-          <div className="space-y-4 relative z-10">
+          <div className="space-y-8 relative z-10">
             {/* Header Section */}
             <div className="space-y-2 text-left">
               <div className="flex items-center justify-start">
