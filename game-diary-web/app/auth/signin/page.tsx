@@ -35,7 +35,7 @@ export default function SignInPage() {
           initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[460px] bg-card/60 backdrop-blur-3xl border border-border/50 p-4 rounded-xl shadow-2xl relative overflow-hidden"
+          className="w-full max-w-[460px] bg-card/60 backdrop-blur-3xl border border-border/50 px-4 py-8 rounded-xl shadow-2xl relative overflow-hidden"
         >
           {/* Glass Reflection Highlight */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.3] via-transparent to-transparent pointer-events-none" />
