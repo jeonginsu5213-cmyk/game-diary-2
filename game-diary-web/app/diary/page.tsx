@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from 'framer-motion';
 import { supabase } from "@/src/lib/supabase"; 
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from 'next/link';
@@ -109,7 +109,7 @@ function DiaryListItem({
               s.guild_icon ? (
                 <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
               ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-foreground">
                   {s.guild_name.charAt(0)}
                 </div>
               )
@@ -132,7 +132,7 @@ function DiaryListItem({
                       if (onRestore) await onRestore(s.id);
                     }
                   }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground hover:bg-primary/10 hover:text-foreground transition-all active:scale-90"
                   title="일기 복원"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -200,7 +200,7 @@ function HomeContent() {
                       alt="" 
                     />
                   ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[8px] font-black text-primary uppercase">
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[8px] font-black text-foreground uppercase">
                       {displayName.charAt(0)}
                     </div>
                   )}
@@ -233,7 +233,7 @@ function HomeContent() {
                   {/* Pin Toggle Button on the Right */}
                   <button 
                     onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
-                    className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shrink-0"
+                    className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-foreground-foreground hover:bg-primary/95 transition-colors shrink-0"
                     title="고정 해제"
                   >
                     <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
@@ -556,6 +556,8 @@ function HomeContent() {
     setCalendarTouchStart(null);
   };
 
+
+
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread'>('all');
 
@@ -575,7 +577,7 @@ function HomeContent() {
       } else {
         const prevIndex = tabIndices[currentTab] ?? 0;
         const currentIndex = tabIndices[newTab] ?? 0;
-        const newDirection = currentIndex > prevIndex ? -1 : 1;
+        const newDirection = currentIndex > prevIndex ? 1 : -1;
         setDirection(newDirection);
       }
       
@@ -1239,6 +1241,60 @@ function HomeContent() {
     };
   }, []);
 
+  // 모바일 가상 키보드 대응: visualViewport 크기가 변경될 때 컨테이너 높이를 맞춰주어 상단 고정바가 밀려나지 않도록 처리
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
+      
+      // 키보드가 올라왔을 때 윈도우 스크롤이 강제로 이동하는 현상 방지
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        window.scrollTo(0, 0);
+        const mainEl = document.querySelector('main');
+        if (mainEl) mainEl.scrollTop = 0;
+      }
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
+
+  // 인풋 포커스 시 브라우저가 화면을 강제로 올리는 기본 스크롤 동작 방지 및 고정
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      const mainEl = document.querySelector('main');
+      if (mainEl) mainEl.scrollTop = 0;
+    };
+
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        resetScroll();
+        // 브라우저의 기본 포커스 동작 완료 후에도 스크롤 상태를 제어하기 위해 딜레이 실행
+        setTimeout(resetScroll, 50);
+        setTimeout(resetScroll, 150);
+        setTimeout(resetScroll, 300);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocus);
+    return () => {
+      document.removeEventListener('focusin', handleFocus);
+    };
+  }, []);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     if (target.scrollHeight - target.scrollTop - target.clientHeight < 100) {
@@ -1256,9 +1312,9 @@ function HomeContent() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
+    <div className="flex h-[var(--visual-viewport-height,100vh)] w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className={`w-full bg-background md:bg-sidebar/40 border-r border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
+      <aside className={`w-full bg-background md:bg-sidebar/40 md:border-r md:border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
         viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-10 md:z-auto' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
       }`}>
         <div className="h-16 hidden md:flex items-center px-4 border-b border-border shrink-0">
@@ -1270,7 +1326,7 @@ function HomeContent() {
                 <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="text-[14px] font-black text-foreground tracking-tight group-hover:text-primary transition-colors">Game Diary</span>
+            <span className="text-[14px] font-black text-foreground tracking-tight group-hover:text-foreground transition-colors">Game Diary</span>
           </Link>
         </div>
 
@@ -1459,7 +1515,7 @@ function HomeContent() {
           }`}
         >
           <div className="relative group w-full">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-primary/60 transition-colors">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground/40 group-focus-within:text-foreground/60 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
             <input 
@@ -1521,30 +1577,44 @@ function HomeContent() {
               {listTab === 'notifications' && (
                 <div className="absolute top-0 left-0 right-0 bg-transparent z-20 select-none pointer-events-auto">
                   {/* Stationary Gradient Overlay */}
-                  <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
+                  <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
 
                   {/* Switcher Buttons Row */}
                   <div className="relative z-20 pt-3 pb-1.5 px-3 flex items-center justify-between w-full">
-                    <div className="flex items-center gap-1.5 w-max ml-1 mt-1">
+                    <div className="flex items-center gap-1.5 w-max ml-1 mt-1 select-none">
                       <button
                         onClick={() => setNotifFilter('all')}
-                        className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
+                        className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
                           notifFilter === 'all'
-                            ? 'bg-[#e94a44] text-white font-bold shadow-xs'
-                            : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs'
+                            ? 'text-white font-bold shadow-xs z-10'
+                            : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs z-0'
                         }`}
                       >
-                        모든 알림
+                        {notifFilter === 'all' && (
+                          <motion.div 
+                            layoutId="notifTabBg" 
+                            className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs z-0" 
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10">모든 알림</span>
                       </button>
                       <button
                         onClick={() => setNotifFilter('unread')}
-                        className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center transition-all ${
+                        className={`px-3.5 rounded-full text-[12px] h-7 flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
                           notifFilter === 'unread'
-                            ? 'bg-[#e94a44] text-white font-bold shadow-xs'
-                            : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs'
+                            ? 'text-white font-bold shadow-xs z-10'
+                            : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs z-0'
                         }`}
                       >
-                        읽지 않은 알림
+                        {notifFilter === 'unread' && (
+                          <motion.div 
+                            layoutId="notifTabBg" 
+                            className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs z-0" 
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10">읽지 않은 알림</span>
                       </button>
                     </div>
                     <button
@@ -1557,23 +1627,25 @@ function HomeContent() {
                 </div>
               )}
 
-              {/* 2. If listTab === 'active' || listTab === 'trash', render absolute sort bar! */}
-              {(listTab === 'active' || listTab === 'trash') && (
+              {/* 2. If listTab === 'active', render absolute sort bar! */}
+              {listTab === 'active' && (
                 <div className="absolute top-0 left-0 right-0 bg-transparent z-20 h-8 flex items-center justify-between pl-2 pr-[14px] md:pl-5 md:pr-[26px] shrink-0">
                   {/* Stationary Gradient Overlay */}
                   <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
+                  <div />
+                  <SidebarSortDropdown className="translate-y-2 z-20" currentSort={sortBy} onSortChange={setSortBy} />
+                </div>
+              )}
 
-                  {listTab === 'active' ? (
-                    <>
-                      <div />
-                      <SidebarSortDropdown className="translate-y-2 z-20" currentSort={sortBy} onSortChange={setSortBy} />
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-muted-foreground/60 select-none pl-3.5 md:pl-2 relative z-20">
-                      <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                      <span className="text-[10px] font-bold">7일 후 영구 삭제됩니다.</span>
-                    </div>
-                  )}
+              {/* 3. If listTab === 'trash', render static header with text and divider matching calendar tab */}
+              {listTab === 'trash' && (
+                <div className="shrink-0 flex flex-col pt-3 pb-0 select-none animate-in fade-in duration-300">
+                  <div className="flex items-center gap-1.5 text-muted-foreground/60 pl-5 relative z-20 pb-2.5">
+                    <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                    <span className="text-[10px] font-bold">7일 후 영구 삭제됩니다.</span>
+                  </div>
+                  {/* Divider matching the calendar tab divider exactly */}
+                  <div className="mx-4 md:mx-5 border-b border-border/60 shrink-0" />
                 </div>
               )}
 
@@ -1584,37 +1656,64 @@ function HomeContent() {
                     {/* Calendar Header */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-foreground px-3 h-[28px] rounded-full select-none ml-2">
-                          <span className="text-[12.5px] font-bold">
+                        <div className="relative flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-foreground w-[96px] shrink-0 h-[28px] rounded-full select-none ml-2 cursor-pointer active:scale-95 transition-transform duration-100">
+                          <span className="text-[12.5px] font-bold relative z-10">
                             {calendarMonth.getFullYear()}년 {calendarMonth.getMonth() + 1}월
                           </span>
+                          <input 
+                            type="month"
+                            value={`${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}`}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val) {
+                                const [year, month] = val.split('-').map(Number);
+                                setCalendarMonth(new Date(year, month - 1, 1));
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20"
+                            style={{ WebkitAppearance: 'none' }}
+                          />
                         </div>
-                        <div className="flex items-center gap-1 p-0 rounded-full h-[28px] select-none">
+                        <div className="flex items-center gap-1.5 w-max h-[28px] select-none">
                           <button
                             onClick={() => {
                               setCalendarDirection(0);
                               setCalendarViewMode('week');
                             }}
-                            className={`px-3 rounded-full text-[11.5px] h-[28px] flex items-center justify-center transition-all cursor-pointer ${
+                            className={`px-3 rounded-full text-[11.5px] h-full flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
                               calendarViewMode === 'week'
-                                ? 'bg-[#e94a44] text-white font-bold shadow-xs'
-                                : 'bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground/75 hover:text-foreground/80'
+                                ? 'text-white font-bold shadow-xs z-10'
+                                : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs z-0'
                             }`}
                           >
-                            주간
+                            {calendarViewMode === 'week' && (
+                              <motion.div 
+                                layoutId="calendarTabBg" 
+                                className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs z-0" 
+                                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                              />
+                            )}
+                            <span className="relative z-10">주간</span>
                           </button>
                           <button
                             onClick={() => {
                               setCalendarDirection(0);
                               setCalendarViewMode('month');
                             }}
-                            className={`px-3 rounded-full text-[11.5px] h-[28px] flex items-center justify-center transition-all cursor-pointer ${
+                            className={`px-3 rounded-full text-[11.5px] h-full flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
                               calendarViewMode === 'month'
-                                ? 'bg-[#e94a44] text-white font-bold shadow-xs'
-                                : 'bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground/75 hover:text-foreground/80'
+                                ? 'text-white font-bold shadow-xs z-10'
+                                : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs z-0'
                             }`}
                           >
-                            월간
+                            {calendarViewMode === 'month' && (
+                              <motion.div 
+                                layoutId="calendarTabBg" 
+                                className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs z-0" 
+                                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                              />
+                            )}
+                            <span className="relative z-10">월간</span>
                           </button>
                         </div>
                       </div>
@@ -1710,7 +1809,7 @@ function HomeContent() {
                           exit="exit"
                           transition={{
                             x: { type: "spring", stiffness: 400, damping: 38 },
-                            opacity: { duration: 0.25 }
+                            opacity: { duration: calendarDirection === 0 ? 0 : 0.25 }
                           }}
                           className="flex flex-col w-full"
                         >
@@ -1820,30 +1919,21 @@ function HomeContent() {
                     </div>
                   </div>
 
-                  {/* Fixed Date Label & Divider Wrapper (Fades in when view/date changes) */}
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={calendarViewMode + '-' + (selectedCalendarDate ? selectedCalendarDate.toDateString() : '')}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="shrink-0"
-                    >
-                      {selectedCalendarDate && (
-                        <div className={`shrink-0 pb-2.5 pl-3 md:pl-2 select-none transition-all duration-200 ${
-                          calendarViewMode === 'week' ? 'pt-[24px]' : 'pt-3.5'
-                        }`}>
-                          <h4 className="text-[14px] font-semibold text-black dark:text-white tracking-tight">
-                            {selectedCalendarDate.getFullYear()}년 {selectedCalendarDate.getMonth() + 1}월 {selectedCalendarDate.getDate()}일의 일기
-                          </h4>
-                        </div>
-                      )}
+                  {/* Fixed Date Label & Divider Wrapper */}
+                  <div className="shrink-0">
+                    {selectedCalendarDate && (
+                      <div className={`shrink-0 pb-2.5 pl-3 md:pl-2 select-none transition-all duration-200 ${
+                        calendarViewMode === 'week' ? 'pt-[24px]' : 'pt-3.5'
+                      }`}>
+                        <h4 className="text-[14px] font-semibold text-black dark:text-white tracking-tight">
+                          {selectedCalendarDate.getFullYear()}년 {selectedCalendarDate.getMonth() + 1}월 {selectedCalendarDate.getDate()}일의 일기
+                        </h4>
+                      </div>
+                    )}
 
-                      {/* Divider with 8px margin on each side */}
-                      <div className="mx-2 border-b border-border/60 shrink-0" />
-                    </motion.div>
-                  </AnimatePresence>
+                    {/* Divider with 8px margin on each side */}
+                    <div className="mx-2 border-b border-border/60 shrink-0" />
+                  </div>
 
                   {/* Daily Diary List (Scrollable) */}
                   <div 
@@ -1884,7 +1974,9 @@ function HomeContent() {
 
                             if (selectedDateSessions.length === 0) {
                               return (
-                                <p className="text-[11px] font-bold text-muted-foreground/30 text-center pt-[130px] pb-4 select-none">생성된 일기가 없습니다.</p>
+                                <p className={`text-[11px] font-bold text-muted-foreground/30 text-center pb-4 select-none ${
+                                  calendarViewMode === 'week' ? 'pt-[240px]' : 'pt-[130px]'
+                                }`}>생성된 일기가 없습니다.</p>
                               );
                             }
 
@@ -1916,7 +2008,9 @@ function HomeContent() {
                   className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
                     listTab === 'notifications' 
                       ? 'px-1 pt-12' 
-                      : 'px-2 md:px-3 pt-8 md:pt-1'
+                      : listTab === 'trash'
+                        ? 'px-2 md:px-3 pt-2 md:pt-1'
+                        : 'px-2 md:px-3 pt-8 md:pt-1'
                   }`}
                 >
                   {/* Pull-to-refresh Indicator */}
@@ -2018,7 +2112,7 @@ function HomeContent() {
                                         {targetSession?.guild_icon ? (
                                           <img src={targetSession.guild_icon} className="w-full h-full object-cover" alt="" />
                                         ) : (
-                                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-foreground">
                                             {targetSession?.guild_name?.charAt(0) || 'G'}
                                           </div>
                                         )}
@@ -2275,7 +2369,7 @@ function HomeContent() {
                                                 />
                                               </div>
                                               <span className="translate-y-[-0.5px]">{displayName}</span>
-                                              <span className="text-primary/60 font-bold font-sans text-[9.5px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
+                                              <span className="text-foreground/60 font-bold font-sans text-[9.5px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
                                             </div>
                                           );
                                         })}
@@ -2312,7 +2406,7 @@ function HomeContent() {
                             // Left Card: Detailed Game Info & Screenshots (2 cols)
                             {
                               title: game.title,
-                              icon: game.icon_url ? <img src={game.icon_url} className="w-10 h-10 object-contain" alt="" /> : <Gamepad2 className="w-10 h-10 text-primary" />,
+                              icon: game.icon_url ? <img src={game.icon_url} className="w-10 h-10 object-contain" alt="" /> : <Gamepad2 className="w-10 h-10 text-foreground" />,
                               meta: (
                                 <div className="flex items-center gap-1.5 leading-none">
                                   <Clock className="hidden md:block w-2.5 h-2.5 opacity-40" />
@@ -2324,7 +2418,7 @@ function HomeContent() {
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); toggleGameStats(game.id); }}
                                     data-playtime-toggle="true"
-                                    className={`group/btn flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[10px] font-sans font-bold uppercase tracking-widest leading-none ${isExpanded ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
+                                    className={`group/btn flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[10px] font-sans font-bold uppercase tracking-widest leading-none ${isExpanded ? 'bg-primary text-foreground-foreground shadow-lg' : 'bg-primary/5 text-foreground hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
                                   >
                                     <span className="translate-y-[-0.5px]">{formatDurationText(game.play_time_min)}</span>
                                     <motion.div
@@ -2364,7 +2458,7 @@ function HomeContent() {
                                                       : maskNickname(profiles[p.user_id]?.display_name || '알 수 없음')}
                                                   </span>
                                                 </div>
-                                                <span className="text-[9.5px] font-sans font-bold text-primary/60 shrink-0 whitespace-nowrap translate-y-[-0.5px]">{formatDurationText(p.play_time_min)}</span>
+                                                <span className="text-[9.5px] font-sans font-bold text-foreground/60 shrink-0 whitespace-nowrap translate-y-[-0.5px]">{formatDurationText(p.play_time_min)}</span>
                                               </div>
                                             ))}
                                         </div>
@@ -2382,7 +2476,7 @@ function HomeContent() {
                                       whileHover="hover"
                                       className="flex items-center gap-1 group/label cursor-pointer select-none"
                                     >
-                                      <span className="text-[12px] font-bold tracking-tight text-primary/60 group-hover/label:text-primary transition-colors duration-200">
+                                      <span className="text-[12px] font-bold tracking-tight text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200">
                                         하이라이트
                                       </span>
                                       <motion.div
@@ -2390,7 +2484,7 @@ function HomeContent() {
                                           hover: { x: 2 }
                                         }}
                                         transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                                        className="text-primary/60 group-hover/label:text-primary transition-colors duration-200 flex items-center"
+                                        className="text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200 flex items-center"
                                       >
                                         <ChevronRight className="w-3 h-3" />
                                       </motion.div>
@@ -2472,14 +2566,14 @@ function HomeContent() {
                                             <button
                                               onClick={() => pagination.goToFirstPage()}
                                               disabled={pagination.page === 1}
-                                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-primary rounded-lg transition-colors disabled:opacity-10 disabled:pointer-events-none"
+                                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors disabled:opacity-10 disabled:pointer-events-none"
                                             >
                                               <ChevronsLeft className="w-4 h-4 stroke-[2.5]" />
                                             </button>
                                           )}
                                         </Pagination.Context>
 
-                                        <Pagination.PrevTrigger className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-primary rounded-lg transition-colors data-disabled:opacity-10 data-disabled:pointer-events-none">
+                                        <Pagination.PrevTrigger className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors data-disabled:opacity-10 data-disabled:pointer-events-none">
                                           <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
                                         </Pagination.PrevTrigger>
 
@@ -2491,7 +2585,7 @@ function HomeContent() {
                                                   key={index}
                                                   {...page}
                                                   className="inline-flex items-center justify-center w-8 h-8 text-[11px] font-black tabular-nums rounded-lg transition-all cursor-pointer hover:bg-muted
-                                                             data-selected:bg-primary data-selected:text-primary-foreground data-selected:shadow-md data-selected:shadow-primary/20"
+                                                             data-selected:bg-primary data-selected:text-foreground-foreground data-selected:shadow-md data-selected:shadow-primary/20"
                                                 >
                                                   {page.value}
                                                 </Pagination.Item>
@@ -2508,7 +2602,7 @@ function HomeContent() {
                                           }
                                         </Pagination.Context>
 
-                                        <Pagination.NextTrigger className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-primary rounded-lg transition-colors data-disabled:opacity-10 data-disabled:pointer-events-none">
+                                        <Pagination.NextTrigger className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors data-disabled:opacity-10 data-disabled:pointer-events-none">
                                           <ChevronRight className="w-4 h-4 stroke-[2.5]" />
                                         </Pagination.NextTrigger>
 
@@ -2517,7 +2611,7 @@ function HomeContent() {
                                             <button
                                               onClick={() => pagination.goToLastPage()}
                                               disabled={pagination.page === pagination.totalPages}
-                                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-primary rounded-lg transition-colors disabled:opacity-10 disabled:pointer-events-none"
+                                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors disabled:opacity-10 disabled:pointer-events-none"
                                             >
                                               <ChevronsRight className="w-4 h-4 stroke-[2.5]" />
                                             </button>
@@ -2638,7 +2732,7 @@ function HomeContent() {
                       <FolderInput className="w-6.5 h-6.5" />
                       
                       {/* Notification Badge: Scaled down for smaller FAB */}
-                      <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-primary text-[12px] flex items-center justify-center font-black shadow-lg ring-4 ring-background border-none animate-in zoom-in duration-300">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-foreground text-[12px] flex items-center justify-center font-black shadow-lg ring-4 ring-background border-none animate-in zoom-in duration-300">
                         {current.screenshots.filter((s: any) => !s.game_title).length}
                       </div>
 
@@ -2664,14 +2758,14 @@ function HomeContent() {
                         <div className="flex items-center gap-2 mb-1">
                           <button 
                             onClick={() => uncatCarouselApi?.scrollPrev()}
-                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
                             disabled={!canScrollPrev}
                           >
                             <ArrowLeft className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => uncatCarouselApi?.scrollNext()}
-                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
                             disabled={!canScrollNext}
                           >
                             <ArrowRight className="w-4 h-4" />
@@ -2788,7 +2882,7 @@ function HomeContent() {
                       onClick={() => setReactionDetailEmoji(emoji)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
                         isSelected 
-                          ? 'bg-primary/10 border-primary text-primary shadow-sm' 
+                          ? 'bg-primary/10 border-primary text-foreground shadow-sm' 
                           : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted/85 hover:border-muted-foreground/30'
                       }`}
                     >
@@ -2870,7 +2964,7 @@ function HomeContent() {
               <div className="flex flex-col w-full gap-1.5">
                 <a 
                   href="tel:010-7109-8131"
-                  className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-primary text-primary-foreground font-bold text-[12px] shadow-md shadow-primary/10 hover:bg-primary/90 active:scale-98 transition-all"
+                  className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-primary text-foreground-foreground font-bold text-[12px] shadow-md shadow-primary/10 hover:bg-primary/90 active:scale-98 transition-all"
                 >
                   <span>전화걸기</span>
                 </a>

@@ -5,6 +5,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 import ScreenshotItem from "./ScreenshotItem";
 import UploadPlaceholder from "./UploadPlaceholder";
 import { maskNickname } from "@/src/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 interface MobileScreenshotCarouselProps {
   gameShots: any[];
@@ -66,13 +67,11 @@ export default function MobileScreenshotCarousel({
       {/* Mobile Header Row: Highlight title and Dots Indicator */}
       <div className="flex items-center justify-between mb-2 pl-[4px]">
         <div className="flex items-center gap-1 group/label cursor-pointer select-none">
-          <span className="text-[12px] font-bold tracking-tight text-primary/60 group-hover/label:text-primary transition-colors duration-200">
+          <span className="text-[12px] font-bold tracking-tight text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200">
             하이라이트
           </span>
-          <div className="text-primary/60 group-hover/label:text-primary transition-colors duration-200 flex items-center">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="translate-y-[-0.5px]">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+          <div className="text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200 flex items-center">
+            <ChevronRight className="w-3 h-3" />
           </div>
         </div>
 
