@@ -202,7 +202,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
             <div className="flex items-center gap-2 shrink-0">
               <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
               <span className="text-[11px] font-black text-muted-foreground/60 uppercase tracking-wider tabular-nums">
-                {formatTime(current.start_time)} — {formatTime(current.end_time)}
+                {formatTime(current.start_time)} - {formatTime(current.end_time)}
               </span>
             </div>
             {/* Total Duration */}

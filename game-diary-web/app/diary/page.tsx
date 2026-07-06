@@ -109,7 +109,7 @@ function DiaryListItem({
               s.guild_icon ? (
                 <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
               ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-foreground">
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
                   {s.guild_name.charAt(0)}
                 </div>
               )
@@ -122,7 +122,7 @@ function DiaryListItem({
             )}
           </div>
           <span className="text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium">{s.title}</span>
-          <span className="text-[11px] font-mono tracking-tighter opacity-70 shrink-0 flex items-center gap-1.5 select-none">
+          <span className="text-[11px] font-sans tracking-tighter opacity-70 shrink-0 flex items-center gap-1.5 select-none">
             {isTrash ? (
               <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {/* 되돌리기 (복원) 버튼 */}
@@ -1253,8 +1253,10 @@ function HomeContent() {
       // 키보드가 올라왔을 때 윈도우 스크롤이 강제로 이동하는 현상 방지
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
         window.scrollTo(0, 0);
-        const mainEl = document.querySelector('main');
-        if (mainEl) mainEl.scrollTop = 0;
+        // 포커스된 입력창이 키보드에 가려지지 않도록 스크롤링
+        setTimeout(() => {
+          document.activeElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }, 100);
       }
     };
 
@@ -1274,8 +1276,6 @@ function HomeContent() {
 
     const resetScroll = () => {
       window.scrollTo(0, 0);
-      const mainEl = document.querySelector('main');
-      if (mainEl) mainEl.scrollTop = 0;
     };
 
     const handleFocus = (e: FocusEvent) => {
@@ -1286,6 +1286,11 @@ function HomeContent() {
         setTimeout(resetScroll, 50);
         setTimeout(resetScroll, 150);
         setTimeout(resetScroll, 300);
+
+        // 포커스된 인풋이 가려지지 않도록 스크롤하여 보이게 함
+        setTimeout(() => {
+          target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }, 100);
       }
     };
 
@@ -2112,7 +2117,7 @@ function HomeContent() {
                                         {targetSession?.guild_icon ? (
                                           <img src={targetSession.guild_icon} className="w-full h-full object-cover" alt="" />
                                         ) : (
-                                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-foreground">
+                                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
                                             {targetSession?.guild_name?.charAt(0) || 'G'}
                                           </div>
                                         )}
@@ -2273,7 +2278,7 @@ function HomeContent() {
                     <div className="md:hidden px-3 pt-2 pb-0">
                       <div 
                         onClick={!isMetadataExpanded ? () => setIsMetadataExpanded(true) : undefined}
-                        className={`relative rounded-2xl overflow-hidden py-2.5 px-4 bg-card backdrop-blur-sm transition-all duration-200 ${
+                        className={`relative rounded-2xl overflow-hidden py-2 px-4 bg-card backdrop-blur-sm transition-all duration-200 ${
                           !isMetadataExpanded ? 'cursor-pointer select-none active:scale-[0.995] active:bg-muted/30' : ''
                         }`}
                       >
@@ -2292,8 +2297,7 @@ function HomeContent() {
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <span 
-                                className="font-mono font-bold text-muted-foreground text-[13px] leading-none translate-y-[-0.5px] pl-1 inline-block shrink-0 select-none"
-                                style={{ wordSpacing: '-0.18em' }}
+                                className="font-sans font-bold text-muted-foreground text-[13px] leading-none translate-y-[-0.5px] pl-1 inline-block shrink-0 select-none"
                               >
                                 {formatDate(current.start_time || current.date)}
                               </span>
@@ -2301,7 +2305,7 @@ function HomeContent() {
                                 <motion.span 
                                   layoutId="duration-badge"
                                   transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                                  className="inline-flex items-center justify-center bg-[#e94a44] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none shrink-0"
+                                  className="inline-flex items-center justify-center bg-[#e94a44] text-white font-sans font-bold text-[11px] px-2.5 py-1.5 rounded-full select-none leading-none shrink-0"
                                 >
                                   <span className="translate-y-[-0.5px]">{formatDurationText(current.total_duration_min)}</span>
                                 </motion.span>
@@ -2313,15 +2317,14 @@ function HomeContent() {
                               {isMetadataExpanded ? (
                                 <>
                                   <span 
-                                    className="text-[11px] font-bold text-muted-foreground/50 font-mono select-none translate-y-[-0.5px] shrink-0"
-                                    style={{ wordSpacing: '-0.18em' }}
+                                    className="text-[11px] font-bold text-muted-foreground/50 font-sans select-none translate-y-[-0.5px] shrink-0"
                                   >
-                                    {formatTime(current.start_time)} — {formatTime(current.end_time)}
+                                    {formatTime(current.start_time)} - {formatTime(current.end_time)}
                                   </span>
                                   <motion.span 
                                     layoutId="duration-badge"
                                     transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                                    className="inline-flex items-center justify-center bg-[#e94a44] text-white font-sans font-bold text-[10px] px-2.5 py-1.5 rounded-full tracking-widest uppercase select-none leading-none"
+                                    className="inline-flex items-center justify-center bg-[#e94a44] text-white font-sans font-bold text-[11px] px-2.5 py-1.5 rounded-full select-none leading-none"
                                   >
                                     <span className="translate-y-[-0.5px]">{formatDurationText(current.total_duration_min)}</span>
                                   </motion.span>
@@ -2369,7 +2372,7 @@ function HomeContent() {
                                                 />
                                               </div>
                                               <span className="translate-y-[-0.5px]">{displayName}</span>
-                                              <span className="text-foreground/60 font-bold font-sans text-[9.5px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
+                                              <span className="text-primary font-bold font-sans text-[9.5px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
                                             </div>
                                           );
                                         })}
@@ -2408,9 +2411,8 @@ function HomeContent() {
                               title: game.title,
                               icon: game.icon_url ? <img src={game.icon_url} className="w-10 h-10 object-contain" alt="" /> : <Gamepad2 className="w-10 h-10 text-foreground" />,
                               meta: (
-                                <div className="flex items-center gap-1.5 leading-none">
-                                  <Clock className="hidden md:block w-2.5 h-2.5 opacity-40" />
-                                  <span className="translate-y-[-0.5px]">{formatTime(game.start_time)} — {formatTime(game.end_time)}</span>
+                                <div className="flex items-center leading-none">
+                                  <span className="translate-y-[-0.5px]">{formatTime(game.start_time)} - {formatTime(game.end_time)}</span>
                                 </div>
                               ),
                               status: (
@@ -2418,7 +2420,7 @@ function HomeContent() {
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); toggleGameStats(game.id); }}
                                     data-playtime-toggle="true"
-                                    className={`group/btn flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[10px] font-sans font-bold uppercase tracking-widest leading-none ${isExpanded ? 'bg-primary text-foreground-foreground shadow-lg' : 'bg-primary/5 text-foreground hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
+                                    className={`group/btn flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[11px] font-sans font-bold leading-none ${isExpanded ? 'bg-primary text-white shadow-lg' : 'bg-primary/5 text-primary hover:bg-primary/10 hover:scale-105 active:scale-95'}`}
                                   >
                                     <span className="translate-y-[-0.5px]">{formatDurationText(game.play_time_min)}</span>
                                     <motion.div
@@ -2458,7 +2460,7 @@ function HomeContent() {
                                                       : maskNickname(profiles[p.user_id]?.display_name || '알 수 없음')}
                                                   </span>
                                                 </div>
-                                                <span className="text-[9.5px] font-sans font-bold text-foreground/60 shrink-0 whitespace-nowrap translate-y-[-0.5px]">{formatDurationText(p.play_time_min)}</span>
+                                                <span className="text-[9.5px] font-sans font-bold text-primary shrink-0 whitespace-nowrap translate-y-[-0.5px]">{formatDurationText(p.play_time_min)}</span>
                                               </div>
                                             ))}
                                         </div>

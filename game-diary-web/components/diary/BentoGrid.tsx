@@ -61,7 +61,7 @@ function BentoGrid({ items }: BentoGridProps) {
                                             {item.title}
                                         </h3>
                                         {item.meta && (
-                                            <div className="md:hidden text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider opacity-60 mt-1 ml-0.5">
+                                            <div className="text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-1">
                                                 {item.meta}
                                             </div>
                                         )}
@@ -74,11 +74,6 @@ function BentoGrid({ items }: BentoGridProps) {
                                 </div>
                                 
                                 <div className="flex items-center justify-end gap-3 shrink-0">
-                                    {item.meta && (
-                                        <div className="hidden md:block text-[10px] text-muted-foreground font-mono font-bold uppercase tracking-wider opacity-60 mt-1">
-                                            {item.meta}
-                                        </div>
-                                    )}
                                     {item.status && (
                                         <div className="hidden md:flex shrink-0 items-center h-6 mt-1">
                                             {item.status}
