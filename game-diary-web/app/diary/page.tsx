@@ -2232,21 +2232,27 @@ function HomeContent() {
                           </div>
                         )
                       ) : (
-                        (isMobile ? mobileSessions : paginatedSessions).map(s => (
-                          <DiaryListItem 
-                            key={s.id}
-                            session={s}
-                            isSelected={selectedId === s.id}
-                            isFavorite={favoriteSessionIds.has(s.id)}
-                            onSelect={handleDiarySelect}
-                            onToggleFavorite={handleToggleFavorite}
-                            isTrash={listTab === 'trash'}
-                            currentUserId={session?.user?.id}
-                            onRestore={handleRestoreDiary}
-                            onPermanentDelete={handlePermanentDeleteDiary}
-                            creatorAvatarUrl={profiles[s.session_participants?.[0]?.user_id]?.avatar_url}
-                          />
-                        ))
+                        <motion.div
+                          animate={isRefreshing ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
+                          transition={isRefreshing ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
+                          className="space-y-1"
+                        >
+                          {(isMobile ? mobileSessions : paginatedSessions).map(s => (
+                            <DiaryListItem 
+                              key={s.id}
+                              session={s}
+                              isSelected={selectedId === s.id}
+                              isFavorite={favoriteSessionIds.has(s.id)}
+                              onSelect={handleDiarySelect}
+                              onToggleFavorite={handleToggleFavorite}
+                              isTrash={listTab === 'trash'}
+                              currentUserId={session?.user?.id}
+                              onRestore={handleRestoreDiary}
+                              onPermanentDelete={handlePermanentDeleteDiary}
+                              creatorAvatarUrl={profiles[s.session_participants?.[0]?.user_id]?.avatar_url}
+                            />
+                          ))}
+                        </motion.div>
                       )
                     )}
                   </div>
