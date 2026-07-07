@@ -1781,7 +1781,7 @@ function HomeContent() {
                     </div>
 
                     {/* Day Headers */}
-                    <div className="grid grid-cols-7 gap-1 text-center select-none mb-2.5 pb-0 border-none">
+                    <div className="grid grid-cols-7 gap-1 text-center select-none mb-1 pb-0 border-none">
                       {['일', '월', '화', '수', '목', '금', '토'].map((d) => (
                         <span 
                           key={d} 
