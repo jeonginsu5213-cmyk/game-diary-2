@@ -124,8 +124,8 @@ client.on('guildCreate', async (guild) => {
         const newChannel = await guild.channels.create({
             name: '일기장',
             type: ChannelType.GuildText,
-            topic: `사용방법 보기
-
+            topic: `
+사용방법 보기
 1. 서버의 음성 채널에서 친구들과 게임을 플레이합니다.
 2. 플레이 도중 남길 코멘트나 스크린샷을 이 #일기장 채널에 자유롭게 전송하세요.
 3. 음성 채널의 모든 인원이 퇴장하면, 자동으로 멋진 일기가 완성되어 발행 링크가 전송됩니다!
