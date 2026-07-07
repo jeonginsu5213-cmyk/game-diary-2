@@ -2270,7 +2270,7 @@ function HomeContent() {
                                   href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="underline text-primary hover:text-primary/90 font-medium cursor-pointer"
+                                  className="text-primary hover:underline hover:text-primary/90 font-medium cursor-pointer"
                                 >
                                   봇 추가하기
                                 </a>
