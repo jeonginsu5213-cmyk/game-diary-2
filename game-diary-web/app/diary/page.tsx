@@ -1894,7 +1894,7 @@ function HomeContent() {
                                       setSelectedCalendarDate(dateObj);
                                       setCalendarMonth(dateObj);
                                     }}
-                                    className={`w-9 h-9 rounded-full flex flex-col items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
                                       isSelected 
                                         ? isToday
                                           ? 'bg-[#e94a44] text-white font-bold shadow-sm z-10'
@@ -1907,19 +1907,13 @@ function HomeContent() {
                                     }`}
                                     style={{ fontSize: '17px' }}
                                   >
-                                    <span className={sessionIcon ? "translate-y-[-3px]" : ""}>
-                                      {cell.day}
-                                    </span>
-                                    {sessionIcon && (
-                                      <div className={`absolute bottom-[2px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 ${
-                                        isSelected 
-                                          ? 'border-[1px] border-white' 
-                                          : 'border-[1px] border-background'
-                                      }`}>
-                                        {sessionIcon}
-                                      </div>
-                                    )}
+                                    {cell.day}
                                   </button>
+                                  {sessionIcon && (
+                                    <div className="absolute bottom-[2px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 border-[1.5px] border-background">
+                                      {sessionIcon}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             };
