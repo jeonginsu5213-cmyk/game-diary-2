@@ -2044,29 +2044,11 @@ function HomeContent() {
                     data-scroll-container="true"
                     className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] pt-1"
                   >
-                    {/* Pull-to-refresh Indicator */}
-                    <div 
-                      data-pull-indicator="true"
-                      className="w-full flex items-center justify-center overflow-hidden h-0 opacity-0"
-                      style={{
-                        height: isRefreshing ? '50px' : undefined,
-                        opacity: isRefreshing ? 1 : undefined
-                      }}
-                    >
-                      <div className="flex items-center justify-center py-2">
-                        <RotateCcw 
-                          data-pull-icon="true"
-                          strokeWidth={2.75}
-                          className={`w-[22px] h-[22px] text-[#e94a44] ${isRefreshing ? 'animate-spin-reverse' : ''}`}
-                        />
-                      </div>
-                    </div>
-
                     {selectedCalendarDate && (
                       <div className="pt-0 animate-in slide-in-from-bottom-1 duration-200">
                         <motion.div 
-                          animate={isRefreshing ? { opacity: [1, 0.4, 1, 0.4, 1] } : { opacity: 1 }}
-                          transition={isRefreshing ? { repeat: Infinity, duration: 0.8, ease: "easeInOut" } : { duration: 0.2 }}
+                          animate={isRefreshing ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
+                          transition={isRefreshing ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
                           className="space-y-1"
                         >
                           {(() => {
