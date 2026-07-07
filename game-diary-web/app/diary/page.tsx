@@ -1398,22 +1398,15 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('active')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none ${
+            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
               listTab === 'active' 
-                ? 'flex-1 bg-transparent text-foreground px-5' 
-                : 'w-14 bg-[#e8ebed]/40 hover:bg-[#e8ebed]/70 dark:bg-muted/20 dark:hover:bg-muted/40 text-muted-foreground'
+                ? 'flex-1 text-foreground px-5' 
+                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="목록"
           >
-            {listTab === 'active' && (
-              <motion.div 
-                layoutId="activeTabBg" 
-                className="absolute inset-0 bg-[#e8ebed] dark:bg-muted rounded-full shadow-xs z-0" 
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <List className={`w-4 h-4 ${listTab === 'active' ? 'fill-foreground text-foreground' : ''}`} />
               {listTab === 'active' && <span>목록</span>}
@@ -1424,22 +1417,15 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('calendar')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none ${
+            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
               listTab === 'calendar' 
-                ? 'flex-1 bg-transparent text-foreground px-5' 
-                : 'w-14 bg-[#e8ebed]/40 hover:bg-[#e8ebed]/70 dark:bg-muted/20 dark:hover:bg-muted/40 text-muted-foreground'
+                ? 'flex-1 text-foreground px-5' 
+                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="캘린더"
           >
-            {listTab === 'calendar' && (
-              <motion.div 
-                layoutId="activeTabBg" 
-                className="absolute inset-0 bg-[#e8ebed] dark:bg-muted rounded-full shadow-xs z-0" 
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <Calendar className={`w-4 h-4 ${listTab === 'calendar' ? 'fill-foreground text-foreground' : ''}`} />
               {listTab === 'calendar' && <span>캘린더</span>}
@@ -1450,22 +1436,15 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('trash')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none ${
+            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
               listTab === 'trash' 
-                ? 'flex-1 bg-transparent text-foreground px-5' 
-                : 'w-14 bg-[#e8ebed]/40 hover:bg-[#e8ebed]/70 dark:bg-muted/20 dark:hover:bg-muted/40 text-muted-foreground'
+                ? 'flex-1 text-foreground px-5' 
+                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="휴지통"
           >
-            {listTab === 'trash' && (
-              <motion.div 
-                layoutId="activeTabBg" 
-                className="absolute inset-0 bg-[#e8ebed] dark:bg-muted rounded-full shadow-xs z-0" 
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <Trash2 className={`w-4 h-4 ${listTab === 'trash' ? 'fill-foreground text-foreground' : ''}`} />
               {listTab === 'trash' && <span>휴지통</span>}
@@ -1476,22 +1455,15 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('notifications')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none ${
+            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
               listTab === 'notifications' 
-                ? 'flex-1 bg-transparent text-foreground px-5' 
-                : 'w-14 bg-[#e8ebed]/40 hover:bg-[#e8ebed]/70 dark:bg-muted/20 dark:hover:bg-muted/40 text-muted-foreground'
+                ? 'flex-1 text-foreground px-5' 
+                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="알림"
           >
-            {listTab === 'notifications' && (
-              <motion.div 
-                layoutId="activeTabBg" 
-                className="absolute inset-0 bg-[#e8ebed] dark:bg-muted rounded-full shadow-xs z-0" 
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <span className="relative">
                 <Bell className={`w-4 h-4 ${listTab === 'notifications' ? 'fill-foreground text-foreground' : ''}`} />
@@ -2053,7 +2025,7 @@ function HomeContent() {
               ) : (
                 <div 
                   data-scroll-container="true"
-                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
+                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] flex flex-col ${
                     listTab === 'notifications' 
                       ? 'px-1 pt-12' 
                       : listTab === 'trash'
@@ -2079,11 +2051,15 @@ function HomeContent() {
                     </div>
                   </div>
 
-                  <div className="space-y-0 min-h-[396px] w-full">
+                  <div className={`space-y-0 w-full flex-1 flex flex-col ${
+                    (listTab === 'notifications' ? filteredNotifications.length : sortedSessions.length) > 0 
+                      ? 'min-h-[396px]' 
+                      : ''
+                  }`}>
                     {listTab === 'notifications' ? (
                       <div className="flex flex-col gap-3.5 px-1 pb-4 animate-in fade-in duration-300 select-none relative">
                         {filteredNotifications.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center min-h-[320px] text-muted-foreground/40 gap-2 select-none">
+                          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-2 select-none py-12 min-h-[320px]">
                             <Bell className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">
                               {notifFilter === 'unread' ? '읽지 않은 알림이 없습니다' : '새로운 알림이 없습니다'}
@@ -2179,12 +2155,12 @@ function HomeContent() {
                     ) : (
                       sortedSessions.length === 0 ? (
                         listTab === 'trash' ? (
-                          <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
+                          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300 py-12 min-h-[320px]">
                             <Trash2 className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center min-h-[360px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
+                          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300 py-12 min-h-[320px]">
                             <Inbox className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">작성된 일기가 없습니다</p>
                           </div>
