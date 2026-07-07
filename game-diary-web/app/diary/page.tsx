@@ -2071,7 +2071,7 @@ function HomeContent() {
               ) : (
                 <div 
                   data-scroll-container="true"
-                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] flex flex-col ${
+                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
                     listTab === 'notifications' 
                       ? 'px-1 pt-12' 
                       : listTab === 'trash'
@@ -2097,15 +2097,11 @@ function HomeContent() {
                     </div>
                   </div>
 
-                  <div className={`space-y-0 w-full flex-1 flex flex-col ${
-                    (listTab === 'notifications' ? filteredNotifications.length : sortedSessions.length) > 0 
-                      ? 'min-h-[396px]' 
-                      : ''
-                  }`}>
+                  <div className="space-y-0 min-h-[396px] w-full">
                     {listTab === 'notifications' ? (
                       <div className="flex flex-col gap-3.5 px-1 pb-4 animate-in fade-in duration-300 select-none relative">
                         {filteredNotifications.length === 0 ? (
-                          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-2 select-none py-12 min-h-[320px]">
+                          <div className="flex flex-col items-center justify-center min-h-[480px] text-muted-foreground/40 gap-2 select-none">
                             <Bell className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">
                               {notifFilter === 'unread' ? '읽지 않은 알림이 없습니다' : '새로운 알림이 없습니다'}
@@ -2201,12 +2197,12 @@ function HomeContent() {
                     ) : (
                       sortedSessions.length === 0 ? (
                         listTab === 'trash' ? (
-                          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300 py-12 min-h-[320px]">
+                          <div className="flex flex-col items-center justify-center min-h-[480px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
                             <Trash2 className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
                           </div>
                         ) : (
-                          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300 py-12 min-h-[320px]">
+                          <div className="flex flex-col items-center justify-center min-h-[480px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
                             <Inbox className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">작성된 일기가 없습니다</p>
                           </div>
