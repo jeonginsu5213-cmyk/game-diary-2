@@ -2008,7 +2008,9 @@ function HomeContent() {
                   {/* Fixed Date Label & Divider Wrapper */}
                   <div className="shrink-0">
                     {selectedCalendarDate && (
-                      <div className="shrink-0 pt-2 pb-2 pl-3 md:pl-2 select-none transition-all duration-200">
+                      <div className={`shrink-0 pb-2 pl-3 md:pl-2 select-none transition-all duration-200 ${
+                        calendarViewMode === 'week' ? 'pt-[32px]' : 'pt-2'
+                      }`}>
                         <h4 className="text-[14px] font-semibold text-black dark:text-white tracking-tight">
                           {selectedCalendarDate.getFullYear()}년 {selectedCalendarDate.getMonth() + 1}월 {selectedCalendarDate.getDate()}일의 일기
                         </h4>
