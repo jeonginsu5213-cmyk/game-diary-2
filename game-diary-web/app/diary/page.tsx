@@ -2061,7 +2061,7 @@ function HomeContent() {
                             if (selectedDateSessions.length === 0) {
                               return (
                                 <p className={`text-[11px] font-bold text-muted-foreground/30 text-center pb-4 select-none ${
-                                  calendarViewMode === 'week' ? 'pt-[240px]' : 'pt-[100px]'
+                                  calendarViewMode === 'week' ? 'pt-[240px]' : 'pt-[80px]'
                                 }`}>생성된 일기가 없습니다.</p>
                               );
                             }
