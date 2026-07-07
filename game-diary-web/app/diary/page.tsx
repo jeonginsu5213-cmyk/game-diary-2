@@ -188,7 +188,7 @@ function HomeContent() {
           return (
             <div 
               key={c.id} 
-              className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-xl bg-primary/5 border border-primary/10 group animate-in fade-in duration-300"
+              className="flex items-center justify-between gap-3 px-2 py-1 rounded-xl bg-primary/5 border border-primary/10 group animate-in fade-in duration-300"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 {/* Avatar */}
@@ -233,10 +233,10 @@ function HomeContent() {
                   {/* Pin Toggle Button on the Right */}
                   <button 
                     onClick={() => handleToggleChecklist(c.id, c.is_checklist, game.id)}
-                    className="w-5 h-5 rounded-md border border-primary/30 flex items-center justify-center bg-primary text-foreground-foreground hover:bg-primary/95 transition-colors shrink-0"
+                    className="w-6 h-6 rounded-full border border-primary/30 flex items-center justify-center bg-primary text-white hover:bg-primary/95 transition-colors shrink-0"
                     title="고정 해제"
                   >
-                    <Pin className="w-3 h-3 rotate-45" strokeWidth={3} />
+                    <Pin className="w-3.5 h-3.5 rotate-45 text-white" strokeWidth={2.5} />
                   </button>
                 </div>
               )}
@@ -1241,6 +1241,26 @@ function HomeContent() {
     };
   }, []);
 
+  // 인풋이 키보드 가상 영역에 가려지지 않으면서 너무 많이 올라가지 않도록 적절한 오프셋(하단 80px 여백)으로 정렬하는 함수
+  const scrollInputIntoView = (target: HTMLElement) => {
+    const scrollContainer = target.closest('.overflow-y-auto');
+    if (scrollContainer) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      
+      // 타겟(입력창)의 아래쪽 경계가 스크롤 컨테이너 아래에서 80px 높이에 위치하도록 조정 (키보드 툴바 여백 확보)
+      const targetBottomRelative = targetRect.bottom - containerRect.top;
+      const desiredBottom = containerRect.height - 80;
+      const diff = targetBottomRelative - desiredBottom;
+      
+      if (diff > 0) {
+        scrollContainer.scrollBy({ top: diff, behavior: 'smooth' });
+      }
+    } else {
+      target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  };
+
   // 모바일 가상 키보드 대응: visualViewport 크기가 변경될 때 컨테이너 높이를 맞춰주어 상단 고정바가 밀려나지 않도록 처리
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
@@ -1254,8 +1274,9 @@ function HomeContent() {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
         window.scrollTo(0, 0);
         // 포커스된 입력창이 키보드에 가려지지 않도록 스크롤링
+        const activeEl = document.activeElement as HTMLElement;
         setTimeout(() => {
-          document.activeElement?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          scrollInputIntoView(activeEl);
         }, 100);
       }
     };
@@ -1289,7 +1310,7 @@ function HomeContent() {
 
         // 포커스된 인풋이 가려지지 않도록 스크롤하여 보이게 함
         setTimeout(() => {
-          target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          scrollInputIntoView(target);
         }, 100);
       }
     };
@@ -2652,7 +2673,7 @@ function HomeContent() {
                                         댓글
                                       </h3>
                                     </div>
-                                    <div className="px-4">
+                                    <div className="px-3.5">
                                       {renderChecklist(game)}
                                     </div>
                                     <div className={`flex flex-col ${(game.comments?.filter((c: any) => !c.is_checklist) || []).reduce((acc: number, c: any) => acc + 1 + (c.replies?.length || 0), 0) > 5 ? "h-[320px]" : "h-auto"}`}>

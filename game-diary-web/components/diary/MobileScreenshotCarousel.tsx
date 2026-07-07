@@ -65,12 +65,12 @@ export default function MobileScreenshotCarousel({
   return (
     <div className="w-full flex flex-col">
       {/* Mobile Header Row: Highlight title and Dots Indicator */}
-      <div className="flex items-center justify-between mb-2 pl-[4px]">
+      <div className="flex items-center justify-between mb-2 pl-[2px]">
         <div className="flex items-center gap-1 group/label cursor-pointer select-none">
-          <span className="text-[12px] font-bold tracking-tight text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200">
+          <span className="text-[12px] font-bold tracking-tight text-primary transition-colors duration-200">
             하이라이트
           </span>
-          <div className="text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200 flex items-center">
+          <div className="text-primary flex items-center">
             <ChevronRight className="w-3 h-3" />
           </div>
         </div>

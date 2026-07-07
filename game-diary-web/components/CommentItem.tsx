@@ -189,12 +189,19 @@ export default function CommentItem({
   return (
     <div ref={itemRef} className={`flex flex-col scroll-my-2 ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
       <div className={`relative ${isReply || isActiveReply || showReplyInput ? 'overflow-visible' : 'overflow-hidden rounded-lg'}`}>
+        {/* Parent-to-replies vertical line */}
+        {!isReply && comment.replies && comment.replies.length > 0 && (
+          <div 
+            className="absolute w-[1px] bg-border/50 pointer-events-none select-none z-0" 
+            style={{ left: '20px', top: '38px', bottom: 0 }}
+          />
+        )}
         {isReply && (
-          <div className="absolute left-[-16px] top-0 bottom-0 w-[16px] pointer-events-none select-none z-0">
+          <div className="absolute left-[-12px] top-0 bottom-0 w-[12px] pointer-events-none select-none z-0">
             {/* 세로선 */}
             <div className={`absolute left-0 w-[1px] bg-border/50 ${isLastReply ? 'top-0 h-[24px]' : 'top-0 bottom-0'}`} />
             {/* L자형 가로선 */}
-            <div className="absolute left-0 top-[24px] w-[12px] h-[1px] bg-border/50" />
+            <div className="absolute left-0 top-[24px] w-[16px] h-[1px] bg-border/50" />
           </div>
         )}
         {/* Swipe Reply Icon Background */}
@@ -243,9 +250,13 @@ export default function CommentItem({
           onClickCapture={handleCardClick}
           className={`group flex items-start gap-3 py-2 transition-[background-color,box-shadow,opacity] duration-200 hover:bg-muted/50 select-none relative z-10 ${
             isPressing
-              ? '-mx-4 px-4 scale-[0.97] bg-primary/15 shadow-inner rounded-none'
+              ? isReply
+                ? 'px-1 rounded-lg bg-primary/15 scale-[0.97] transition-all'
+                : '-mx-4 px-4 scale-[0.97] bg-primary/15 shadow-inner rounded-none'
               : (showReplyInput || isActiveReply)
-                ? '-mx-4 px-4 bg-primary/10 rounded-none border-l-4 border-primary'
+                ? isReply
+                  ? 'px-1 rounded-lg bg-primary/10 border-l-2 border-primary'
+                  : '-mx-4 px-4 bg-primary/10 rounded-none border-l-4 border-primary'
                 : isChecklist 
                   ? 'px-1 rounded-lg bg-primary/5'
                   : 'px-1 rounded-lg bg-transparent'
@@ -306,7 +317,7 @@ export default function CommentItem({
                         onTouchStart={(e) => { e.stopPropagation(); startEmojiPress(emoji, e); }}
                         onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); endEmojiPress(emoji, () => onAddReaction(emoji)); }}
                         onTouchMove={(e) => { e.stopPropagation(); cancelEmojiPress(); }}
-                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border bg-primary/20 border-primary/30 text-primary hover:border-primary/50 select-none touch-none touch-callout-none"
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all bg-primary/20 text-primary select-none touch-none touch-callout-none"
                       >
                         <span>{emoji}</span>
                         <span>{users.length}</span>
