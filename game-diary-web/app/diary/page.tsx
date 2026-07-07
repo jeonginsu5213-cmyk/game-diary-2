@@ -2243,7 +2243,7 @@ function HomeContent() {
                             <Trash2 className="w-8 h-8 opacity-50" />
                             <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
                           </div>
-                        ) : sessions.length === 0 ? (
+                        ) : calendarSessions.length === 0 ? (
                           <div className="flex flex-col items-center justify-center min-h-[520px] px-6 text-center select-none animate-in fade-in duration-300">
                             <div className="w-full max-w-[280px] bg-card border border-border/60 rounded-2xl p-6 shadow-md flex flex-col items-center gap-4">
                               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
