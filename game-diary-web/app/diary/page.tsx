@@ -155,7 +155,7 @@ function DiaryListItem({
                 {isFavorite && (
                   <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200 -translate-x-1" strokeWidth={2.5} />
                 )}
-                <span className="opacity-55">
+                <span className="opacity-55 w-[34px] text-right tabular-nums font-mono">
                   {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
                 </span>
               </>
@@ -1690,7 +1690,7 @@ function HomeContent() {
                 <div className="shrink-0 flex flex-col pt-3 pb-0 select-none animate-in fade-in duration-300">
                   <div className="flex items-center gap-1.5 text-muted-foreground/60 pl-5 relative z-20 pb-2.5">
                     <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                    <span className="text-[10px] font-bold">7일 후 영구 삭제됩니다.</span>
+                    <span className="text-[10px] font-bold">삭제된 일기는 나에게서만 삭제되며 7일 후 영구 삭제됩니다.</span>
                   </div>
                   {/* Divider matching the calendar tab divider exactly */}
                   <div className="mx-4 md:mx-5 border-b border-border/60 shrink-0" />
