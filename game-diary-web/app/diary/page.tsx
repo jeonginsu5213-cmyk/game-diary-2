@@ -2264,7 +2264,7 @@ function HomeContent() {
                               >
                                 디스코드 봇 초대하기
                               </a>
-                              <p className="text-[10px] text-muted-foreground">
+                              <p className="text-[12px] text-muted-foreground">
                                 혼자서 사용할 계획이신가요?{' '}
                                 <a
                                   href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
