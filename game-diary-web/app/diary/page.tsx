@@ -2246,9 +2246,13 @@ function HomeContent() {
                         ) : calendarSessions.length === 0 ? (
                           <div className="flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-4">
                             <div className="space-y-1.5 max-w-[280px]">
-                              <h3 className="text-[14px] font-bold text-foreground">시작이 반이에요! 🎮</h3>
+                              <h3 className="text-[14px] font-bold text-foreground">
+                                {session?.user?.name || '유저'}님 반가워요👋🏻
+                              </h3>
                               <p className="text-[11px] text-muted-foreground leading-normal px-1">
-                                게임 다이어리 봇을 디스코드 서버에 초대해 보세요. 음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
+                                일기 작성을 도와줄 봇을 디스코드 서버에 초대해 보세요.
+                                <br />
+                                음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
                               </p>
                             </div>
                             <a
