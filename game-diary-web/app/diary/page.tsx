@@ -2568,25 +2568,27 @@ function HomeContent() {
                               content: (
                                 <div className="flex flex-col h-auto md:h-[450px]">
                                   {/* Header (Desktop only) */}
-                                  <div className="hidden md:flex items-center mb-2 pl-[6px]">
-                                    <motion.div 
-                                      whileHover="hover"
-                                      className="flex items-center gap-1 group/label cursor-pointer select-none"
-                                    >
-                                      <span className="text-[12px] font-bold tracking-tight text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200">
-                                        하이라이트
-                                      </span>
-                                      <motion.div
-                                        variants={{
-                                          hover: { x: 2 }
-                                        }}
-                                        transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                                        className="text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200 flex items-center"
+                                  {(!isDeleted || gameShots.length > 0) && (
+                                    <div className="hidden md:flex items-center mb-2 pl-[6px]">
+                                      <motion.div 
+                                        whileHover="hover"
+                                        className="flex items-center gap-1 group/label cursor-pointer select-none"
                                       >
-                                        <ChevronRight className="w-3 h-3" />
+                                        <span className="text-[12px] font-bold tracking-tight text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200">
+                                          하이라이트
+                                        </span>
+                                        <motion.div
+                                          variants={{
+                                            hover: { x: 2 }
+                                          }}
+                                          transition={{ type: "spring", stiffness: 600, damping: 30 }}
+                                          className="text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200 flex items-center"
+                                        >
+                                          <ChevronRight className="w-3 h-3" />
+                                        </motion.div>
                                       </motion.div>
-                                    </motion.div>
-                                  </div>
+                                    </div>
+                                  )}
 
                                   <div className="flex-1">
                                     {/* Desktop Grid View */}
