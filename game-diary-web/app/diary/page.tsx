@@ -1841,7 +1841,7 @@ function HomeContent() {
                                 return (
                                   <div 
                                     key={cell.id} 
-                                    className="h-[68px] flex items-center justify-center p-0.5" 
+                                    className="h-[75px] flex items-center justify-center p-0.5" 
                                   />
                                 );
                               }
@@ -1887,7 +1887,7 @@ function HomeContent() {
                               return (
                                 <div 
                                   key={cell.id} 
-                                  className="h-[68px] flex items-center justify-center p-0.5 relative z-10"
+                                  className="h-[75px] flex items-center justify-center p-0.5 relative z-10"
                                 >
                                   <button
                                     onClick={() => {
@@ -1910,7 +1910,7 @@ function HomeContent() {
                                     {cell.day}
                                   </button>
                                   {sessionIcon && (
-                                    <div className="absolute bottom-[2px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 border-[1.5px] border-background">
+                                    <div className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 border-[1.5px] border-background">
                                       {sessionIcon}
                                     </div>
                                   )}
@@ -1939,7 +1939,7 @@ function HomeContent() {
 
                             const remainingCells = allCells.slice(7);
                             const totalRowsCount = Math.ceil((emptyDays + totalDays) / 7);
-                            const remainingHeight = (totalRowsCount - 1) * 68;
+                            const remainingHeight = (totalRowsCount - 1) * 75;
 
                             if (calendarViewMode === 'week') {
                               const baseDate = selectedCalendarDate || new Date();
@@ -1957,7 +1957,7 @@ function HomeContent() {
                               
                               return (
                                 <div className="flex flex-col w-full">
-                                  <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[68px] shrink-0">
+                                  <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[75px] shrink-0">
                                     {firstRowCells.map(renderCell)}
                                   </div>
                                 </div>
@@ -1975,7 +1975,7 @@ function HomeContent() {
                                 {rows.map((rowCells, idx) => (
                                   <div 
                                     key={`row-${idx}`}
-                                    className={`grid grid-cols-7 gap-x-1 gap-y-0 h-[68px] shrink-0 ${
+                                    className={`grid grid-cols-7 gap-x-1 gap-y-0 h-[75px] shrink-0 ${
                                       idx < 5 ? 'border-b border-border/40' : ''
                                     }`}
                                   >
