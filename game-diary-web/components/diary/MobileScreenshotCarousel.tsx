@@ -40,6 +40,8 @@ export default function MobileScreenshotCarousel({
   onFileSelect,
   isDeleted = false,
 }: MobileScreenshotCarouselProps) {
+  if (isDeleted && gameShots.length === 0) return null;
+
   const [api, setApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [count, setCount] = useState(0);
