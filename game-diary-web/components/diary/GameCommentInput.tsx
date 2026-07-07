@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from "next-auth/react";
 import { supabase } from "@/src/lib/supabase";
-import { ArrowUp, Pin, X } from 'lucide-react';
+import { ArrowUp, Pin, X, Info } from 'lucide-react';
 
 const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancelReply, onAddReply, isMobile }: any) => {
   const { data: session }: any = useSession();
@@ -116,7 +116,8 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden bg-primary/10"
           >
-            <div className="flex items-center px-3 py-2">
+            <div className="flex items-center gap-1.5 px-3 py-2">
+              <Info className="w-3.5 h-3.5 text-primary shrink-0" />
               <span className="text-[11px] font-semibold text-primary leading-none">
                 메시지를 상단에 고정하고 체크리스트로 활용할 수 있습니다.
               </span>
