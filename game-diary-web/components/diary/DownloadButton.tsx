@@ -4,7 +4,39 @@ import React from 'react';
 
 export const handleDownload = async (url: string) => {
   try {
-    // Check if it's a Supabase Storage URL
+    // Try to fetch as Blob first to trigger native browser download manager (ideal for mobile Safari/Chrome)
+    const response = await fetch(url).catch(() => null);
+    if (response && response.ok) {
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      
+      let filename = `game-diary-${Date.now()}.png`;
+      try {
+        const u = new URL(url);
+        const ext = u.pathname.split('.').pop();
+        if (ext && ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext.toLowerCase())) {
+          filename = `game-diary-${Date.now()}.${ext}`;
+        }
+      } catch (e) {}
+
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 1000);
+      return;
+    }
+  } catch (error) {
+    console.error("Blob download failed, falling back to direct navigation:", error);
+  }
+
+  // Fallback: Use direct link click with download param (Supabase) or open new window (other CORS-restricted files)
+  try {
     if (url.includes('/storage/v1/object/public/')) {
       const downloadUrl = new URL(url);
       downloadUrl.searchParams.set('download', '');
@@ -14,20 +46,6 @@ export const handleDownload = async (url: string) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      return;
-    }
-
-    const response = await fetch(url).catch(() => null);
-    if (response && response.ok) {
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `game-diary-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
     } else {
       window.open(url, '_blank');
     }
