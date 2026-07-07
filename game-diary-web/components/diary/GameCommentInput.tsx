@@ -90,7 +90,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
             exit={{ height: 0, opacity: 0 }}
             className={`overflow-hidden ${isMobile ? 'bg-muted/40' : 'bg-muted/80'}`}
           >
-            <div className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
+            <div className="flex items-center gap-2 px-2 py-2 text-muted-foreground">
               <button 
                 onClick={onCancelReply}
                 className="w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/10 hover:bg-muted-foreground/20 text-muted-foreground transition-colors shrink-0"
@@ -116,7 +116,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden bg-primary/10"
           >
-            <div className="flex items-center gap-1.5 px-3 py-2">
+            <div className="flex items-center gap-1.5 px-2 py-2">
               <Info className="w-3.5 h-3.5 text-primary shrink-0" />
               <span className="text-[11px] font-semibold text-primary leading-none">
                 메시지를 상단에 고정하고 체크리스트로 활용할 수 있습니다.
@@ -126,7 +126,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
         )}
       </AnimatePresence>
  
-      <div className="flex items-center py-[10px] px-3.5 bg-transparent">
+      <div className="flex items-center py-[10px] px-2 bg-transparent">
         {!activeReply && (
           <button 
             onClick={() => setIsChecklistMode(!isChecklistMode)}
