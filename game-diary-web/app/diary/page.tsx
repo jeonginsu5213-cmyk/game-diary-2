@@ -2245,9 +2245,6 @@ function HomeContent() {
                           </div>
                         ) : calendarSessions.length === 0 ? (
                           <div className="flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-4">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-xs">
-                              <Gamepad2 className="w-6 h-6" />
-                            </div>
                             <div className="space-y-1.5 max-w-[280px]">
                               <h3 className="text-[14px] font-bold text-foreground">시작이 반이에요! 🎮</h3>
                               <p className="text-[11px] text-muted-foreground leading-normal px-1">
