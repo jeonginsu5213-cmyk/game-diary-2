@@ -130,7 +130,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
         {!activeReply && (
           <button 
             onClick={() => setIsChecklistMode(!isChecklistMode)}
-            className={`flex items-center justify-center transition-all duration-300 ${isChecklistMode ? 'text-primary' : 'text-muted-foreground/30 hover:text-muted-foreground'} shrink-0 ml-1 mr-2.5`}
+            className={`flex items-center justify-center transition-all duration-300 ${isChecklistMode ? 'text-primary' : 'text-muted-foreground/30 hover:text-muted-foreground'} shrink-0 ml-1 mr-1`}
             title={isChecklistMode ? "고정 해제" : "상단 고정 (체크리스트)"}
           >
             <Pin className={`w-5 h-5 transition-transform duration-300 ${isChecklistMode ? 'rotate-45' : ''}`} strokeWidth={isChecklistMode ? 3 : 2.5} />
