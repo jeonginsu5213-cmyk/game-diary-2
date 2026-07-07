@@ -1672,7 +1672,7 @@ function HomeContent() {
               {listTab === 'calendar' ? (
                 <div className="flex-1 flex flex-col overflow-hidden min-h-0 pt-4 md:pt-2 px-2 md:px-3">
                   {/* Calendar Widget (Fixed at the top) */}
-                  <div className="shrink-0 animate-in fade-in duration-300 select-none pb-3">
+                  <div className="shrink-0 animate-in fade-in duration-300 select-none pb-0">
                     {/* Calendar Header */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
