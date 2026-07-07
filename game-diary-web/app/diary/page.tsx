@@ -2255,14 +2255,27 @@ function HomeContent() {
                                 음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
                               </p>
                             </div>
-                            <a
-                              href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-full max-w-[280px] py-3 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[13px] rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-primary/10 cursor-pointer"
-                            >
-                              디스코드 봇 초대하기
-                            </a>
+                            <div className="w-full flex flex-col items-center gap-2">
+                              <a
+                                href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full max-w-[280px] py-3 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[13px] rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-primary/10 cursor-pointer"
+                              >
+                                디스코드 봇 초대하기
+                              </a>
+                              <p className="text-[10px] text-muted-foreground">
+                                혼자서 사용할 계획이신가요?{' '}
+                                <a
+                                  href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline text-primary hover:text-primary/90 font-medium cursor-pointer"
+                                >
+                                  봇 추가하기
+                                </a>
+                              </p>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center min-h-[480px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
