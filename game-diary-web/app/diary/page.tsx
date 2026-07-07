@@ -2244,23 +2244,24 @@ function HomeContent() {
                             <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
                           </div>
                         ) : calendarSessions.length === 0 ? (
-                          <div className="space-y-1 animate-in fade-in duration-300">
-                            <div className="relative overflow-hidden rounded-lg w-full flex items-center">
-                              <a
-                                href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground active:scale-[0.97] active:bg-muted/80 origin-center cursor-pointer select-none"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-primary/10 shrink-0 flex items-center justify-center text-primary shadow-xs">
-                                  <Plus className="w-3.5 h-3.5 text-primary" strokeWidth={3} />
-                                </div>
-                                <span className="text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium">시작하기: 디스코드 봇 초대하기</span>
-                                <span className="text-[11px] font-sans tracking-tighter opacity-70 shrink-0 flex items-center gap-1 select-none">
-                                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                                </span>
-                              </a>
+                          <div className="flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-4">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-xs">
+                              <Gamepad2 className="w-6 h-6" />
                             </div>
+                            <div className="space-y-1.5 max-w-[280px]">
+                              <h3 className="text-[14px] font-bold text-foreground">시작이 반이에요! 🎮</h3>
+                              <p className="text-[11px] text-muted-foreground leading-normal px-1">
+                                게임 다이어리 봇을 디스코드 서버에 초대해 보세요. 음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
+                              </p>
+                            </div>
+                            <a
+                              href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full max-w-[240px] py-2.5 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[12px] rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-primary/10 cursor-pointer"
+                            >
+                              디스코드 봇 초대하기
+                            </a>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center min-h-[480px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
