@@ -1866,11 +1866,11 @@ function HomeContent() {
                                 if (firstSession.guild_name && firstSession.guild_name !== '개인') {
                                   if (firstSession.guild_icon) {
                                     sessionIcon = (
-                                      <img src={firstSession.guild_icon} className="w-full h-full object-cover rounded-full" alt="" />
+                                      <img src={firstSession.guild_icon} className="w-full h-full object-cover rounded-full block" alt="" />
                                     );
                                   } else {
                                     sessionIcon = (
-                                      <div className="w-full h-full bg-primary/20 flex items-center justify-center text-[5px] font-black text-primary rounded-full">
+                                      <div className="w-full h-full bg-primary/20 flex items-center justify-center text-[5px] font-black text-primary rounded-full block">
                                         {firstSession.guild_name.charAt(0)}
                                       </div>
                                     );
@@ -1879,7 +1879,7 @@ function HomeContent() {
                                   const participantId = firstSession.session_participants?.[0]?.user_id || firstSession.id;
                                   const avatarUrl = profiles[participantId]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${participantId}`;
                                   sessionIcon = (
-                                    <img src={avatarUrl} className="w-full h-full object-cover rounded-full" alt="" />
+                                    <img src={avatarUrl} className="w-full h-full object-cover rounded-full block" alt="" />
                                   );
                                 }
                               }
@@ -1912,17 +1912,15 @@ function HomeContent() {
                                   {sessionIcon && (
                                     <div className="absolute top-[47px] left-1/2 -translate-x-1/2 flex items-center gap-0.5 z-20">
                                       <div 
-                                        className="rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs border border-background shrink-0 aspect-square"
-                                        style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                                        className="rounded-full overflow-hidden bg-card ring-[1px] ring-background shrink-0 aspect-square"
+                                        style={{ width: '14px', height: '14px', minWidth: '14px', minHeight: '14px', maxWidth: '14px', maxHeight: '14px' }}
                                       >
-                                        <div className="w-full h-full flex items-center justify-center rounded-full overflow-hidden aspect-square">
-                                          {sessionIcon}
-                                        </div>
+                                        {sessionIcon}
                                       </div>
                                       {daySessions.length > 1 && (
                                         <div 
-                                          className="rounded-full flex items-center justify-center bg-card border border-background shadow-2xs shrink-0 select-none overflow-hidden aspect-square"
-                                          style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
+                                          className="rounded-full flex items-center justify-center bg-card ring-[1px] ring-background shrink-0 select-none overflow-hidden aspect-square"
+                                          style={{ width: '14px', height: '14px', minWidth: '14px', minHeight: '14px', maxWidth: '14px', maxHeight: '14px' }}
                                         >
                                           <span className="text-[9px] font-black text-primary font-mono leading-none tracking-tighter" style={{ fontSize: '9px', lineHeight: '1' }}>
                                             +{daySessions.length - 1}
