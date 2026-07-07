@@ -739,6 +739,20 @@ function HomeContent() {
     });
   }, [filteredSessions, sortBy, favoriteSessionIds]);
 
+  const calendarSessions = useMemo(() => {
+    return sessions
+      .filter(s => {
+        const matchesUser = session?.user?.id 
+          ? s.session_participants?.some((p: any) => p.user_id === session.user.id)
+          : false;
+        if (!matchesUser) return false;
+
+        const participant = s.session_participants?.find((p: any) => p.user_id === session?.user?.id);
+        return !participant?.is_deleted;
+      })
+      .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
+  }, [sessions, session]);
+
   const paginatedSessions = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return sortedSessions.slice(start, start + pageSize);
@@ -1850,7 +1864,7 @@ function HomeContent() {
                               const isSelected = selectedCalendarDate && selectedCalendarDate.toDateString() === dateObj.toDateString();
                               const dayOfWeek = dateObj.getDay();
 
-                              const daySessions = sortedSessions.filter(s => {
+                              const daySessions = calendarSessions.filter(s => {
                                 const dateStr = s.start_time || s.date;
                                 if (!dateStr) return false;
                                 const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
@@ -2052,7 +2066,7 @@ function HomeContent() {
                           className="space-y-1"
                         >
                           {(() => {
-                            const selectedDateSessions = sortedSessions.filter(s => {
+                            const selectedDateSessions = calendarSessions.filter(s => {
                               const dateStr = s.start_time || s.date;
                               if (!dateStr) return false;
                               const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
