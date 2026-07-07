@@ -153,7 +153,7 @@ function DiaryListItem({
             ) : (
               <>
                 {isFavorite && (
-                  <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200 -translate-x-1" strokeWidth={2.5} />
+                  <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200" strokeWidth={2.5} />
                 )}
                 <span className="opacity-55 w-[34px] text-right tabular-nums font-sans">
                   {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
