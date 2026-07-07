@@ -2064,7 +2064,11 @@ function HomeContent() {
 
                     {selectedCalendarDate && (
                       <div className="pt-0 animate-in slide-in-from-bottom-1 duration-200">
-                        <div className="space-y-1">
+                        <motion.div 
+                          animate={isRefreshing ? { opacity: [1, 0.4, 1, 0.4, 1] } : { opacity: 1 }}
+                          transition={isRefreshing ? { repeat: Infinity, duration: 0.8, ease: "easeInOut" } : { duration: 0.2 }}
+                          className="space-y-1"
+                        >
                           {(() => {
                             const selectedDateSessions = sortedSessions.filter(s => {
                               const dateStr = s.start_time || s.date;
@@ -2098,7 +2102,7 @@ function HomeContent() {
                               />
                             ));
                           })()}
-                        </div>
+                        </motion.div>
                       </div>
                     )}
 
