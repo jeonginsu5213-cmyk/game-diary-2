@@ -211,7 +211,7 @@ const ScreenshotItem = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: isDrawer ? 4 : -4, scale: 0.95 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="fixed z-[350] w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl"
+              className="fixed z-[350] w-48 overflow-hidden rounded-xl bg-card shadow-2xl"
               style={{
                 left: `${coords.left}px`,
                 top: coords.top !== undefined ? `${coords.top}px` : undefined,
