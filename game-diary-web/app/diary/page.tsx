@@ -780,7 +780,7 @@ function HomeContent() {
   // Dynamic native touch listeners for Sidebar parent container
   useEffect(() => {
     const parentEl = sidebarNodeRef.current;
-    if (parentEl) {
+    if (parentEl && listTab !== 'calendar') {
       parentEl.addEventListener('touchstart', handleTouchStartNative, { passive: true });
       parentEl.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
       parentEl.addEventListener('touchend', handleTouchEndNative, { passive: true });
