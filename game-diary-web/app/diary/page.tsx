@@ -2008,12 +2008,30 @@ function HomeContent() {
                   {/* Fixed Date Label & Divider Wrapper */}
                   <div className="shrink-0">
                     {selectedCalendarDate && (
-                      <div className={`shrink-0 pb-2 pl-3 md:pl-2 select-none transition-all duration-200 ${
+                      <div className={`shrink-0 pb-2 pl-3 md:pl-2 pr-3 select-none flex items-center justify-between transition-all duration-200 ${
                         calendarViewMode === 'week' ? 'pt-[32px]' : 'pt-2'
                       }`}>
                         <h4 className="text-[14px] font-semibold text-black dark:text-white tracking-tight">
                           {selectedCalendarDate.getFullYear()}년 {selectedCalendarDate.getMonth() + 1}월 {selectedCalendarDate.getDate()}일의 일기
                         </h4>
+                        <button
+                          onClick={async () => {
+                            if (isRefreshing) return;
+                            setIsRefreshing(true);
+                            try {
+                              await fetchData();
+                            } catch (err) {
+                              console.error("Refresh failed:", err);
+                            } finally {
+                              setIsRefreshing(false);
+                            }
+                          }}
+                          disabled={isRefreshing}
+                          className="p-1 rounded-full text-muted-foreground/50 hover:text-primary hover:bg-[#e8ebed] dark:hover:bg-muted transition-all active:scale-95 duration-100 flex items-center justify-center cursor-pointer focus:outline-none"
+                          title="일기 새로고침"
+                        >
+                          <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin-reverse' : ''}`} />
+                        </button>
                       </div>
                     )}
 
