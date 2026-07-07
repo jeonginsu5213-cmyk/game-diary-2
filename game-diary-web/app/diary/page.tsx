@@ -2027,7 +2027,7 @@ function HomeContent() {
                             }
                           }}
                           disabled={isRefreshing}
-                          className="w-7 h-7 rounded-full bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground/60 hover:text-primary hover:bg-[#e8ebed] dark:hover:bg-muted transition-all active:scale-95 duration-100 flex items-center justify-center cursor-pointer focus:outline-none"
+                          className="w-6 h-6 rounded-full bg-[#e8ebed]/60 dark:bg-muted/40 text-muted-foreground/60 hover:text-primary hover:bg-[#e8ebed] dark:hover:bg-muted transition-all active:scale-95 duration-100 flex items-center justify-center cursor-pointer focus:outline-none"
                           title="일기 새로고침"
                         >
                           <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin-reverse' : ''}`} />
