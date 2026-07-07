@@ -1910,8 +1910,17 @@ function HomeContent() {
                                     {cell.day}
                                   </button>
                                   {sessionIcon && (
-                                    <div className="absolute top-[47px] left-1/2 -translate-x-1/2 w-[16px] h-[16px] rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 border-[1.5px] border-background">
-                                      {sessionIcon}
+                                    <div className="absolute top-[47px] left-1/2 -translate-x-1/2 w-[16px] h-[16px] z-20">
+                                      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs border-[1.5px] border-background">
+                                        {sessionIcon}
+                                      </div>
+                                      {daySessions.length > 1 && (
+                                        <div className="absolute left-[11px] bottom-[-2px] bg-card border border-background rounded-[4px] px-0.5 py-[0.5px] flex items-center justify-center min-w-[13px] h-[11px] shadow-3xs select-none">
+                                          <span className="text-[8px] font-bold text-primary font-mono leading-none tracking-tighter">
+                                            +{daySessions.length - 1}
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
