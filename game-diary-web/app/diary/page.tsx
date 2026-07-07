@@ -1255,7 +1255,7 @@ function HomeContent() {
         window.scrollTo(0, 0);
         // 포커스된 입력창이 키보드에 가려지지 않도록 스크롤링
         setTimeout(() => {
-          document.activeElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          document.activeElement?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }, 100);
       }
     };
@@ -1289,7 +1289,7 @@ function HomeContent() {
 
         // 포커스된 인풋이 가려지지 않도록 스크롤하여 보이게 함
         setTimeout(() => {
-          target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          target.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }, 100);
       }
     };
@@ -1338,18 +1338,40 @@ function HomeContent() {
         {/* Tab Bar (IMG_4513.jpg Style) */}
         <div className="w-full px-4 pt-4 pb-4 flex items-center gap-2.5 shrink-0 overflow-visible relative z-30">
           {/* 1. 디스코드 프로필 이미지 */}
-          <button 
-            onClick={() => setIsProfileOpen(true)}
-            className="w-10 h-10 rounded-full bg-white border-2 border-[#e8ebed] dark:border-muted flex items-center justify-center shadow-xs overflow-hidden shrink-0 focus:outline-none cursor-pointer active:scale-95 transition-transform"
-          >
-            {session?.user?.image ? (
-              <img src={session.user.image} className="w-full h-full object-cover" alt="" />
-            ) : (
-              <span className="text-[12px] font-black text-foreground">
-                {session?.user?.name?.charAt(0) || '정'}
-              </span>
-            )}
-          </button>
+          <div className="relative w-10 h-10 shrink-0">
+            <button 
+              onClick={() => setIsProfileOpen(true)}
+              className="w-10 h-10 rounded-full bg-white border-2 border-[#e8ebed] dark:border-muted flex items-center justify-center shadow-xs overflow-hidden shrink-0 focus:outline-none cursor-pointer active:scale-95 transition-transform"
+            >
+              {session?.user?.image ? (
+                <img src={session.user.image} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <span className="text-[12px] font-black text-foreground">
+                  {session?.user?.name?.charAt(0) || '정'}
+                </span>
+              )}
+            </button>
+            <select
+              value=""
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'settings') {
+                  setIsSettingsOpen(true);
+                } else if (val === 'help') {
+                  setIsHelpOpen(true);
+                } else if (val === 'logout') {
+                  signOut();
+                }
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20 md:hidden"
+              style={{ WebkitAppearance: 'none' }}
+            >
+              <option value="" disabled>프로필 메뉴</option>
+              <option value="settings">설정</option>
+              <option value="help">도움말 및 지원</option>
+              <option value="logout">로그아웃</option>
+            </select>
+          </div>
 
           {/* 2. 목록 탭 (active) */}
           <motion.button 

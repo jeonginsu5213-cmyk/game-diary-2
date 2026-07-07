@@ -148,7 +148,7 @@ export default function CommentItem({
       const timer = setTimeout(() => {
         itemRef.current?.scrollIntoView({
           behavior: 'smooth',
-          block: 'nearest'
+          block: 'center'
         });
       }, 250);
       return () => clearTimeout(timer);

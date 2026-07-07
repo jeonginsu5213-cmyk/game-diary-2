@@ -70,6 +70,20 @@ export default function SidebarSortDropdown({
         </motion.div>
       </button>
 
+      {/* Mobile-only native select overlay */}
+      <select
+        value={currentSort}
+        onChange={(e) => onSortChange(e.target.value as any)}
+        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full md:hidden z-20"
+        style={{ WebkitAppearance: 'none' }}
+      >
+        {SORT_OPTIONS.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </select>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
