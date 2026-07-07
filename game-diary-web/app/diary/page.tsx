@@ -1910,7 +1910,7 @@ function HomeContent() {
                                     {cell.day}
                                   </button>
                                   {sessionIcon && (
-                                    <div className="absolute bottom-[2px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 border-[1.5px] border-background">
+                                    <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 border-[1.5px] border-background">
                                       {sessionIcon}
                                     </div>
                                   )}
