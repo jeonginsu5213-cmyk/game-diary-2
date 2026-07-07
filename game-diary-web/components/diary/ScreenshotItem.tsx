@@ -220,14 +220,6 @@ const ScreenshotItem = ({
               onClick={e => e.stopPropagation()}
             >
               <div className="p-1 flex flex-col">
-                <button 
-                  onClick={() => {
-                    supabase.from('screenshots').update({ game_title: null }).eq('id', shot.id).then(() => { fetchData(); setActiveMoveShotId(null); });
-                  }}
-                  className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 ${!shot.game_title ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-                >
-                  <FolderInput className="w-3.5 h-3.5 shrink-0 opacity-50" /> 분류되지 않은 순간들
-                </button>
                 {current.session_games?.map((g: any) => (
                   <button 
                     key={g.id}

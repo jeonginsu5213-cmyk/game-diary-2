@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Gamepad2, FolderInput } from 'lucide-react';
+import { Gamepad2 } from 'lucide-react';
 
 const MoveModal = ({ shot, onClose, onMove, games }: any) => {
   return (
@@ -14,13 +14,6 @@ const MoveModal = ({ shot, onClose, onMove, games }: any) => {
           </button>
         </div>
         <div className="p-2 max-h-80 overflow-y-auto scrollbar-hide space-y-1">
-          <button 
-            onClick={() => onMove(null)}
-            className={`w-full text-left px-4 py-2.5 text-sm rounded-xl transition-all flex items-center gap-2.5 ${!shot.game_title ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
-          >
-            <FolderInput className="w-4 h-4 shrink-0 opacity-60" />
-            분류되지 않은 순간들
-          </button>
           {games.map((g: any) => (
             <button 
               key={g.id} 
