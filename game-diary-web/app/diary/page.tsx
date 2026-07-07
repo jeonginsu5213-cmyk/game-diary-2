@@ -2346,7 +2346,7 @@ function HomeContent() {
 
             <div 
               data-scroll-container="true"
-              className={`flex-1 overflow-y-auto scrollbar-hide ${isDeleted && current ? 'pt-[100px]' : 'pt-16'}`}
+              className={`flex-1 overflow-y-auto scrollbar-hide ${isDeleted && current ? 'pt-[104px]' : 'pt-16'}`}
             >
               {/* Pull-to-refresh Indicator */}
               <div 
