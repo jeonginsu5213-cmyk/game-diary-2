@@ -1915,8 +1915,8 @@ function HomeContent() {
                                         {sessionIcon}
                                       </div>
                                       {daySessions.length > 1 && (
-                                        <div className="absolute left-[11px] bottom-[-2px] bg-card border border-background rounded-[4px] px-0.5 py-[0.5px] flex items-center justify-center min-w-[13px] h-[11px] shadow-3xs select-none">
-                                          <span className="text-[8px] font-bold text-primary font-mono leading-none tracking-tighter">
+                                        <div className="absolute left-[11px] bottom-[-2px] bg-card border-[1.5px] border-background rounded-full flex items-center justify-center w-[14px] h-[14px] shadow-2xs select-none">
+                                          <span className="text-[7.5px] font-black text-primary font-mono leading-none tracking-tighter">
                                             +{daySessions.length - 1}
                                           </span>
                                         </div>
