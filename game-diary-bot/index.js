@@ -12,7 +12,8 @@ const {
     ComponentType,
     EmbedBuilder,
     MessageFlags,
-    Partials
+    Partials,
+    ChannelType
 } = require('discord.js');
 const { 
     joinVoiceChannel, 
@@ -107,6 +108,28 @@ const client = new Client({
 
 client.on('error', error => {
     console.error('[Discord Client Error]', error);
+});
+
+client.on('guildCreate', async (guild) => {
+    console.log(`[Discord] Joined new guild: ${guild.name} (${guild.id})`);
+    try {
+        const existingChannel = guild.channels.cache.find(
+            ch => ch.type === ChannelType.GuildText && ch.name === '일기장'
+        );
+        if (existingChannel) {
+            console.log(`[Discord] '일기장' channel already exists in ${guild.name}`);
+            return;
+        }
+
+        const newChannel = await guild.channels.create({
+            name: '일기장',
+            type: ChannelType.GuildText,
+            topic: '게임 다이어리 봇이 작성하는 일기장 채널입니다.'
+        });
+        console.log(`[Discord] Created '일기장' channel in ${guild.name}: ${newChannel.id}`);
+    } catch (e) {
+        console.error(`[Discord] Failed to create '일기장' channel in ${guild.name}:`, e);
+    }
 });
 
 const activeSessions = new Map();
