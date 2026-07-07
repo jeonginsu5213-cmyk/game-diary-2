@@ -2132,7 +2132,11 @@ function HomeContent() {
                             </p>
                           </div>
                         ) : (
-                          <div className="flex flex-col gap-2.5">
+                          <motion.div 
+                            animate={isRefreshing ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
+                            transition={isRefreshing ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
+                            className="flex flex-col gap-2.5"
+                          >
                             {filteredNotifications.map((notif) => {
                               const isUnread = !notif.is_read;
                               const dateObj = new Date(notif.created_at);
@@ -2215,7 +2219,7 @@ function HomeContent() {
                                 </div>
                               );
                             })}
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     ) : (
