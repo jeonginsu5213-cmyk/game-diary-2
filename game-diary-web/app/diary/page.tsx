@@ -1841,7 +1841,7 @@ function HomeContent() {
                                 return (
                                   <div 
                                     key={cell.id} 
-                                    className="h-[52px] flex items-center justify-center p-0.5" 
+                                    className="h-[60px] flex items-center justify-center p-0.5" 
                                   />
                                 );
                               }
@@ -1887,7 +1887,7 @@ function HomeContent() {
                               return (
                                 <div 
                                   key={cell.id} 
-                                  className="h-[52px] flex items-center justify-center p-0.5 relative z-10"
+                                  className="h-[60px] flex items-center justify-center p-0.5 relative z-10"
                                 >
                                   <button
                                     onClick={() => {
@@ -1939,7 +1939,7 @@ function HomeContent() {
 
                             const remainingCells = allCells.slice(7);
                             const totalRowsCount = Math.ceil((emptyDays + totalDays) / 7);
-                            const remainingHeight = (totalRowsCount - 1) * 52;
+                            const remainingHeight = (totalRowsCount - 1) * 60;
 
                             if (calendarViewMode === 'week') {
                               const baseDate = selectedCalendarDate || new Date();
@@ -1961,7 +1961,7 @@ function HomeContent() {
                             return (
                               <div className="flex flex-col w-full">
                                 {/* First Row (Static height) */}
-                                <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[52px] shrink-0">
+                                <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[60px] shrink-0">
                                   {firstRowCells.map(renderCell)}
                                 </div>
 
