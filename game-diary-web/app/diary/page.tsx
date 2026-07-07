@@ -1841,7 +1841,7 @@ function HomeContent() {
                                 return (
                                   <div 
                                     key={cell.id} 
-                                    className="h-[75px] flex items-center justify-center p-0.5" 
+                                    className="h-[75px] flex items-start justify-center px-0.5 pb-0.5 pt-[6px]" 
                                   />
                                 );
                               }
@@ -1887,7 +1887,7 @@ function HomeContent() {
                               return (
                                 <div 
                                   key={cell.id} 
-                                  className="h-[75px] flex items-center justify-center p-0.5 relative z-10"
+                                  className="h-[75px] flex items-start justify-center px-0.5 pb-0.5 pt-[6px] relative z-10"
                                 >
                                   <button
                                     onClick={() => {
