@@ -1911,11 +1911,11 @@ function HomeContent() {
                                   </button>
                                   {sessionIcon && (
                                     <div className="absolute top-[47px] left-1/2 -translate-x-1/2 flex items-center gap-0.5 z-20">
-                                      <div className="w-[16px] h-[16px] rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs border-[1.5px] border-background shrink-0">
+                                      <div className="w-[16px] h-[16px] aspect-square rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs border-2 border-background shrink-0">
                                         {sessionIcon}
                                       </div>
                                       {daySessions.length > 1 && (
-                                        <div className="w-[16px] h-[16px] rounded-full flex items-center justify-center bg-card border-[1.5px] border-background shadow-2xs shrink-0 select-none">
+                                        <div className="w-[16px] h-[16px] aspect-square rounded-full flex items-center justify-center bg-card border-2 border-background shadow-2xs shrink-0 select-none">
                                           <span className="text-[8px] font-black text-primary font-mono leading-none tracking-tighter">
                                             +{daySessions.length - 1}
                                           </span>
