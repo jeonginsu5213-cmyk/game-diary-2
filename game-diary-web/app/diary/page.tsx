@@ -1954,23 +1954,34 @@ function HomeContent() {
                                   id: `day-week-${i}`
                                 });
                               }
-                            } else {
-                              firstRowCells = allCells.slice(0, 7);
+                              
+                              return (
+                                <div className="flex flex-col w-full">
+                                  <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[60px] shrink-0">
+                                    {firstRowCells.map(renderCell)}
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // Month View: partition allCells into 6 rows of 7 cells
+                            const rows: any[][] = [];
+                            for (let i = 0; i < 6; i++) {
+                              rows.push(allCells.slice(i * 7, (i + 1) * 7));
                             }
 
                             return (
                               <div className="flex flex-col w-full">
-                                {/* First Row (Static height) */}
-                                <div className="grid grid-cols-7 gap-x-1 gap-y-0 h-[60px] shrink-0">
-                                  {firstRowCells.map(renderCell)}
-                                </div>
-
-                                {/* Remaining Rows (Animate height via parent layout="size") */}
-                                {calendarViewMode === 'month' && remainingCells.length > 0 && (
-                                  <div className="grid grid-cols-7 gap-x-1 gap-y-0 shrink-0">
-                                    {remainingCells.map(renderCell)}
+                                {rows.map((rowCells, idx) => (
+                                  <div 
+                                    key={`row-${idx}`}
+                                    className={`grid grid-cols-7 gap-x-1 gap-y-0 h-[60px] shrink-0 ${
+                                      idx < 5 ? 'border-b border-border/40' : ''
+                                    }`}
+                                  >
+                                    {rowCells.map(renderCell)}
                                   </div>
-                                )}
+                                ))}
                               </div>
                             );
                           })()}
