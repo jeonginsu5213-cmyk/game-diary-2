@@ -2244,7 +2244,7 @@ function HomeContent() {
                             <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
                           </div>
                         ) : calendarSessions.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-4">
+                          <div className="flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-6">
                             <div className="space-y-1.5 max-w-[340px]">
                               <h3 className="text-[18px] font-bold text-foreground">
                                 {session?.user?.name || '유저'}님 반가워요 👋🏻
