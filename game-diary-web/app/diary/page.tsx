@@ -122,7 +122,7 @@ function DiaryListItem({
             )}
           </div>
           <span className="text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium">{s.title}</span>
-          <span className="text-[11px] font-sans tracking-tighter opacity-70 shrink-0 flex items-center gap-1.5 select-none">
+          <span className="text-[11px] font-sans tracking-tighter opacity-70 shrink-0 flex items-center gap-1 select-none">
             {isTrash ? (
               <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {/* 되돌리기 (복원) 버튼 */}
