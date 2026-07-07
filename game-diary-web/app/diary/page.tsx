@@ -1912,7 +1912,7 @@ function HomeContent() {
                                   {sessionIcon && (
                                     <div className="absolute top-[47px] left-1/2 -translate-x-1/2 flex items-center gap-0.5 z-20">
                                       <div 
-                                        className="rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs border-2 border-background shrink-0 aspect-square"
+                                        className="rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs border border-background shrink-0 aspect-square"
                                         style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                                       >
                                         <div className="w-full h-full flex items-center justify-center rounded-full overflow-hidden aspect-square">
@@ -1921,10 +1921,10 @@ function HomeContent() {
                                       </div>
                                       {daySessions.length > 1 && (
                                         <div 
-                                          className="rounded-full flex items-center justify-center bg-card border-2 border-background shadow-2xs shrink-0 select-none overflow-hidden aspect-square"
+                                          className="rounded-full flex items-center justify-center bg-card border border-background shadow-2xs shrink-0 select-none overflow-hidden aspect-square"
                                           style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px', maxWidth: '16px', maxHeight: '16px' }}
                                         >
-                                          <span className="text-[8px] font-black text-primary font-mono leading-none tracking-tighter" style={{ fontSize: '8px', lineHeight: '1' }}>
+                                          <span className="text-[9px] font-black text-primary font-mono leading-none tracking-tighter" style={{ fontSize: '9px', lineHeight: '1' }}>
                                             +{daySessions.length - 1}
                                           </span>
                                         </div>
