@@ -1849,6 +1849,41 @@ function HomeContent() {
                               const isToday = new Date().toDateString() === dateObj.toDateString();
                               const isSelected = selectedCalendarDate && selectedCalendarDate.toDateString() === dateObj.toDateString();
                               const dayOfWeek = dateObj.getDay();
+
+                              const daySessions = sortedSessions.filter(s => {
+                                const dateStr = s.start_time || s.date;
+                                if (!dateStr) return false;
+                                const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
+                                if (isNaN(d.getTime())) return false;
+                                return d.getFullYear() === dateObj.getFullYear() &&
+                                       d.getMonth() === dateObj.getMonth() &&
+                                       d.getDate() === dateObj.getDate();
+                              });
+
+                              const firstSession = daySessions[0];
+                              let sessionIcon = null;
+                              if (firstSession) {
+                                if (firstSession.guild_name && firstSession.guild_name !== '개인') {
+                                  if (firstSession.guild_icon) {
+                                    sessionIcon = (
+                                      <img src={firstSession.guild_icon} className="w-full h-full object-cover rounded-full" alt="" />
+                                    );
+                                  } else {
+                                    sessionIcon = (
+                                      <div className="w-full h-full bg-primary/20 flex items-center justify-center text-[5px] font-black text-primary rounded-full">
+                                        {firstSession.guild_name.charAt(0)}
+                                      </div>
+                                    );
+                                  }
+                                } else {
+                                  const participantId = firstSession.session_participants?.[0]?.user_id || firstSession.id;
+                                  const avatarUrl = profiles[participantId]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${participantId}`;
+                                  sessionIcon = (
+                                    <img src={avatarUrl} className="w-full h-full object-cover rounded-full" alt="" />
+                                  );
+                                }
+                              }
+
                               return (
                                 <div 
                                   key={cell.id} 
@@ -1859,7 +1894,7 @@ function HomeContent() {
                                       setSelectedCalendarDate(dateObj);
                                       setCalendarMonth(dateObj);
                                     }}
-                                    className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
+                                    className={`w-9 h-9 rounded-full flex flex-col items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
                                       isSelected 
                                         ? isToday
                                           ? 'bg-[#e94a44] text-white font-bold shadow-sm z-10'
@@ -1872,7 +1907,18 @@ function HomeContent() {
                                     }`}
                                     style={{ fontSize: '17px' }}
                                   >
-                                    {cell.day}
+                                    <span className={sessionIcon ? "translate-y-[-3px]" : ""}>
+                                      {cell.day}
+                                    </span>
+                                    {sessionIcon && (
+                                      <div className={`absolute bottom-[2px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full overflow-hidden flex items-center justify-center bg-card shadow-2xs z-20 ${
+                                        isSelected 
+                                          ? 'border-[1px] border-white' 
+                                          : 'border-[1px] border-background'
+                                      }`}>
+                                        {sessionIcon}
+                                      </div>
+                                    )}
                                   </button>
                                 </div>
                               );
