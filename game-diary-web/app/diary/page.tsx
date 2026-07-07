@@ -2249,10 +2249,12 @@ function HomeContent() {
                               <h3 className="text-[18px] font-bold text-foreground">
                                 {session?.user?.name || '유저'}님 반가워요 👋🏻
                               </h3>
-                              <p className="text-[12px] text-muted-foreground leading-normal px-1">
+                              <p className="text-[12px] text-muted-foreground leading-normal px-1 break-keep">
                                 일기 작성을 도와줄 봇을 디스코드 서버에 초대해 보세요.
                                 <br />
-                                음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
+                                음성 채널 대화와 스크린샷이 모여
+                                <br />
+                                일기로 자동 작성됩니다.
                               </p>
                             </div>
                             <div className="w-full flex flex-col items-center gap-2">
