@@ -14,6 +14,14 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   const matchedGame = games?.find((g: any) => g.title === selectedGame);
   const [previewUrl, setPreviewUrl] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -51,17 +59,20 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   };
 
   return (
-    <div className={`fixed inset-0 z-[150] flex justify-center bg-black/40 backdrop-blur-md p-4 ${
-      isInputFocused ? 'items-start pt-4 md:items-center' : 'items-center'
-    }`}>
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-4">
       <motion.div 
-        layout
-        transition={{
-          layout: { type: "spring", stiffness: 380, damping: 30 }
-        }}
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        animate={{ 
+          opacity: 1, 
+          y: isInputFocused && isMobile ? -140 : 0, 
+          scale: 1 
+        }}
         exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        transition={{
+          y: { type: "spring", stiffness: 380, damping: 30 },
+          opacity: { duration: 0.2 },
+          scale: { duration: 0.2 }
+        }}
         className="bg-[#ffffff] w-full max-w-[860px] max-h-[90vh] md:max-h-none overflow-y-auto md:overflow-visible rounded-[0.75rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row"
       >
           {/* Left: Preview Section */}
