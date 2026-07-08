@@ -300,6 +300,18 @@ const InteractiveHero: React.FC = () => {
             </motion.div>
 
         </main>
+        
+        <footer className="w-full py-8 border-t border-border/10 z-10 bg-background/50 backdrop-blur-sm">
+          <div className="max-w-screen-xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
+            <div>
+              © 2026 Game Diary. All rights reserved.
+            </div>
+            <div className="flex gap-6">
+              <Link href="/terms" className="hover:text-foreground transition-colors font-medium">이용약관</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors font-medium">개인정보 처리방침</Link>
+            </div>
+          </div>
+        </footer>
 
     </div>
   );
