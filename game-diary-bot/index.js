@@ -322,8 +322,8 @@ const MANUAL_GAME_MAP = {
 };
 
 // 🌐 디코드 가능한 게임 리스트 캐싱 및 매핑
-const detectableGamesById = new Map();
-const detectableGamesByName = new Map();
+let detectableGamesById = new Map();
+let detectableGamesByName = new Map();
 
 async function loadDetectableGames() {
     return new Promise((resolve) => {
@@ -334,22 +334,32 @@ async function loadDetectableGames() {
             res.on('end', () => {
                 try {
                     const list = JSON.parse(data);
+                    
+                    // 1. 임시 맵(Shadow Map) 생성 (원자적 교체 및 메모리 누수 방지)
+                    const tempById = new Map();
+                    const tempByName = new Map();
+                    
                     let count = 0;
                     for (const item of list) {
                         if (item.icon_hash) {
                             const iconUrl = `https://cdn.discordapp.com/app-icons/${item.id}/${item.icon_hash}.png?size=512`;
-                            detectableGamesById.set(item.id, iconUrl);
+                            tempById.set(item.id, iconUrl);
                             if (item.name) {
-                                detectableGamesByName.set(item.name.toLowerCase().trim(), iconUrl);
+                                tempByName.set(item.name.toLowerCase().trim(), iconUrl);
                             }
                             if (item.aliases) {
                                 for (const alias of item.aliases) {
-                                    detectableGamesByName.set(alias.toLowerCase().trim(), iconUrl);
+                                    tempByName.set(alias.toLowerCase().trim(), iconUrl);
                                 }
                             }
                             count++;
                         }
                     }
+                    
+                    // 2. 성공 시에만 맵 객체를 새로 교체 (기존 맵은 즉시 가비지 컬렉션 대상이 되어 메모리에서 해제됨)
+                    detectableGamesById = tempById;
+                    detectableGamesByName = tempByName;
+                    
                     console.log(`[System] 감지 가능한 게임 아이콘 ${count}개 캐싱 및 색인 완료.`);
                     resolve(true);
                 } catch (e) {
