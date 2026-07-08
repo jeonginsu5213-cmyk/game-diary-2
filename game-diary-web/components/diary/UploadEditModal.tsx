@@ -52,7 +52,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
 
   return (
     <div className={`fixed inset-0 z-[150] flex justify-center bg-black/40 backdrop-blur-md p-4 transition-all duration-300 ${
-      isInputFocused ? 'items-start pt-2 md:items-center md:pt-4' : 'items-center pt-4'
+      isInputFocused ? 'items-start pt-4 md:items-center md:pt-4' : 'items-center pt-4'
     }`}>
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
