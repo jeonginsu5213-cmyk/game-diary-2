@@ -588,9 +588,7 @@ async function updateGameLog(session, userId, activity) {
         // 게임 시작 알림 전송
         (async () => {
             try {
-                const gameLog = session.gameLogs[originalName];
-                const finalIconURL = gameLog ? gameLog.iconURL : null;
-                await sendNotification(session, userId, `${originalName} 기록을 시작합니다.`, finalIconURL);
+                await sendNotification(session, userId, `${originalName} 기록을 시작합니다.`);
             } catch (e) {
                 console.error("[updateGameLog] 게임 시작 알림 전송 실패:", e);
             }
@@ -1446,8 +1444,7 @@ client.on('presenceUpdate', async (o, n) => {
                             durationText = `${durationMin}분`;
                         }
                         
-                        const finalIconURL = gameLog ? gameLog.iconURL : null;
-                        await sendNotification(s, n.userId, `${oldG.name} 기록을 종료합니다. (플레이 시간: ${durationText})`, finalIconURL);
+                        await sendNotification(s, n.userId, `${oldG.name} 기록을 종료합니다. (플레이 시간: ${durationText})`);
                     } catch (e) {
                         console.error("[presenceUpdate] 게임 종료 알림 전송 실패:", e);
                     }
