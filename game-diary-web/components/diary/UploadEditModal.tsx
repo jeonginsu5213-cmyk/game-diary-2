@@ -96,11 +96,11 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 {matchedGame?.icon_url ? (
                   <img 
                     src={matchedGame.icon_url} 
-                    className="w-3.5 h-3.5 object-contain shrink-0 rounded-sm" 
+                    className="w-5 h-5 object-contain shrink-0" 
                     alt="" 
                   />
                 ) : (
-                  <Gamepad2 size={13} className="text-[#e94a44]/85 shrink-0" />
+                  <Gamepad2 size={16} className="text-[#e94a44]/85 shrink-0" />
                 )}
                 <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </p>
@@ -121,11 +121,11 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 {matchedGame?.icon_url ? (
                   <img 
                     src={matchedGame.icon_url} 
-                    className="w-[15px] h-[15px] object-contain shrink-0 rounded-sm" 
+                    className="w-6 h-6 object-contain shrink-0" 
                     alt="" 
                   />
                 ) : (
-                  <Gamepad2 size={14} className="text-[#e94a44] shrink-0" />
+                  <Gamepad2 size={20} className="text-[#e94a44] shrink-0" />
                 )}
                 <span>{selectedGame || "분류되지 않은 순간"}에 기록됩니다.</span>
               </div>
