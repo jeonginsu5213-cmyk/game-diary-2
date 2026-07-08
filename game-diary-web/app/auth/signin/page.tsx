@@ -110,7 +110,7 @@ export default function SignInPage() {
               </motion.a>
               
               <p className="text-[10px] text-center text-muted-foreground px-2 leading-relaxed">
-                로그인 시 Game Diary의{' '}
+                로그인 시{' '}
                 <Link href="/terms" className="underline hover:text-[#e94a44] transition-colors font-semibold">
                   이용 약관
                 </Link>
