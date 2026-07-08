@@ -444,6 +444,11 @@ async function updateGameLog(session, userId, activity) {
     if (!activity || activity.type !== 0) return;
 
     const originalName = activity.name;
+
+    // 유저의 직전 플레이 게임 업데이트
+    if (!session.lastPlayedGames) session.lastPlayedGames = new Map();
+    session.lastPlayedGames.set(userId, originalName);
+
     console.log(`\n--- 🔍 [아이콘 매칭] "${originalName}" 처리 중 ---`);
     const iconURL = await getGameIconURL(originalName, activity);
 
@@ -1240,6 +1245,7 @@ client.on('messageCreate', async (m) => {
                 await updateGameLog(session, m.author.id, uploaderGame);
             }
         } else {
+            // 1. 현재 이 유저의 활성 게임 세션이 살아있는지 확인
             for (const [name, log] of Object.entries(session.gameLogs)) {
                 const isPlayerActive = log.activeStartTime[m.author.id] !== null;
                 if (isPlayerActive) {
@@ -1247,6 +1253,23 @@ client.on('messageCreate', async (m) => {
                     break;
                 }
             }
+            // 2. 직전 플레이했던 게임이 캐싱되어 있으면 매칭
+            if (activeGameTitle === "미지정" && session.lastPlayedGames) {
+                const lastGame = session.lastPlayedGames.get(m.author.id);
+                if (lastGame && session.gameLogs[lastGame]) {
+                    activeGameTitle = lastGame;
+                }
+            }
+            // 3. 봇 세션 내에서 이 사용자가 플레이한 흔적이 있는 게임들 중 첫 번째
+            if (activeGameTitle === "미지정") {
+                for (const [name, log] of Object.entries(session.gameLogs)) {
+                    if (log.players && log.players.has(m.author.id)) {
+                        activeGameTitle = name;
+                        break;
+                    }
+                }
+            }
+            // 4. 마지막 보완 폴백: 세션에 등록된 전체 게임 로그 중 첫 번째 게임
             if (activeGameTitle === "미지정") {
                 const keys = Object.keys(session.gameLogs);
                 if (keys.length > 0) activeGameTitle = keys[0];
@@ -1344,9 +1367,34 @@ client.on('messageCreate', async (m) => {
         activeGameTitle = uploaderGame.name;
         if (!s.gameLogs[activeGameTitle]) await updateGameLog(s, m.author.id, uploaderGame);
     } else {
+        // 1. 현재 이 유저의 활성 게임 세션이 살아있는지 확인
         for (const [name, log] of Object.entries(s.gameLogs)) {
-            const isAnyPlayerActive = Object.values(log.activeStartTime).some(time => time !== null);
-            if (isAnyPlayerActive) { activeGameTitle = name; break; }
+            const isPlayerActive = log.activeStartTime[m.author.id] !== null;
+            if (isPlayerActive) {
+                activeGameTitle = name;
+                break;
+            }
+        }
+        // 2. 직전 플레이했던 게임이 캐싱되어 있으면 매칭
+        if (activeGameTitle === "미지정" && s.lastPlayedGames) {
+            const lastGame = s.lastPlayedGames.get(m.author.id);
+            if (lastGame && s.gameLogs[lastGame]) {
+                activeGameTitle = lastGame;
+            }
+        }
+        // 3. 봇 세션 내에서 이 사용자가 플레이한 흔적이 있는 게임들 중 첫 번째
+        if (activeGameTitle === "미지정") {
+            for (const [name, log] of Object.entries(s.gameLogs)) {
+                if (log.players && log.players.has(m.author.id)) {
+                    activeGameTitle = name;
+                    break;
+                }
+            }
+        }
+        // 4. 마지막 보완 폴백: 세션에 등록된 전체 게임 로그 중 첫 번째 게임
+        if (activeGameTitle === "미지정") {
+            const keys = Object.keys(s.gameLogs);
+            if (keys.length > 0) activeGameTitle = keys[0];
         }
     }
     if (m.attachments.size === 0 && m.content.trim()) {
