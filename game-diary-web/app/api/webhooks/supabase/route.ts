@@ -180,6 +180,25 @@ export async function POST(request: Request) {
 
         const sessionId = gameRecord.session_id;
 
+        // 세션의 end_time 조회
+        const { data: sessionRecord } = await supabase
+          .from("sessions")
+          .select("end_time")
+          .eq("id", sessionId)
+          .single();
+
+        if (sessionRecord && sessionRecord.end_time) {
+          const sessionEndTime = new Date(sessionRecord.end_time).getTime();
+          const commentCreatedAt = new Date(record.created_at).getTime();
+          
+          // 디스코드 보이스 통화 도중 작성되어 봇이 마지막에 대량 삽입한 댓글인 경우 알림 대상에서 제외
+          // 미세 시간 오차나 네트워크 지연을 감안해 10초(10000ms) 여유 마진 적용
+          if (commentCreatedAt <= sessionEndTime + 10000) {
+            console.log("[Webhook] 디스코드 채팅 수집 댓글 알림 제외:", record.id);
+            return NextResponse.json({ success: true, message: "Discord call comment notification skipped" }, { status: 200 });
+          }
+        }
+
         // 2. 해당 세션의 참여자 목록 조회 (작성자 본인 제외)
         const { data: participants, error: partError } = await supabase
           .from("session_participants")
