@@ -2064,57 +2064,75 @@ function HomeContent() {
                   </div>
 
                   {/* Daily Diary List (Scrollable) */}
-                  <div 
-                    data-scroll-container="true"
-                    className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] pt-1"
-                  >
-                    {selectedCalendarDate && (
-                      <div className="pt-0 animate-in slide-in-from-bottom-1 duration-200">
-                        <motion.div 
-                          animate={isRefreshing ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
-                          transition={isRefreshing ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
-                          className="space-y-1"
-                        >
-                          {(() => {
-                            const selectedDateSessions = calendarSessions.filter(s => {
-                              const dateStr = s.start_time || s.date;
-                              if (!dateStr) return false;
-                              const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
-                              if (isNaN(d.getTime())) return false;
-                              return d.getFullYear() === selectedCalendarDate.getFullYear() &&
-                                     d.getMonth() === selectedCalendarDate.getMonth() &&
-                                     d.getDate() === selectedCalendarDate.getDate();
-                            });
+                  {(() => {
+                    const selectedDateSessions = selectedCalendarDate ? calendarSessions.filter(s => {
+                      const dateStr = s.start_time || s.date;
+                      if (!dateStr) return false;
+                      const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
+                      if (isNaN(d.getTime())) return false;
+                      return d.getFullYear() === selectedCalendarDate.getFullYear() &&
+                             d.getMonth() === selectedCalendarDate.getMonth() &&
+                             d.getDate() === selectedCalendarDate.getDate();
+                    }) : [];
 
-                            if (selectedDateSessions.length === 0) {
-                              return (
+                    const hasDiaries = selectedDateSessions.length > 0;
+                    const isMonthMode = calendarViewMode === 'month';
+                    
+                    // 각 아이템 높이가 약 52px이므로, 3개 높이는 약 156px입니다. 
+                    // 4개부터는 스크롤되도록 max-h-[160px] 설정 (패딩 고려)
+                    const containerStyle = isMonthMode && hasDiaries
+                      ? { maxHeight: '160px' }
+                      : undefined;
+
+                    const containerClass = `overflow-x-hidden scrollbar-hide touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] pt-1 ${
+                      isMonthMode && selectedDateSessions.length <= 3
+                        ? 'overflow-y-hidden'
+                        : 'overflow-y-auto flex-1 pb-4'
+                    }`;
+
+                    return (
+                      <div 
+                        data-scroll-container="true"
+                        style={containerStyle}
+                        className={containerClass}
+                      >
+                        {selectedCalendarDate && (
+                          <div className="pt-0 animate-in slide-in-from-bottom-1 duration-200">
+                            <motion.div 
+                              animate={isRefreshing ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
+                              transition={isRefreshing ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
+                              className="space-y-1"
+                            >
+                              {selectedDateSessions.length === 0 ? (
                                 <p className={`text-[11px] font-bold text-muted-foreground/30 text-center pb-4 select-none ${
                                   calendarViewMode === 'week' ? 'pt-[240px]' : 'pt-[80px]'
                                 }`}>생성된 일기가 없습니다.</p>
-                              );
-                            }
+                              ) : (
+                                selectedDateSessions.map(s => (
+                                  <DiaryListItem 
+                                    key={s.id}
+                                    session={s}
+                                    isSelected={selectedId === s.id}
+                                    isFavorite={favoriteSessionIds.has(s.id)}
+                                    onSelect={handleDiarySelect}
+                                    onToggleFavorite={handleToggleFavorite}
+                                    isTrash={false}
+                                    currentUserId={session?.user?.id}
+                                    creatorAvatarUrl={profiles[s.session_participants?.[0]?.user_id]?.avatar_url}
+                                  />
+                                ))
+                              )}
+                            </motion.div>
+                          </div>
+                        )}
 
-                            return selectedDateSessions.map(s => (
-                              <DiaryListItem 
-                                key={s.id}
-                                session={s}
-                                isSelected={selectedId === s.id}
-                                isFavorite={favoriteSessionIds.has(s.id)}
-                                onSelect={handleDiarySelect}
-                                onToggleFavorite={handleToggleFavorite}
-                                isTrash={false}
-                                currentUserId={session?.user?.id}
-                                creatorAvatarUrl={profiles[s.session_participants?.[0]?.user_id]?.avatar_url}
-                              />
-                            ));
-                          })()}
-                        </motion.div>
+                        {/* Haptic/Visual spacer to push content above the 88px mobile dock - 월간뷰에서는 과도한 스크롤 방지를 위해 비활성화 */}
+                        {!isMonthMode && (
+                          <div className="h-40 md:hidden shrink-0" />
+                        )}
                       </div>
-                    )}
-
-                    {/* Haptic/Visual spacer to push content above the 88px mobile dock */}
-                    <div className="h-40 md:hidden shrink-0" />
-                  </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div 
