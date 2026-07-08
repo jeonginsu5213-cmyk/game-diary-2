@@ -2422,7 +2422,7 @@ function HomeContent() {
 
             <div 
               data-scroll-container="true"
-              className={`flex-1 overflow-y-auto scrollbar-hide ${isDeleted && current ? 'pt-[104px]' : 'pt-16'}`}
+              className={`flex-1 overflow-y-auto overscroll-y-contain scrollbar-hide ${isDeleted && current ? 'pt-[104px]' : 'pt-16'}`}
             >
               {/* Pull-to-refresh Indicator */}
               <div 
@@ -3071,7 +3071,7 @@ function HomeContent() {
 
             {/* 현재 선택된 이모지에 반응을 남긴 유저 목록 */}
             {activeReactionComment && reactionDetailEmoji && activeReactionComment.reactions?.[reactionDetailEmoji] && (
-              <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto px-1 custom-scrollbar">
+              <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-1 custom-scrollbar">
                 {(activeReactionComment.reactions[reactionDetailEmoji] as string[]).map((uid) => {
                   const userProfile = profiles[uid];
                   const isMe = session?.user?.id === uid;
