@@ -4,6 +4,7 @@ import React from 'react';
 import { signIn, getCsrfToken } from "next-auth/react";
 import { motion } from "framer-motion";
 import BackgroundCanvas from '@/components/main/BackgroundCanvas';
+import Link from 'next/link';
 
 export default function SignInPage() {
   const [discordUrl, setDiscordUrl] = React.useState<string | null>(null);
@@ -108,8 +109,16 @@ export default function SignInPage() {
                 디스코드로 시작하기
               </motion.a>
               
-              <p className="text-[9px] text-center text-muted-foreground px-2 leading-relaxed">
-                로그인 시 Game Diary의 이용 약관 및 개인정보 처리방침에 동의하게 됩니다.
+              <p className="text-[10px] text-center text-muted-foreground px-2 leading-relaxed">
+                로그인 시 Game Diary의{' '}
+                <Link href="/terms" className="underline hover:text-[#e94a44] transition-colors font-semibold">
+                  이용 약관
+                </Link>
+                {' '}및{' '}
+                <Link href="/privacy" className="underline hover:text-[#e94a44] transition-colors font-semibold">
+                  개인정보 처리방침
+                </Link>
+                에 동의하게 됩니다.
               </p>
             </div>
           </div>
