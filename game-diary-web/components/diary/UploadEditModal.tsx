@@ -121,7 +121,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 {matchedGame?.icon_url ? (
                   <img 
                     src={matchedGame.icon_url} 
-                    className="w-6 h-6 object-contain shrink-0" 
+                    className="w-5 h-5 object-contain shrink-0" 
                     alt="" 
                   />
                 ) : (
