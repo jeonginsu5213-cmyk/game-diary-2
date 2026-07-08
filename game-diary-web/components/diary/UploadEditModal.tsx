@@ -153,10 +153,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                   기록 중...
                 </>
               ) : (
-                <>
-                  업로드 완료
-                  <ArrowRight size={18} />
-                </>
+                "업로드 완료"
               )}
             </button>
           </div>
