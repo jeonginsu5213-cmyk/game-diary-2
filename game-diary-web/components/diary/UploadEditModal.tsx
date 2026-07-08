@@ -62,8 +62,8 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
     <motion.div 
       layout
       transition={{ type: "spring", stiffness: 380, damping: 30 }}
-      className={`fixed inset-0 z-[150] flex justify-center bg-black/40 backdrop-blur-md p-4 ${
-        isInputFocused ? 'items-start pt-4 md:items-center' : 'items-center'
+      className={`fixed inset-0 z-[150] flex justify-center bg-black/40 backdrop-blur-md p-4 pt-4 ${
+        isInputFocused ? 'items-start md:items-center' : 'items-center'
       }`}
     >
       <motion.div 
