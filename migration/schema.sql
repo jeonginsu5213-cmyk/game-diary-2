@@ -116,6 +116,8 @@ alter table public.session_game_players enable row level security;
 alter table public.comments enable row level security;
 alter table public.screenshots enable row level security;
 alter table public.notifications enable row level security;
+alter table public.session_favorites enable row level security;
+alter table public.app_settings enable row level security;
 
 -- 12. Define Policies (Read Policies)
 create policy "Allow public read-only access" on public.profiles for select using (true);
@@ -127,6 +129,8 @@ create policy "Allow public read-only access" on public.session_game_players for
 create policy "Allow public read-only access" on public.comments for select using (true);
 create policy "Allow public read-only access" on public.screenshots for select using (true);
 create policy "Allow public read-only access" on public.notifications for select using (true);
+create policy "Allow public read-only access" on public.session_favorites for select using (true);
+create policy "Allow public read-only access" on public.app_settings for select using (true);
 
 -- 13. Define Policies (Write/Mutation Policies for public/anon web operations)
 create policy "Allow public insert profiles" on public.profiles for insert with check (true);
@@ -158,3 +162,6 @@ create policy "Allow public delete screenshots" on public.screenshots for delete
 create policy "Allow public insert notifications" on public.notifications for insert with check (true);
 create policy "Allow public update notifications" on public.notifications for update using (true);
 create policy "Allow public delete notifications" on public.notifications for delete using (true);
+
+create policy "Allow public insert session_favorites" on public.session_favorites for insert with check (true);
+create policy "Allow public delete session_favorites" on public.session_favorites for delete using (true);
