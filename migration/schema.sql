@@ -94,7 +94,19 @@ create table if not exists public.screenshots (
   unique(session_id, url)
 );
 
--- 10. Enable RLS
+-- 10. Notifications
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  recipient_id text not null references public.profiles(id) on delete cascade,
+  sender_id text references public.profiles(id) on delete cascade,
+  type text not null,
+  source_id text,
+  content text not null,
+  read boolean default false,
+  created_at timestamptz default now()
+);
+
+-- 11. Enable RLS
 alter table public.profiles enable row level security;
 alter table public.server_profiles enable row level security;
 alter table public.sessions enable row level security;
@@ -103,8 +115,9 @@ alter table public.session_games enable row level security;
 alter table public.session_game_players enable row level security;
 alter table public.comments enable row level security;
 alter table public.screenshots enable row level security;
+alter table public.notifications enable row level security;
 
--- 11. Define Policies
+-- 12. Define Policies (Read Policies)
 create policy "Allow public read-only access" on public.profiles for select using (true);
 create policy "Allow public read-only access" on public.server_profiles for select using (true);
 create policy "Allow public read-only access" on public.sessions for select using (true);
@@ -113,6 +126,35 @@ create policy "Allow public read-only access" on public.session_games for select
 create policy "Allow public read-only access" on public.session_game_players for select using (true);
 create policy "Allow public read-only access" on public.comments for select using (true);
 create policy "Allow public read-only access" on public.screenshots for select using (true);
+create policy "Allow public read-only access" on public.notifications for select using (true);
 
--- Note: Write policies should be added based on authentication requirements.
--- Typically, the bot (service_role) handles most writes, so public write policies are not needed.
+-- 13. Define Policies (Write/Mutation Policies for public/anon web operations)
+create policy "Allow public insert profiles" on public.profiles for insert with check (true);
+create policy "Allow public update profiles" on public.profiles for update using (true);
+
+create policy "Allow public insert server_profiles" on public.server_profiles for insert with check (true);
+create policy "Allow public update server_profiles" on public.server_profiles for update using (true);
+
+create policy "Allow public insert sessions" on public.sessions for insert with check (true);
+create policy "Allow public update sessions" on public.sessions for update using (true);
+
+create policy "Allow public insert session_participants" on public.session_participants for insert with check (true);
+create policy "Allow public update session_participants" on public.session_participants for update using (true);
+
+create policy "Allow public insert session_games" on public.session_games for insert with check (true);
+create policy "Allow public update session_games" on public.session_games for update using (true);
+
+create policy "Allow public insert session_game_players" on public.session_game_players for insert with check (true);
+create policy "Allow public update session_game_players" on public.session_game_players for update using (true);
+
+create policy "Allow public insert comments" on public.comments for insert with check (true);
+create policy "Allow public update comments" on public.comments for update using (true);
+create policy "Allow public delete comments" on public.comments for delete using (true);
+
+create policy "Allow public insert screenshots" on public.screenshots for insert with check (true);
+create policy "Allow public update screenshots" on public.screenshots for update using (true);
+create policy "Allow public delete screenshots" on public.screenshots for delete using (true);
+
+create policy "Allow public insert notifications" on public.notifications for insert with check (true);
+create policy "Allow public update notifications" on public.notifications for update using (true);
+create policy "Allow public delete notifications" on public.notifications for delete using (true);
