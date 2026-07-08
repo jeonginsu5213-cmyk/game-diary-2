@@ -28,6 +28,7 @@ const {
 const admin = require('firebase-admin');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
+const fs = require('fs');
 const https = require('https');
 const crypto = require('crypto');
 
@@ -148,6 +149,141 @@ client.on('guildCreate', async (guild) => {
 
 const activeSessions = new Map();
 const activeSoloSessions = new Map();
+
+// --- 활성 세션 백업 및 복원 로직 (서버 재시작 대비) ---
+const BACKUP_FILE_PATH = path.join(__dirname, 'active_sessions_backup.json');
+
+function serializeTimestamp(ts) {
+    if (!ts) return null;
+    if (ts.seconds !== undefined && ts.nanoseconds !== undefined) {
+        return { _type: 'Timestamp', seconds: ts.seconds, nanoseconds: ts.nanoseconds };
+    }
+    if (typeof ts.toDate === 'function') {
+        const date = ts.toDate();
+        return { _type: 'Timestamp', seconds: Math.floor(date.getTime() / 1000), nanoseconds: (date.getTime() % 1000) * 1e6 };
+    }
+    return ts;
+}
+
+function deserializeTimestamp(val) {
+    if (val && val._type === 'Timestamp') {
+        return new admin.firestore.Timestamp(val.seconds, val.nanoseconds);
+    }
+    return val;
+}
+
+function serializeSession(session) {
+    return {
+        ...session,
+        participants: Array.from(session.participants || []),
+        displayNames: session.displayNames ? Array.from(session.displayNames.entries()) : [],
+        profileImages: session.profileImages ? Array.from(session.profileImages.entries()) : [],
+        lastPlayedGames: session.lastPlayedGames ? Array.from(session.lastPlayedGames.entries()) : [],
+        controlMessage: session.controlMessage ? {
+            channelId: session.controlMessage.channelId,
+            messageId: session.controlMessage.id
+        } : null,
+        gameLogs: Object.entries(session.gameLogs || {}).reduce((acc, [gameName, log]) => {
+            acc[gameName] = {
+                ...log,
+                players: Array.from(log.players || [])
+            };
+            return acc;
+        }, {}),
+        participantLogs: Object.entries(session.participantLogs || {}).reduce((acc, [userId, logs]) => {
+            acc[userId] = logs.map(l => ({
+                joinTime: serializeTimestamp(l.joinTime),
+                leaveTime: serializeTimestamp(l.leaveTime)
+            }));
+            return acc;
+        }, {})
+    };
+}
+
+async function deserializeSession(data) {
+    const session = {
+        ...data,
+        participants: new Set(data.participants || []),
+        displayNames: new Map(data.displayNames || []),
+        profileImages: new Map(data.profileImages || []),
+        lastPlayedGames: new Map(data.lastPlayedGames || []),
+        controlMessage: null,
+        gameLogs: Object.entries(data.gameLogs || {}).reduce((acc, [gameName, log]) => {
+            acc[gameName] = {
+                ...log,
+                players: new Set(log.players || [])
+            };
+            return acc;
+        }, {}),
+        participantLogs: Object.entries(data.participantLogs || {}).reduce((acc, [userId, logs]) => {
+            acc[userId] = logs.map(l => ({
+                joinTime: deserializeTimestamp(l.joinTime),
+                leaveTime: deserializeTimestamp(l.leaveTime)
+            }));
+            return acc;
+        }, {})
+    };
+
+    if (data.controlMessage) {
+        try {
+            const channel = await client.channels.fetch(data.controlMessage.channelId);
+            if (channel) {
+                session.controlMessage = await channel.messages.fetch(data.controlMessage.messageId);
+            }
+        } catch (e) {
+            console.error("[Backup Restore] 제어 메시지 복구 실패:", e.message);
+        }
+    }
+
+    return session;
+}
+
+function saveSessionsBackup() {
+    try {
+        const backupData = {
+            activeSessions: Array.from(activeSessions.entries()).map(([k, v]) => [k, serializeSession(v)]),
+            activeSoloSessions: Array.from(activeSoloSessions.entries()).map(([k, v]) => [k, serializeSession(v)])
+        };
+        fs.writeFileSync(BACKUP_FILE_PATH, JSON.stringify(backupData, null, 2), 'utf-8');
+        console.log("[Backup] 활성 세션 백업 파일이 저장되었습니다.");
+    } catch (e) {
+        console.error("[Backup] 세션 백업 실패:", e);
+    }
+}
+
+async function loadSessionsBackup() {
+    try {
+        if (!fs.existsSync(BACKUP_FILE_PATH)) return;
+        const raw = fs.readFileSync(BACKUP_FILE_PATH, 'utf-8');
+        if (!raw.trim()) return;
+        const backupData = JSON.parse(raw);
+
+        if (backupData.activeSessions) {
+            for (const [k, v] of backupData.activeSessions) {
+                try {
+                    const session = await deserializeSession(v);
+                    activeSessions.set(k, session);
+                } catch (e) {
+                    console.error(`[Backup] activeSession 복구 실패 (${k}):`, e);
+                }
+            }
+        }
+
+        if (backupData.activeSoloSessions) {
+            for (const [k, v] of backupData.activeSoloSessions) {
+                try {
+                    const session = await deserializeSession(v);
+                    activeSoloSessions.set(k, session);
+                } catch (e) {
+                    console.error(`[Backup] activeSoloSession 복구 실패 (${k}):`, e);
+                }
+            }
+        }
+        console.log(`[Backup] 복구 완료: 서버 세션 ${activeSessions.size}개, 개인 세션 ${activeSoloSessions.size}개`);
+    } catch (e) {
+        console.error("[Backup] 세션 백업 로드 실패:", e);
+    }
+}
 
 async function findMemberInMutualGuilds(userId) {
     // 1. 캐시에서 우선 조회 (지연 없음) 및 presence 정보가 존재하면 즉시 반환
@@ -744,6 +880,14 @@ client.once('ready', async () => {
     console.log('--------------------------------------');
     console.log('🤖 Game Diary 봇 온라인!');
     console.log('--------------------------------------');
+
+    // 💾 저장된 활성 세션 백업 복구
+    await loadSessionsBackup();
+
+    // ⏰ 30초마다 활성 세션 데이터 자동 백업 저장
+    setInterval(() => {
+        saveSessionsBackup();
+    }, 30 * 1000);
 
     // 🌐 감지 가능한 게임 리스트 비동기 캐싱 시작
     await loadDetectableGames();
@@ -1501,6 +1645,19 @@ client.on('presenceUpdate', async (o, n) => {
         }
     }
     if (newG) await updateGameLog(s, n.userId, newG);
+});
+
+// 💾 프로세스 종료(SIGINT, SIGTERM) 시 백업 즉시 저장
+process.on('SIGINT', () => {
+    console.log("[System] SIGINT 신호가 감지되었습니다. 세션 백업을 긴급 저장합니다...");
+    saveSessionsBackup();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log("[System] SIGTERM 신호가 감지되었습니다. 세션 백업을 긴급 저장합니다...");
+    saveSessionsBackup();
+    process.exit(0);
 });
 
 client.login(process.env.DISCORD_TOKEN);
