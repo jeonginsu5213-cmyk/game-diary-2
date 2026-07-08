@@ -181,7 +181,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
           </div>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 
