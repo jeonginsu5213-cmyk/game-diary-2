@@ -137,7 +137,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 value={comment} 
                 onChange={(e) => setComment(e.target.value)} 
                 placeholder="이 순간을 기억할 수 있는 짧은 글을 남겨주세요."
-                className="w-full bg-[#f4f5f7] border-none p-3 md:p-4 rounded-[0.75rem] text-[13px] md:text-[14px] text-[#333333] focus:ring-2 focus:ring-[#e94a44]/20 transition-all placeholder:text-[#6b7280]/50 flex-1 min-h-[60px] md:min-h-[80px] resize-none font-medium leading-relaxed"
+                className="w-full bg-[#f4f5f7] border-none p-3 md:p-4 rounded-[0.75rem] text-[16px] md:text-[14px] text-[#333333] focus:ring-2 focus:ring-[#e94a44]/20 transition-all placeholder:text-[#6b7280]/50 flex-1 min-h-[60px] md:min-h-[80px] resize-none font-medium leading-relaxed"
               />
             </div>
 
