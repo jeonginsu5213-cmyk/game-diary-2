@@ -735,6 +735,12 @@ client.once('ready', async () => {
     // 🌐 감지 가능한 게임 리스트 비동기 캐싱 시작
     await loadDetectableGames();
 
+    // ⏰ 24시간마다 감지 가능한 게임 목록 자동 갱신
+    setInterval(async () => {
+        console.log('[System] 감지 가능한 게임 목록 자동 주기 갱신 시작...');
+        await loadDetectableGames();
+    }, 24 * 60 * 60 * 1000);
+
     for (const guild of client.guilds.cache.values()) {
         for (const voiceState of guild.voiceStates.cache.values()) {
             if (!voiceState.member || voiceState.member.user.bot || !voiceState.channelId) continue;
