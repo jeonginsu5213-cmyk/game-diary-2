@@ -13,6 +13,7 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   const [isUploading, setIsUploading] = useState(false);
   const matchedGame = games?.find((g: any) => g.title === selectedGame);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -50,7 +51,9 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 pt-4">
+    <div className={`fixed inset-0 z-[150] flex justify-center bg-black/40 backdrop-blur-md p-4 transition-all duration-300 ${
+      isInputFocused ? 'items-start pt-2 md:items-center md:pt-4' : 'items-center pt-4'
+    }`}>
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -137,6 +140,8 @@ const UploadEditModal = ({ file, sessionId, defaultGame = "", onClose, games, on
                 value={comment} 
                 onChange={(e) => setComment(e.target.value)} 
                 placeholder="이 순간을 기억할 수 있는 짧은 글을 남겨주세요."
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 className="w-full bg-[#f4f5f7] border-none p-3 md:p-4 rounded-[0.75rem] text-[13px] md:text-[14px] text-[#333333] focus:ring-2 focus:ring-[#e94a44]/20 transition-all placeholder:text-[#6b7280]/50 flex-1 min-h-[60px] md:min-h-[80px] resize-none font-medium leading-relaxed"
               />
             </div>
