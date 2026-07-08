@@ -241,23 +241,7 @@ async function startSoloSession(interaction, userId, gameName, sessionTitle, act
         newSession.gameLogs[gameName].activeStartTime[userId] = Date.now();
         
         // 아이콘 조회 및 추가
-        if (activity) {
-            let iconURL = null;
-            const gameNameKey = gameName.trim().toLowerCase();
-            if (MANUAL_GAME_MAP[gameNameKey]) {
-                iconURL = MANUAL_GAME_MAP[gameNameKey];
-            } else if (activity.assets) {
-                iconURL = activity.assets.largeImageURL({ format: 'png', size: 512 });
-            } else if (activity.applicationId) {
-                try {
-                    const app = await client.rest.get(`/applications/${activity.applicationId}`);
-                    if (app && app.icon) {
-                        iconURL = `https://cdn.discordapp.com/app-icons/${activity.applicationId}/${app.icon}.png?size=512`;
-                    }
-                } catch (e) {}
-            }
-            newSession.gameLogs[gameName].iconURL = iconURL;
-        }
+        newSession.gameLogs[gameName].iconURL = await getGameIconURL(gameName, activity);
     }
 
     // 제어 패널 메시지 업데이트 (서버와 동일한 양식의 content + 안내 embed + 2개 버튼 구성)
@@ -337,6 +321,98 @@ const MANUAL_GAME_MAP = {
     "overwatch 2": "https://cdn.discordapp.com/app-icons/356860322762162176/67406a6c253457a3e7e8b6f3796f7c81.png"
 };
 
+// 🌐 디코드 가능한 게임 리스트 캐싱 및 매핑
+const detectableGamesById = new Map();
+const detectableGamesByName = new Map();
+
+async function loadDetectableGames() {
+    return new Promise((resolve) => {
+        console.log('[System] Discord API에서 감지 가능한 게임 리스트를 로드하는 중...');
+        https.get('https://discord.com/api/v9/applications/detectable', (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+                try {
+                    const list = JSON.parse(data);
+                    let count = 0;
+                    for (const item of list) {
+                        if (item.icon_hash) {
+                            const iconUrl = `https://cdn.discordapp.com/app-icons/${item.id}/${item.icon_hash}.png?size=512`;
+                            detectableGamesById.set(item.id, iconUrl);
+                            if (item.name) {
+                                detectableGamesByName.set(item.name.toLowerCase().trim(), iconUrl);
+                            }
+                            if (item.aliases) {
+                                for (const alias of item.aliases) {
+                                    detectableGamesByName.set(alias.toLowerCase().trim(), iconUrl);
+                                }
+                            }
+                            count++;
+                        }
+                    }
+                    console.log(`[System] 감지 가능한 게임 아이콘 ${count}개 캐싱 및 색인 완료.`);
+                    resolve(true);
+                } catch (e) {
+                    console.error('[System] 감지 가능한 게임 JSON 파싱 실패:', e.message);
+                    resolve(false);
+                }
+            });
+        }).on('error', (err) => {
+            console.error('[System] 감지 가능한 게임 리스트 API 호출 에러:', err.message);
+            resolve(false);
+        });
+    });
+}
+
+async function getGameIconURL(gameName, activity) {
+    if (!gameName || gameName === '미지정') return null;
+    const gameNameKey = gameName.trim().toLowerCase();
+
+    // 1. 수동 매칭 리스트 우선 확인
+    if (MANUAL_GAME_MAP[gameNameKey]) {
+        return MANUAL_GAME_MAP[gameNameKey];
+    }
+
+    // 2. 캐시 데이터베이스 ID 매칭
+    if (activity && activity.applicationId) {
+        const cachedUrl = detectableGamesById.get(activity.applicationId);
+        if (cachedUrl) {
+            console.log(`✨ [성공] 데시벨 데이터베이스 ID 매칭 완료: ${gameName}`);
+            return cachedUrl;
+        }
+    }
+
+    // 3. 캐시 데이터베이스 이름/별칭 매칭
+    const cachedNameUrl = detectableGamesByName.get(gameNameKey);
+    if (cachedNameUrl) {
+        console.log(`✨ [성공] 데시벨 데이터베이스 이름 매칭 완료: ${gameName}`);
+        return cachedNameUrl;
+    }
+
+    // 4. 리치 프레젠스 에셋 획득
+    if (activity && activity.assets) {
+        const assetUrl = activity.assets.largeImageURL({ format: 'png', size: 512 });
+        if (assetUrl) {
+            console.log(`✨ [성공] 리치 프레젠스 에셋 획득: ${gameName}`);
+            return assetUrl;
+        }
+    }
+
+    // 5. API 폴백 조회
+    if (activity && activity.applicationId) {
+        try {
+            const app = await client.rest.get(`/applications/${activity.applicationId}`);
+            if (app && app.icon) {
+                const apiIconUrl = `https://cdn.discordapp.com/app-icons/${activity.applicationId}/${app.icon}.png?size=512`;
+                console.log(`✨ [성공] API 조회 성공: ${gameName}`);
+                return apiIconUrl;
+            }
+        } catch (e) {}
+    }
+
+    return null;
+}
+
 function findSessionByUserId(userId) {
     for (const session of activeSessions.values()) {
         if (session.participants.has(userId)) return session;
@@ -358,30 +434,8 @@ async function updateGameLog(session, userId, activity) {
     if (!activity || activity.type !== 0) return;
 
     const originalName = activity.name;
-    const gameNameKey = originalName.trim().toLowerCase();
-    let iconURL = null;
-
     console.log(`\n--- 🔍 [아이콘 매칭] "${originalName}" 처리 중 ---`);
-
-    if (MANUAL_GAME_MAP[gameNameKey]) {
-        iconURL = MANUAL_GAME_MAP[gameNameKey];
-        console.log(`✨ [성공] 수동 리스트 매칭 완료`);
-    }
-
-    if (!iconURL && activity.assets) {
-        iconURL = activity.assets.largeImageURL({ format: 'png', size: 512 });
-        if (iconURL) console.log(`✨ [성공] 리치 프레젠스 에셋 획득`);
-    }
-
-    if (!iconURL && activity.applicationId) {
-        try {
-            const app = await client.rest.get(`/applications/${activity.applicationId}`);
-            if (app && app.icon) {
-                iconURL = `https://cdn.discordapp.com/app-icons/${activity.applicationId}/${app.icon}.png?size=512`;
-                console.log(`✨ [성공] API 조회 성공`);
-            }
-        } catch (e) {}
-    }
+    const iconURL = await getGameIconURL(originalName, activity);
 
     if (!session.gameLogs[originalName]) {
         session.gameLogs[originalName] = { 
@@ -677,6 +731,9 @@ client.once('ready', async () => {
     console.log('--------------------------------------');
     console.log('🤖 Game Diary 봇 온라인!');
     console.log('--------------------------------------');
+
+    // 🌐 감지 가능한 게임 리스트 비동기 캐싱 시작
+    await loadDetectableGames();
 
     for (const guild of client.guilds.cache.values()) {
         for (const voiceState of guild.voiceStates.cache.values()) {
