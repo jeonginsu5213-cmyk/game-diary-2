@@ -943,8 +943,12 @@ function HomeContent() {
   };
 
   const handleNotificationClick = async (notif: any) => {
+    const backup = [...notifications];
     try {
       if (!notif.is_read) {
+        // 즉시 로컬 상태 업데이트 (Optimistic Update)
+        setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+
         const { error } = await supabase
           .from('notifications')
           .update({ is_read: true })
@@ -962,13 +966,18 @@ function HomeContent() {
       }
     } catch (err: any) {
       console.error("Failed to handle notification click:", err.message);
+      setNotifications(backup); // 실패 시 롤백
     }
   };
 
   const handleMarkAllAsRead = async () => {
+    const backup = [...notifications];
     try {
       const unreadNotifs = notifications.filter(n => !n.is_read);
       if (unreadNotifs.length === 0) return;
+
+      // 즉시 로컬 상태 업데이트 (Optimistic Update)
+      setNotifications(prev => prev.map(n => n.is_read ? n : { ...n, is_read: true }));
 
       const { error } = await supabase
         .from('notifications')
@@ -979,6 +988,7 @@ function HomeContent() {
       fetchData();
     } catch (err: any) {
       console.error("Failed to mark all notifications as read:", err.message);
+      setNotifications(backup); // 실패 시 롤백
     }
   };
 
