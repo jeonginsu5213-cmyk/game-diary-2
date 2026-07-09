@@ -16,7 +16,7 @@ import { Gamepad2, Camera, MessageCircleMore, MessageCircle, Clock, ChevronDown,
 import { Pagination } from "@ark-ui/react/pagination";
 import SidebarSortDropdown from '@/components/diary/SidebarSortDropdown';
 import SettingsView from '@/components/diary/SettingsView';
-import SidebarPagination from '@/components/diary/SidebarPagination';
+
 import MoveModal from '@/components/diary/MoveModal';
 import UploadEditModal from '@/components/diary/UploadEditModal';
 import UploadPlaceholder from '@/components/diary/UploadPlaceholder';
@@ -102,7 +102,11 @@ function DiaryListItem({
               onSelect(s.id);
             }
           }}
-          className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground active:scale-[0.97] active:bg-muted/80 origin-center cursor-pointer select-none"
+          className={`w-full text-left px-4 py-3 md:p-2 rounded-lg flex items-center gap-3 transition-all duration-200 cursor-pointer select-none active:scale-[0.97] active:bg-muted/80 origin-center ${
+            isSelected 
+              ? 'bg-transparent md:bg-[#e8ebed] text-foreground shadow-xs md:shadow-none' 
+              : 'bg-transparent text-muted-foreground hover:bg-muted/50 md:hover:bg-[#e8ebed] hover:text-foreground'
+          }`}
         >
           <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
             {s.guild_name && s.guild_name !== '개인' ? (
@@ -121,7 +125,9 @@ function DiaryListItem({
               />
             )}
           </div>
-          <span className="text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium">{s.title}</span>
+          <span className={`text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium ${isSelected ? 'text-foreground' : ''}`}>
+            {s.title}
+          </span>
           <span className="text-[11px] font-sans tracking-tighter opacity-70 shrink-0 flex items-center gap-1 select-none">
             {isTrash ? (
               <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -316,6 +322,7 @@ function HomeContent() {
 
   const sidebarNodeRef = useRef<HTMLDivElement | null>(null);
   const detailNodeRef = useRef<HTMLDivElement | null>(null);
+  const calendarMonthInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sync state values to refs
   useEffect(() => {
@@ -513,7 +520,6 @@ function HomeContent() {
   const [viewMode, setViewMode] = useState<'list' | 'diary'>('list');
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'desc' | 'asc' | 'playtime' | 'favorites'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [visibleCount, setVisibleCount] = useState(15);
   const [listTab, setListTab] = useState<'active' | 'calendar' | 'trash' | 'notifications'>('active');
@@ -587,7 +593,6 @@ function HomeContent() {
   }, []);
 
   const searchParams = useSearchParams();
-  const pageSize = 10;
   const viewParam = searchParams?.get('view');
 
   useEffect(() => {
@@ -753,15 +758,6 @@ function HomeContent() {
       .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
   }, [sessions, session]);
 
-  const paginatedSessions = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return sortedSessions.slice(start, start + pageSize);
-  }, [sortedSessions, currentPage]);
-
-  const mobileSessions = useMemo(() => {
-    return sortedSessions;
-  }, [sortedSessions]);
-
   const current = useMemo(() => {
     const s = (selectedId ? sessions.find(s => s.id === selectedId) : null) || sortedSessions[0];
     if (s) {
@@ -825,8 +821,7 @@ function HomeContent() {
     };
   }, [current?.id, viewMode, handleTouchStartNative, handleTouchMoveNative, handleTouchEndNative]);
   
-  // Reset pagination when search or sort changes
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, sortBy]);
+
 
   // Reset screenshot gallery pages when diary changes
   useEffect(() => { setScreenshotPages({}); }, [selectedId]);
@@ -1364,26 +1359,15 @@ function HomeContent() {
   return (
     <div className="flex h-[var(--visual-viewport-height,100vh)] w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className={`w-full bg-background md:bg-sidebar/40 md:border-r md:border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
+      <aside className={`w-full bg-background md:border-r md:border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
         viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-10 md:z-auto' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-auto'
       }`}>
-        <div className="h-16 hidden md:flex items-center px-4 border-b border-border shrink-0">
-          <Link href="/?landing=true" className="flex items-center gap-2 group transition-all">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-[14px] font-black text-foreground tracking-tight group-hover:text-foreground transition-colors">Game Diary</span>
-          </Link>
-        </div>
+
 
         {/* Tab Bar (IMG_4513.jpg Style) */}
         <div className="w-full px-4 pt-4 pb-4 flex items-center gap-2.5 shrink-0 overflow-visible relative z-30">
           {/* 1. 디스코드 프로필 이미지 */}
-          <div className="relative w-10 h-10 shrink-0">
+          <div className="relative w-10 h-10 shrink-0 md:hidden">
             <button 
               onClick={() => setIsProfileOpen(true)}
               className="w-10 h-10 rounded-full bg-white border-2 border-[#e8ebed] dark:border-muted flex items-center justify-center shadow-xs overflow-hidden shrink-0 focus:outline-none cursor-pointer active:scale-95 transition-transform"
@@ -1433,7 +1417,7 @@ function HomeContent() {
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <List className={`w-4 h-4 ${listTab === 'active' ? 'fill-foreground text-foreground' : ''}`} />
-              {listTab === 'active' && <span>목록</span>}
+              {listTab === 'active' && <span className="md:hidden">목록</span>}
             </span>
           </motion.button>
 
@@ -1452,7 +1436,7 @@ function HomeContent() {
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <Calendar className={`w-4 h-4 ${listTab === 'calendar' ? 'fill-foreground text-foreground' : ''}`} />
-              {listTab === 'calendar' && <span>캘린더</span>}
+              {listTab === 'calendar' && <span className="md:hidden">캘린더</span>}
             </span>
           </motion.button>
 
@@ -1471,7 +1455,7 @@ function HomeContent() {
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <Trash2 className={`w-4 h-4 ${listTab === 'trash' ? 'fill-foreground text-foreground' : ''}`} />
-              {listTab === 'trash' && <span>휴지통</span>}
+              {listTab === 'trash' && <span className="md:hidden">휴지통</span>}
             </span>
           </motion.button>
 
@@ -1495,7 +1479,7 @@ function HomeContent() {
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#ef4444] rounded-full border border-white dark:border-muted z-20 pointer-events-none" />
                 )}
               </span>
-              {listTab === 'notifications' && <span>알림</span>}
+              {listTab === 'notifications' && <span className="md:hidden">알림</span>}
             </span>
           </motion.button>
 
@@ -1512,7 +1496,7 @@ function HomeContent() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -4, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute top-4 left-4 z-50 w-48 overflow-hidden rounded-xl bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-top-left border border-border/30"
+                  className="absolute top-4 left-4 z-50 w-48 overflow-hidden rounded-xl bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-top-left border border-border/30 md:hidden"
                 >
                   <button 
                     onClick={() => {
@@ -1554,7 +1538,7 @@ function HomeContent() {
         <div 
           className={`w-full px-4 flex items-center shrink-0 relative z-10 transition-all duration-300 ${
             listTab === 'active' 
-              ? 'h-14 pb-4 opacity-100 pointer-events-auto' 
+              ? 'h-14 pb-4 md:h-10 md:pb-0 opacity-100 pointer-events-auto' 
               : 'h-0 pb-0 opacity-0 pointer-events-none'
           }`}
         >
@@ -1619,12 +1603,12 @@ function HomeContent() {
             >
               {/* 1. If listTab === 'notifications', render absolute notification switcher header! */}
               {listTab === 'notifications' && (
-                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 select-none pointer-events-auto">
-                  {/* Stationary Gradient Overlay */}
-                  <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 select-none pointer-events-auto md:relative md:top-auto md:left-auto md:right-auto md:z-20 shrink-0">
+                  {/* Stationary Gradient Overlay (Mobile Only) */}
+                  <div className="absolute top-0 left-0 right-0 h-14 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10 md:hidden" />
 
                   {/* Switcher Buttons Row */}
-                  <div className="relative z-20 pt-3 pb-1.5 px-3 flex items-center justify-between w-full">
+                  <div className="relative z-20 pt-3 pb-1.5 px-3 flex items-center justify-between w-full md:pt-0 md:pb-2">
                     <div className="flex items-center gap-1.5 w-max ml-1 mt-1 select-none">
                       <button
                         onClick={() => setNotifFilter('all')}
@@ -1673,11 +1657,11 @@ function HomeContent() {
 
               {/* 2. If listTab === 'active', render absolute sort bar! */}
               {listTab === 'active' && (
-                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 h-8 flex items-center justify-between pl-2 pr-[14px] md:pl-5 md:pr-[26px] shrink-0">
-                  {/* Stationary Gradient Overlay */}
-                  <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 right-0 bg-transparent z-20 h-8 flex items-center justify-between pl-2 pr-[14px] md:relative md:top-auto md:left-auto md:right-auto md:h-9 md:pl-5 md:pr-[16px] md:z-20 shrink-0">
+                  {/* Stationary Gradient Overlay (Mobile Only) */}
+                  <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card via-card/85 to-transparent pointer-events-none z-10 md:hidden" />
                   <div />
-                  <SidebarSortDropdown className="translate-y-2 z-20" currentSort={sortBy} onSortChange={setSortBy} />
+                  <SidebarSortDropdown className="translate-y-2 z-20 md:translate-y-0" currentSort={sortBy} onSortChange={setSortBy} />
                 </div>
               )}
 
@@ -1694,70 +1678,86 @@ function HomeContent() {
               )}
 
               {listTab === 'calendar' ? (
-                <div className="flex-1 flex flex-col overflow-hidden min-h-0 pt-4 md:pt-2 px-2 md:px-3">
+                <div className="flex-1 flex flex-col overflow-hidden min-h-0 pt-4 md:pt-0 px-2 md:px-3">
                   {/* Calendar Widget (Fixed at the top) */}
                   <div className="shrink-0 animate-in fade-in duration-300 select-none pb-0">
                     {/* Calendar Header */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
-                        <div className="relative flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-foreground w-[96px] shrink-0 h-[28px] rounded-full select-none ml-2 cursor-pointer active:scale-95 transition-transform duration-100">
+                        <div 
+                          onClick={() => {
+                            if (calendarMonthInputRef.current) {
+                              try {
+                                calendarMonthInputRef.current.showPicker();
+                              } catch (err) {
+                                calendarMonthInputRef.current.click();
+                              }
+                            }
+                          }}
+                          className="relative flex items-center justify-center bg-[#e8ebed]/60 dark:bg-muted/40 text-foreground w-[96px] shrink-0 h-[28px] rounded-full select-none ml-2 md:ml-0 cursor-pointer active:scale-95 transition-transform duration-100"
+                        >
                           <span className="text-[12.5px] font-bold relative z-10">
                             {calendarMonth.getFullYear()}년 {calendarMonth.getMonth() + 1}월
                           </span>
                           <input 
+                            ref={calendarMonthInputRef}
                             type="month"
                             value={`${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}`}
                             onChange={(e) => {
                               const val = e.target.value;
                               if (val) {
                                 const [year, month] = val.split('-').map(Number);
-                                setCalendarMonth(new Date(year, month - 1, 1));
+                                const newDate = new Date(year, month - 1, 1);
+                                setCalendarMonth(newDate);
+                                setSelectedCalendarDate(newDate);
                               }
                             }}
-                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20"
+                            className="absolute inset-0 opacity-0 w-full h-full z-20 pointer-events-none"
                             style={{ WebkitAppearance: 'none' }}
                           />
                         </div>
-                        <div className="flex items-center gap-1.5 w-max h-[28px] select-none">
+                        <div className="flex items-center gap-1.5 md:gap-0 w-max h-[28px] select-none md:bg-[#e8ebed]/60 md:dark:bg-muted/40 md:p-[2px] md:rounded-full">
                           <button
                             onClick={() => {
                               setCalendarDirection(0);
                               setCalendarViewMode('week');
                             }}
-                            className={`px-3 rounded-full text-[11.5px] h-full flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
+                            className={`px-3 md:px-2.5 rounded-full text-[11.5px] h-full flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
                               calendarViewMode === 'week'
-                                ? 'text-white font-bold shadow-xs z-10'
-                                : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs z-0'
+                                ? 'text-white font-bold shadow-xs md:shadow-none z-10'
+                                : 'bg-muted md:bg-transparent text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 md:hover:bg-transparent shadow-xs md:shadow-none z-0'
                             }`}
                           >
                             {calendarViewMode === 'week' && (
                               <motion.div 
                                 layoutId="calendarTabBg" 
-                                className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs z-0" 
+                                className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs md:shadow-none z-0" 
                                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
                               />
                             )}
-                            <span className="relative z-10">주간</span>
+                            <span className="relative z-10 md:hidden">주간</span>
+                            <span className="relative z-10 hidden md:inline">주</span>
                           </button>
                           <button
                             onClick={() => {
                               setCalendarDirection(0);
                               setCalendarViewMode('month');
                             }}
-                            className={`px-3 rounded-full text-[11.5px] h-full flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
+                            className={`px-3 md:px-2.5 rounded-full text-[11.5px] h-full flex items-center justify-center relative cursor-pointer focus:outline-none transition-all duration-200 ${
                               calendarViewMode === 'month'
-                                ? 'text-white font-bold shadow-xs z-10'
-                                : 'bg-muted text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 shadow-xs z-0'
+                                ? 'text-white font-bold shadow-xs md:shadow-none z-10'
+                                : 'bg-muted md:bg-transparent text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 md:hover:bg-transparent shadow-xs md:shadow-none z-0'
                             }`}
                           >
                             {calendarViewMode === 'month' && (
                               <motion.div 
                                 layoutId="calendarTabBg" 
-                                className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs z-0" 
+                                className="absolute inset-0 bg-[#e94a44] rounded-full shadow-xs md:shadow-none z-0" 
                                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
                               />
                             )}
-                            <span className="relative z-10">월간</span>
+                            <span className="relative z-10 md:hidden">월간</span>
+                            <span className="relative z-10 hidden md:inline">월</span>
                           </button>
                         </div>
                       </div>
@@ -1918,7 +1918,7 @@ function HomeContent() {
                                       setSelectedCalendarDate(dateObj);
                                       setCalendarMonth(dateObj);
                                     }}
-                                    className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
+                                    className={`w-9 h-9 md:shrink-0 md:aspect-square rounded-full flex items-center justify-center relative transition-all duration-200 focus:outline-none active:scale-95 ${
                                       isSelected 
                                         ? isToday
                                           ? 'bg-[#e94a44] text-white font-bold shadow-sm z-10'
@@ -2137,12 +2137,12 @@ function HomeContent() {
               ) : (
                 <div 
                   data-scroll-container="true"
-                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-1 md:pb-1 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
+                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-0 md:pb-0 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
                     listTab === 'notifications' 
-                      ? 'px-1 pt-12' 
+                      ? 'px-1 md:px-2 pt-12' 
                       : listTab === 'trash'
-                        ? 'px-2 md:px-3 pt-2 md:pt-1'
-                        : 'px-2 md:px-3 pt-8 md:pt-1'
+                        ? 'px-2 md:px-3 pt-2 md:pt-0'
+                        : 'px-2 md:px-3 pt-8 md:pt-0'
                   }`}
                 >
                   {/* Pull-to-refresh Indicator */}
@@ -2209,7 +2209,7 @@ function HomeContent() {
                                 <div 
                                   key={notif.id}
                                   onClick={() => handleNotificationClick(notif)}
-                                  className="flex flex-col py-3 px-4 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden"
+                                  className="flex flex-col py-3 px-4 md:p-2 hover:bg-muted/20 rounded-xl cursor-pointer border-b border-border/10 last:border-b-0 transition-all duration-200 relative group overflow-hidden"
                                 >
                                   <div className="flex items-center justify-between gap-3 w-full">
                                     {isReplyNotification ? (
@@ -2243,7 +2243,7 @@ function HomeContent() {
                                   )}
 
                                   {isSessionCreatedNotification && (
-                                    <div className={`mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 dark:bg-muted/30 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1 ${isUnread ? '' : 'opacity-70'}`}>
+                                    <div className={`mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e8ebed]/50 md:bg-[#e8ebed]/80 dark:bg-muted/30 hover:bg-[#e8ebed]/80 md:hover:bg-[#e8ebed]/90 dark:hover:bg-muted/40 transition-colors w-[calc(100%+8px)] -mx-1 ${isUnread ? '' : 'opacity-70'}`}>
                                       <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
                                         {targetSession?.guild_icon ? (
                                           <img src={targetSession.guild_icon} className="w-full h-full object-cover" alt="" />
@@ -2317,7 +2317,7 @@ function HomeContent() {
                           transition={isRefreshing ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
                           className="space-y-1"
                         >
-                          {(isMobile ? mobileSessions : paginatedSessions).map(s => (
+                          {sortedSessions.map(s => (
                             <DiaryListItem 
                               key={s.id}
                               session={s}
@@ -2337,15 +2337,6 @@ function HomeContent() {
                     )}
                   </div>
 
-                  {!isMobile && (
-                    <SidebarPagination 
-                      totalCount={sortedSessions.length} 
-                      pageSize={pageSize} 
-                      page={currentPage} 
-                      onPageChange={setCurrentPage} 
-                    />
-                  )}
-
                   {/* Haptic/Visual spacer to push content above the 88px mobile dock */}
                   <div className="h-40 md:hidden shrink-0" />
                 </div>
@@ -2355,17 +2346,86 @@ function HomeContent() {
           </AnimatePresence>
         </motion.div>
 
-
-        <div className="hidden md:flex p-4 border-t border-border items-center gap-3 bg-card/20 backdrop-blur-sm">
-          <div className="w-9 h-9 rounded-full overflow-hidden border border-border shadow-sm ring-2 ring-background/50 shrink-0">
-            <img src={session?.user?.image || ""} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[12px] font-black text-foreground truncate leading-none mb-1">{session?.user?.name}</span>
-            <span className="text-[9px] text-muted-foreground font-black tracking-[0.1em] uppercase opacity-50 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Online
+        {/* Bottom profile container (desktop only) */}
+        <div className="hidden md:flex pt-2 pb-4 px-4 items-center justify-between bg-transparent relative z-30">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div className="w-[30px] h-[30px] rounded-full bg-white border border-border flex items-center justify-center overflow-hidden">
+                {session?.user?.image ? (
+                  <img src={session.user.image} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <span className="text-[11px] font-black text-foreground">
+                    {session?.user?.name?.charAt(0) || '정'}
+                  </span>
+                )}
+              </div>
+            </div>
+            {/* Name */}
+            <span className="text-[14px] font-bold text-foreground truncate max-w-[150px]">
+              {session?.user?.name}
             </span>
           </div>
+
+          {/* Settings gear icon to open popover */}
+          <button 
+            onClick={() => setIsProfileOpen(prev => !prev)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors focus:outline-none cursor-pointer"
+            title="설정 메뉴"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+
+          {/* Desktop Profile Popover */}
+          <AnimatePresence>
+            {isProfileOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40 cursor-default" 
+                  onClick={() => setIsProfileOpen(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="absolute bottom-16 right-4 z-50 w-48 overflow-hidden rounded-xl bg-card shadow-lg shadow-black/10 flex flex-col p-1 origin-bottom-right border border-border/30"
+                >
+                  <button 
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      setIsSettingsOpen(true);
+                    }}
+                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2.5 focus:outline-none"
+                  >
+                    <Settings className="w-4 h-4 opacity-60 shrink-0" />
+                    <span>설정</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      setIsHelpOpen(true);
+                    }}
+                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2.5 focus:outline-none"
+                  >
+                    <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
+                    <span>도움말 및 지원</span>
+                  </button>
+                  <div className="h-[1px] bg-border/40 my-1 mx-2" />
+                  <button 
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      signOut();
+                    }}
+                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-red-500 hover:bg-red-500/10 hover:text-red-600 flex items-center gap-2.5 focus:outline-none"
+                  >
+                    <LogOut className="w-4 h-4 opacity-80 shrink-0" />
+                    <span>로그아웃</span>
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </aside>
 
@@ -2640,9 +2700,9 @@ function HomeContent() {
                                   </AnimatePresence>
                                 </div>
                               ),
-                              colSpan: 2,
+                              colSpan: 3,
                               content: (
-                                <div className="flex flex-col h-auto md:h-[450px]">
+                                <div className="flex flex-col h-auto md:h-[450px] md:pr-[424px]">
                                   {/* Header (Desktop only) */}
                                   {(!isDeleted || gameShots.length > 0) && (
                                     <div className="hidden md:flex items-center mb-2 pl-[6px]">
@@ -2836,47 +2896,46 @@ function HomeContent() {
                                       )}
                                     </div>
                                   </div>
+
+                                  {/* Desktop Comments Section (Overlay inside Highlight Card on desktop) */}
+                                  <div className="hidden md:flex absolute -right-6 -top-6 -bottom-6 w-[400px] bg-card border-l border-border/40 rounded-l-2xl flex flex-col p-6 z-20 shadow-xs">
+                                    <div className="flex items-center mb-3">
+                                      <h3 className="font-semibold text-foreground tracking-tight text-[15px] leading-none">
+                                        댓글
+                                      </h3>
+                                    </div>
+                                    <div className="flex-1 flex flex-col min-h-0">
+                                      {renderChecklist(game)}
+                                      <GameCommentList 
+                                        game={game}
+                                        profiles={profiles}
+                                        displayNamesMap={displayNamesMap}
+                                        handleAddReaction={handleAddReaction}
+                                        handleAddReply={handleAddReply}
+                                        handleToggleChecklist={handleToggleChecklist}
+                                        fetchData={fetchData}
+                                        className="flex-1 min-h-0"
+                                        onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
+                                        activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
+                                        handleDeleteReply={handleDeleteReply}
+                                        onOpenReactionDetail={handleOpenReactionDetail}
+                                      />
+                                      {!isDeleted && (
+                                        <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
+                                          <GameCommentInput 
+                                            gameId={game.id} 
+                                            gameTitle={game.title} 
+                                            onComplete={fetchData} 
+                                            activeReply={activeReply?.gameId === game.id ? activeReply : null}
+                                            onCancelReply={() => setActiveReply(null)}
+                                            onAddReply={handleAddReply}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               ),
-                            },
-                            // Right Card: Dedicated Comments Section (1 col)
-                            {
-                              title: "댓글",
-                              colSpan: 1,
-                              isCommentSection: true,
-                              className: "hidden md:flex border border-border/40",
-                              content: (
-                                <div className={`flex flex-col ${(game.comments?.filter((c: any) => !c.is_checklist) || []).reduce((acc: number, c: any) => acc + 1 + (c.replies?.length || 0), 0) > 5 ? "h-[450px]" : "h-auto"}`}>
-                                  {renderChecklist(game)}
-                                  <GameCommentList 
-                                    game={game}
-                                    profiles={profiles}
-                                    displayNamesMap={displayNamesMap}
-                                    handleAddReaction={handleAddReaction}
-                                    handleAddReply={handleAddReply}
-                                    handleToggleChecklist={handleToggleChecklist}
-                                    fetchData={fetchData}
-                                    className="flex-1 min-h-0"
-                                    onMobileReply={(commentId: string, userName: string) => setActiveReply({ gameId: game.id, commentId, userName })}
-                                    activeReplyId={activeReply?.gameId === game.id ? activeReply?.commentId : null}
-                                    handleDeleteReply={handleDeleteReply}
-                                    onOpenReactionDetail={handleOpenReactionDetail}
-                                  />
-                                  {/* Fixed Bottom Input: Flush to card edges */}
-                                  {!isDeleted && (
-                                    <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
-                                      <GameCommentInput 
-                                        gameId={game.id} 
-                                        gameTitle={game.title} 
-                                        onComplete={fetchData} 
-                                        activeReply={activeReply?.gameId === game.id ? activeReply : null}
-                                        onCancelReply={() => setActiveReply(null)}
-                                        onAddReply={handleAddReply}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              )
                             }
                           ];
                         }) || []),
