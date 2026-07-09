@@ -4,6 +4,7 @@ import React from "react";
 import { cn } from "@/src/lib/utils";
 import {
     Gamepad2,
+    Clock,
 } from "lucide-react";
 
 export interface BentoItem {
@@ -33,7 +34,7 @@ function BentoGrid({ items }: BentoGridProps) {
                     key={index}
                     className={cn(
                         "group/card relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-auto md:h-full min-h-0",
-                        item.isCommentSection ? "pt-5 px-3 pb-3 md:pt-6 md:px-4 md:pb-4" : "p-4 md:p-6",
+                        item.isCommentSection ? "pt-5 px-3 pb-3 md:pt-6 md:px-4 md:pb-4" : "p-4 md:p-6 md:pt-4",
                         "bg-card backdrop-blur-sm",
                         "hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.02)]",
                         item.colSpan === 3 ? "md:col-span-3" : item.colSpan === 2 ? "md:col-span-2" : "md:col-span-1",
@@ -47,7 +48,7 @@ function BentoGrid({ items }: BentoGridProps) {
                     </div>
 
                     <div className="relative flex flex-col h-full min-h-0 z-0">
-                        <div className={cn("flex items-start md:items-center gap-4 md:gap-6 mb-4 shrink-0 min-h-[40px] pt-0", item.isCommentSection && "px-2")}>
+                        <div className={cn("flex items-start md:items-center gap-4 md:gap-6 mb-4 shrink-0 min-h-[40px] pt-0", item.isCommentSection && "px-2", item.colSpan === 3 && "md:pr-[400px]")}>
                             {item.icon && (
                                 <div className="w-10 h-10 shrink-0 flex items-center justify-center transition-all duration-500">
                                     {item.icon}
@@ -57,11 +58,14 @@ function BentoGrid({ items }: BentoGridProps) {
                             <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
                                 <div className="flex items-start justify-between gap-4 md:flex-1 min-w-0">
                                     <div className="flex flex-col min-w-0 mt-0.5 md:mt-0">
-                                        <h3 className="font-semibold text-foreground tracking-tight text-lg truncate mt-0.5 md:mt-1 leading-none">
+                                        <h3 className="font-semibold text-foreground tracking-tight text-lg truncate mt-0.5 md:mt-1 leading-normal pb-0.5">
                                             {item.title}
                                         </h3>
                                         {item.meta && (
-                                            <div className="text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-1">
+                                            <div className={cn(
+                                                "text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-1",
+                                                item.colSpan === 3 && "md:hidden"
+                                            )}>
                                                 {item.meta}
                                             </div>
                                         )}
@@ -73,9 +77,15 @@ function BentoGrid({ items }: BentoGridProps) {
                                     )}
                                 </div>
                                 
-                                <div className="flex items-center justify-end gap-3 shrink-0">
+                                <div className="flex items-center justify-end gap-3 shrink-0 md:items-center">
+                                    {item.meta && item.colSpan === 3 && (
+                                        <div className="hidden md:flex items-center gap-1.5 text-[11.5px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 shrink-0">
+                                            <Clock className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                                            <span className="translate-y-[1px]">{item.meta}</span>
+                                        </div>
+                                    )}
                                     {item.status && (
-                                        <div className="hidden md:flex shrink-0 items-center h-6 mt-1">
+                                        <div className="hidden md:flex shrink-0 items-center h-6 mt-1 md:mt-0">
                                             {item.status}
                                         </div>
                                     )}

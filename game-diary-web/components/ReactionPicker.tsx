@@ -28,7 +28,7 @@ export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProp
       ref={pickerRef}
       initial={{ opacity: 0, scale: 0.9, y: 5 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="flex items-center gap-1 p-1.5 bg-card/95 backdrop-blur-xl border border-border rounded-full shadow-xl"
+      className="flex items-center gap-1 p-1.5 bg-card/95 backdrop-blur-xl rounded-full shadow-xl"
     >
       {EMOJIS.map((emoji, index) => (
         <motion.button

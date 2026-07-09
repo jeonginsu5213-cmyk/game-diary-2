@@ -56,9 +56,9 @@ const GameCommentList = ({
   const hasComments = game.comments && game.comments.length > 0;
 
   return (
-    <div ref={scrollRef} className={`flex-1 overflow-y-auto overscroll-y-contain px-0 pt-0 pb-4 space-y-1 scroll-smooth ${hasScrollbarHide ? '' : 'custom-scrollbar'} ${className}`}>
+    <div ref={scrollRef} className={`flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pt-0 pb-4 space-y-1 scroll-smooth ${hasScrollbarHide ? '' : 'custom-scrollbar'} ${className}`}>
       {normalComments.length > 0 ? (
-        normalComments.map((c: any) => (
+        normalComments.map((c: any, idx: number) => (
           <CommentItem 
             key={c.id} 
             comment={{ ...c, userId: c.user_id, text: c.content, isChecklist: c.is_checklist, user: profiles[c.user_id]?.display_name || c.user_id, image: profiles[c.user_id]?.avatar_url, createdAt: c.created_at, reactions: c.reactions || {}, replies: c.replies || [] }}
@@ -72,6 +72,7 @@ const GameCommentList = ({
             onMobileReply={onMobileReply}
             isActiveReply={activeReplyId === c.id}
             onOpenReactionDetail={onOpenReactionDetail}
+            isFirst={idx === 0}
           />
         ))
       ) : !hasComments ? (

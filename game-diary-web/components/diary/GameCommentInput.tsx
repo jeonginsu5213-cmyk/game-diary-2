@@ -161,7 +161,7 @@ const GameCommentInput = ({ gameId, gameTitle, onComplete, activeReply, onCancel
           transition={{ type: "spring", stiffness: 350, damping: 25 }}
           onClick={() => handleSubmit(false)} 
           disabled={!text.trim()}
-          className={`h-8 flex items-center justify-center rounded-full bg-primary text-white shadow-md shadow-primary/20 shrink-0 mr-0.5 ${text.trim() ? 'pointer-events-auto' : 'pointer-events-none'}`}
+          className={`h-8 flex items-center justify-center rounded-full bg-primary text-white shrink-0 mr-0.5 ${text.trim() ? 'pointer-events-auto' : 'pointer-events-none'}`}
           title="보내기"
         >
           <ArrowUp className="w-5 h-5" strokeWidth={3} />

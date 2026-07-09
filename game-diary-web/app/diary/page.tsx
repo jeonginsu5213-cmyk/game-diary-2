@@ -184,7 +184,7 @@ function HomeContent() {
     if (checklistComments.length === 0) return null;
     
     return (
-      <div className="mb-0 space-y-1.5 px-0 animate-in fade-in duration-300">
+      <div className="mb-0 space-y-1.5 px-0 md:px-4 animate-in fade-in duration-300">
         {checklistComments.map((c: any) => {
           const hasLoggedIn = !!profiles?.[c.user_id]?.has_logged_in;
           const displayName = hasLoggedIn 
@@ -222,7 +222,7 @@ function HomeContent() {
               {!isDeleted && (
                 <div className="flex items-center gap-2 shrink-0">
                   {/* Delete button */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity md:hidden">
                     <button 
                       onClick={async () => { 
                         if (window.confirm("삭제할까요?")) { 
@@ -2710,7 +2710,7 @@ function HomeContent() {
                                         whileHover="hover"
                                         className="flex items-center gap-1 group/label cursor-pointer select-none"
                                       >
-                                        <span className="text-[12px] font-bold tracking-tight text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200">
+                                        <span className="text-[12px] font-bold tracking-tight text-primary transition-colors duration-200">
                                           하이라이트
                                         </span>
                                         <motion.div
@@ -2718,7 +2718,7 @@ function HomeContent() {
                                             hover: { x: 2 }
                                           }}
                                           transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                                          className="text-muted-foreground/50 group-hover/label:text-muted-foreground/90 transition-colors duration-200 flex items-center"
+                                          className="text-primary flex items-center"
                                         >
                                           <ChevronRight className="w-3 h-3" />
                                         </motion.div>
@@ -2898,9 +2898,9 @@ function HomeContent() {
                                   </div>
 
                                   {/* Desktop Comments Section (Overlay inside Highlight Card on desktop) */}
-                                  <div className="hidden md:flex absolute -right-6 -top-6 -bottom-6 w-[400px] bg-card border-l border-border/40 rounded-l-2xl flex flex-col p-6 z-20 shadow-xs">
-                                    <div className="flex items-center mb-3">
-                                      <h3 className="font-semibold text-foreground tracking-tight text-[15px] leading-none">
+                                  <div className="hidden md:flex absolute -right-6 -top-4 -bottom-6 w-[400px] bg-card border-l border-border/40 rounded-l-2xl flex flex-col pt-4 pb-0 px-0 z-20 shadow-xs overflow-hidden">
+                                    <div className="flex items-center h-10 mb-4 px-6 shrink-0">
+                                      <h3 className="font-semibold text-foreground tracking-tight text-[20px] leading-none">
                                         댓글
                                       </h3>
                                     </div>
@@ -2921,7 +2921,7 @@ function HomeContent() {
                                         onOpenReactionDetail={handleOpenReactionDetail}
                                       />
                                       {!isDeleted && (
-                                        <div className="mt-2 shrink-0 bg-card/90 backdrop-blur-sm">
+                                        <div className="mt-2 md:mt-0 md:mx-4 md:mb-4 shrink-0 bg-card/90 backdrop-blur-sm">
                                           <GameCommentInput 
                                             gameId={game.id} 
                                             gameTitle={game.title} 

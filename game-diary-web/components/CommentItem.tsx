@@ -26,6 +26,7 @@ interface CommentItemProps {
   onMobileReply?: (commentId: string, userName: string) => void;
   isActiveReply?: boolean;
   onOpenReactionDetail?: (commentId: string, initialEmoji: string) => void;
+  isFirst?: boolean;
 }
 
 const formatCommentDate = (isoString?: string) => {
@@ -33,12 +34,17 @@ const formatCommentDate = (isoString?: string) => {
   const date = new Date(isoString);
   if (isNaN(date.getTime())) return "";
   const now = new Date();
-  const isSameDay = now.getFullYear() === date.getFullYear() && 
-                    now.getMonth() === date.getMonth() && 
-                    now.getDate() === date.getDate();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  if (isSameDay) return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-  return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  
+  if (now.getFullYear() !== yyyy) {
+    return `${yyyy}.${mm}.${dd}`;
+  }
+  return `${mm}.${dd}`;
 };
 
 export default function CommentItem({ 
@@ -51,6 +57,7 @@ export default function CommentItem({
   onDeleteReply,
   isReply = false,
   isLastReply = false,
+  isFirst = false,
   displayNames = {},
   profiles = {},
   onMobileReply,
@@ -63,6 +70,26 @@ export default function CommentItem({
   const [replyText, setReplyInput] = useState("");
   const replyInputRef = useRef<HTMLDivElement>(null);
   const itemRef = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  const [isMobileView, setIsMobileView] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
+  }, [showPicker]);
   
   const x = useMotionValue(0);
   const iconScale = useTransform(x, [0, 50], [0.6, 1.15]);
@@ -188,7 +215,7 @@ export default function CommentItem({
 
   return (
     <div ref={itemRef} className={`flex flex-col scroll-my-2 ${isReply ? 'ml-0 mt-0.5' : 'mt-1'}`}>
-      <div className={`relative ${isReply || isActiveReply || showReplyInput ? 'overflow-visible' : 'overflow-hidden rounded-lg'}`}>
+      <div className={`relative ${isReply || isActiveReply || showReplyInput ? 'overflow-visible' : 'overflow-hidden md:overflow-visible rounded-lg'}`}>
         {/* Parent-to-replies vertical line */}
         {!isReply && comment.replies && comment.replies.length > 0 && (
           <div 
@@ -217,49 +244,45 @@ export default function CommentItem({
         )}
 
         <motion.div 
-          drag={!isReply ? "x" : false}
+          drag={isMobileView && !isReply ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={{ left: 0, right: 0.6 }}
           dragTransition={{ bounceStiffness: 300, bounceDamping: 28 }}
           style={{ x }}
           onDragEnd={(event, info) => {
-            if (!isReply && x.get() > 50) {
-              if (window.innerWidth < 768) {
-                onMobileReply?.(comment.id, displayName);
-                const input = document.getElementById('diary-comment-input') as HTMLInputElement;
-                if (input) input.focus();
-                if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
-                  window.navigator.vibrate(30);
-                }
-              } else {
-                setShowReplyInput(true);
-                setTimeout(() => {
-                  const input = replyInputRef.current?.querySelector('input');
-                  if (input) input.focus();
-                }, 100);
+            if (isMobileView && !isReply && x.get() > 50) {
+              onMobileReply?.(comment.id, displayName);
+              const input = document.getElementById('diary-comment-input') as HTMLInputElement;
+              if (input) input.focus();
+              if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(30);
               }
             }
           }}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchMove={handleTouchMove}
-          onMouseDown={handleTouchStart}
-          onMouseUp={handleTouchEnd}
-          onMouseLeave={handleTouchEnd}
-          onContextMenu={(e) => e.preventDefault()}
-          onClickCapture={handleCardClick}
-          className={`group flex items-start gap-3 py-2 transition-[background-color,box-shadow,opacity] duration-200 hover:bg-muted/50 select-none relative z-10 ${
+          onTouchStart={isMobileView ? handleTouchStart : undefined}
+          onTouchEnd={isMobileView ? handleTouchEnd : undefined}
+          onTouchMove={isMobileView ? handleTouchMove : undefined}
+          onMouseDown={isMobileView ? handleTouchStart : undefined}
+          onMouseUp={isMobileView ? handleTouchEnd : undefined}
+          onMouseLeave={isMobileView ? handleTouchEnd : undefined}
+          onContextMenu={isMobileView ? (e) => e.preventDefault() : undefined}
+          onClickCapture={isMobileView ? handleCardClick : undefined}
+          className={`group flex items-start gap-3 py-2 transition-[background-color,box-shadow,opacity] duration-200 select-none relative hover:z-20 ${
+            showPicker ? 'z-30' : 'z-10'
+          } ${
+            !(showReplyInput || isActiveReply) ? 'hover:bg-muted/50' : ''
+          } ${
             isPressing
               ? isReply
-                ? 'px-1 rounded-lg bg-primary/15 scale-[0.97] transition-all'
+                ? 'px-1 md:px-2 rounded-lg bg-primary/15 scale-[0.97] transition-all'
                 : '-mx-4 px-4 scale-[0.97] bg-primary/15 shadow-inner rounded-none'
               : (showReplyInput || isActiveReply)
                 ? isReply
-                  ? 'px-1 rounded-lg bg-primary/10 border-l-2 border-primary'
-                  : '-mx-4 px-4 bg-primary/10 rounded-none border-l-4 border-primary'
+                  ? 'px-1 md:px-2 rounded-lg bg-primary/10 border-l-2 border-primary'
+                  : '-mx-4 px-4 md:px-6 bg-primary/10 rounded-none border-l-4 border-primary'
                 : isChecklist 
-                  ? 'px-1 rounded-lg bg-primary/5'
-                  : 'px-1 rounded-lg bg-transparent'
+                  ? 'px-1 md:px-2 rounded-lg bg-primary/5'
+                  : 'px-1 md:px-2 rounded-lg bg-transparent'
           }`}
         >
           {/* Avatar - Slightly larger than sidebar, but still compact */}
@@ -336,19 +359,26 @@ export default function CommentItem({
             )}
 
             {/* Action Bar (Hover Only) */}
-            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 absolute right-2 -top-2.5 transition-opacity z-10">
-              <button onClick={() => setShowPicker(!showPicker)} className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors">
+            <div className={cn(
+              "flex items-center gap-1 absolute right-2 top-1 transition-opacity z-10",
+              showPicker ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            )}>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPicker(!showPicker);
+                }} 
+                className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors"
+              >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </button>
               {!isReply && (
                 <button 
                   onClick={() => {
-                    if (window.innerWidth < 768) {
-                      onMobileReply?.(comment.id, displayName);
-                      const input = document.getElementById('diary-comment-input') as HTMLInputElement;
-                      if (input) input.focus();
-                    } else {
-                      setShowReplyInput(!showReplyInput);
+                    onMobileReply?.(comment.id, displayName);
+                    const input = document.getElementById('diary-comment-input') as HTMLInputElement;
+                    if (input) {
+                      input.focus();
                     }
                   }} 
                   className="w-5 h-5 flex items-center justify-center rounded-md bg-card border border-border shadow-sm text-muted-foreground hover:text-primary transition-colors"
@@ -375,7 +405,10 @@ export default function CommentItem({
             </div>
 
             {showPicker && (
-              <div className="absolute z-50 mt-2 right-0 origin-top-right">
+              <div 
+                ref={pickerRef} 
+                className="absolute z-50 right-0 top-[32px] origin-top-right"
+              >
                 <ReactionPicker onSelect={(emoji) => { onAddReaction(emoji); setShowPicker(false); }} onClose={() => setShowPicker(false)} />
               </div>
             )}
@@ -402,28 +435,7 @@ export default function CommentItem({
         </div>
       )}
 
-      {/* Reply Input */}
-      {showReplyInput && (
-        <div ref={replyInputRef} className="hidden md:flex ml-7 mt-1 mb-3 items-center gap-2 bg-white/40 p-1.5 rounded-none border border-border/50 focus-within:border-primary/30 transition-all">
-          <input 
-            type="text" 
-            value={replyText} 
-            onChange={(e) => setReplyInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleReplySubmit()}
-            autoFocus
-            placeholder="답글 남기기..." 
-            className="flex-1 min-w-0 bg-transparent border-none outline-none text-[16px] md:text-[12px] text-foreground placeholder:text-muted-foreground/40 px-1 font-medium"
-          />
-          <button 
-            onClick={handleReplySubmit} 
-            disabled={!replyText.trim()}
-            className={`w-6 h-6 flex items-center justify-center rounded-full transition-all shrink-0 ${replyText.trim() ? 'bg-primary text-white shadow-sm hover:scale-105 active:scale-95' : 'bg-muted text-muted-foreground/30 cursor-not-allowed'} mr-0.5`}
-            title="보내기"
-          >
-            <ArrowUp className="w-3.5 h-3.5" strokeWidth={3} />
-          </button>
-        </div>
-      )}
+
       {/* Drawer Panel */}
       <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <DrawerPopup position="bottom" showBar className="bg-[#F4F5F6]" backdropClassName="backdrop-blur-none bg-black/15">
