@@ -206,7 +206,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
               </span>
             </div>
             {/* Total Duration */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary text-primary-foreground rounded-full border border-primary shadow-lg shadow-primary/10 shrink-0 leading-none">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary text-primary-foreground rounded-full border border-primary shrink-0 leading-none">
               <span className="text-[10px] font-black uppercase tracking-[0.05em] translate-y-[-0.5px] font-sans">
                 {formatDurationText(current.total_duration_min)}
               </span>
