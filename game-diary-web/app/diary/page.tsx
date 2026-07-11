@@ -2418,7 +2418,7 @@ function HomeContent() {
                       <span>도움말 및 지원</span>
                       <ChevronRight className="w-3 h-3 ml-auto opacity-40 group-hover/sub:opacity-100 transition-opacity" />
                     </button>
-                    <div className="absolute left-full bottom-0 pl-1.5 z-50 w-44 hidden group-hover/sub:block animate-in fade-in slide-in-from-left-1.5 duration-150 origin-bottom-left">
+                    <div className="absolute left-full top-[-36px] pl-1.5 z-50 w-44 hidden group-hover/sub:block animate-in fade-in slide-in-from-left-1.5 duration-150 origin-top-left">
                       <div className="rounded-lg bg-card shadow-lg shadow-black/5 p-1 flex flex-col">
                         <button 
                           onClick={() => {
