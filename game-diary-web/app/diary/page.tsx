@@ -2398,7 +2398,7 @@ function HomeContent() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute bottom-16 right-4 z-50 w-48 overflow-hidden rounded-lg bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-bottom-right"
+                  className="absolute bottom-14 right-4 z-50 w-48 overflow-hidden rounded-lg bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-bottom-right"
                 >
                   <button 
                     onClick={() => {
