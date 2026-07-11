@@ -160,7 +160,7 @@ const InteractiveHero: React.FC = () => {
                         <path d="M2 17L12 22L22 17" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M2 12L12 17L22 12" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span className="text-xl font-bold text-foreground ml-2 tracking-tight">Plog</span>
+                    <span className="text-xl font-bold text-foreground ml-2 tracking-tight">PLOG</span>
                 </div>
 
                 <div className="hidden md:flex items-center justify-center flex-grow space-x-6 lg:space-x-8 px-4">
@@ -304,7 +304,7 @@ const InteractiveHero: React.FC = () => {
         <footer className="w-full py-8 border-t border-border/10 z-10 bg-background/50 backdrop-blur-sm">
           <div className="max-w-screen-xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
             <div>
-              © 2026 플로그 (Plog). All rights reserved.
+              © 2026 플로그 (PLOG). All rights reserved.
             </div>
             <div className="flex gap-6">
               <Link href="/terms" className="hover:text-foreground transition-colors font-medium">이용약관</Link>
