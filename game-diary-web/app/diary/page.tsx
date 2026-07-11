@@ -1598,7 +1598,7 @@ function HomeContent() {
         <motion.div 
           animate={{ y: 0 }}
           transition={{ type: "spring", stiffness: 380, damping: 30 }}
-          className="flex-1 relative overflow-hidden md:overflow-visible min-h-0 md:flex md:flex-col bg-card rounded-t-2xl rounded-b-none mb-0 pt-0 px-0 pb-0 md:bg-transparent md:rounded-none md:border-none md:shadow-none md:mx-0 md:mb-0 md:p-0 z-20"
+          className="flex-1 relative overflow-hidden min-h-0 md:flex md:flex-col bg-card rounded-t-2xl rounded-b-none mb-0 pt-0 px-0 pb-0 md:bg-transparent md:rounded-none md:border-none md:shadow-none md:mx-0 md:mb-0 md:p-0 z-20"
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
