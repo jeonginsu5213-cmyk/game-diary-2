@@ -77,7 +77,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
             <div className="relative shrink-0 hidden md:block">
               <button 
                 onClick={() => setIsParticipantsDropdownOpen(!isParticipantsDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/15 active:scale-95 text-primary rounded-lg border border-primary/20 text-[12px] font-bold transition-all cursor-pointer select-none"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 hover:scale-105 active:scale-95 text-primary rounded-full text-[12px] font-bold transition-all cursor-pointer select-none"
               >
                 <Users className="w-3.5 h-3.5" />
                 <span>{sortedParticipants.length}</span>
