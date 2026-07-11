@@ -99,10 +99,10 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute top-10 left-0 w-64 bg-card border border-border shadow-2xl rounded-2xl p-4 z-50 flex flex-col gap-3 max-h-[300px] overflow-y-auto overscroll-contain"
+                      className="absolute top-10 left-0 w-max min-w-max bg-card shadow-2xl rounded-2xl p-4 z-50 flex flex-col gap-3 max-h-[300px] overflow-y-auto overscroll-contain"
                     >
                       <div className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider pl-0.5">
-                        참여자 명단
+                        참여자
                       </div>
                       <div className="flex flex-col gap-2.5">
                         {sortedParticipants.map((p: any) => {
@@ -114,7 +114,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                             : maskNickname(profile?.display_name || 'Anonymous');
                           
                           return (
-                            <div key={p.user_id} className="flex items-center justify-between gap-3 min-w-0">
+                            <div key={p.user_id} className="flex items-center justify-between gap-8 min-w-0">
                               <div className="flex items-center gap-2 min-w-0">
                                 <div className="w-6.5 h-6.5 rounded-full border border-border overflow-hidden shrink-0">
                                   <img 
@@ -130,7 +130,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[10px] font-black text-muted-foreground/70 shrink-0 font-mono">
+                              <span className="text-[10px] font-black text-primary shrink-0 font-mono">
                                 {formatDurationText(p.duration_min || 0)}
                               </span>
                             </div>
