@@ -114,8 +114,11 @@ client.on('error', error => {
 client.on('guildCreate', async (guild) => {
     console.log(`[Discord] Joined new guild: ${guild.name} (${guild.id})`);
     try {
+        // Fetch all channels from Discord API to avoid empty cache issues on join
+        const channels = await guild.channels.fetch();
+
         // 1. Text channel '일기장'
-        const existingTextChannel = guild.channels.cache.find(
+        const existingTextChannel = channels.find(
             ch => ch.type === ChannelType.GuildText && ch.name === '일기장'
         );
         if (!existingTextChannel) {
@@ -144,7 +147,7 @@ client.on('guildCreate', async (guild) => {
         }
 
         // 2. Voice channel '일기장'
-        const existingVoiceChannel = guild.channels.cache.find(
+        const existingVoiceChannel = channels.find(
             ch => ch.type === ChannelType.GuildVoice && ch.name === '일기장'
         );
         if (!existingVoiceChannel) {
@@ -911,6 +914,36 @@ client.once('ready', async () => {
         console.log('[System] 감지 가능한 게임 목록 자동 주기 갱신 시작...');
         await loadDetectableGames();
     }, 24 * 60 * 60 * 1000);
+
+    // 🔊 기존 서버(길드) 채널 일괄 검사 및 생성 (텍스트/음성 '일기장')
+    for (const guild of client.guilds.cache.values()) {
+        try {
+            const channels = await guild.channels.fetch();
+            
+            // Text channel
+            const hasText = channels.some(ch => ch.type === ChannelType.GuildText && ch.name === '일기장');
+            if (!hasText) {
+                await guild.channels.create({
+                    name: '일기장',
+                    type: ChannelType.GuildText,
+                    topic: '일기장 봇 자동 기록용 채널입니다.'
+                });
+                console.log(`[Discord Startup] Created '일기장' text channel in ${guild.name}`);
+            }
+
+            // Voice channel
+            const hasVoice = channels.some(ch => ch.type === ChannelType.GuildVoice && ch.name === '일기장');
+            if (!hasVoice) {
+                await guild.channels.create({
+                    name: '일기장',
+                    type: ChannelType.GuildVoice
+                });
+                console.log(`[Discord Startup] Created '일기장' voice channel in ${guild.name}`);
+            }
+        } catch (err) {
+            console.error(`[Discord Startup] Failed to check/create channels in ${guild.name}:`, err);
+        }
+    }
 
     for (const guild of client.guilds.cache.values()) {
         for (const voiceState of guild.voiceStates.cache.values()) {
