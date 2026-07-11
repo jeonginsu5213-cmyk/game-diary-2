@@ -103,17 +103,11 @@ const Slide = ({
                   ? (profiles?.[slide.shot.uploader_id]?.display_name || 'Anonymous')
                   : maskNickname(profiles?.[slide.shot.uploader_id]?.display_name || 'Anonymous')}
               </span>
-              {slide.shot.comment && (() => {
-                const hasNewline = slide.shot.comment.includes('\n');
-                return (
-                  <span className={cn(
-                    "font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap",
-                    hasNewline ? "mt-0.5 block" : ""
-                  )}>
-                    "{slide.shot.comment}"
-                  </span>
-                );
-              })()}
+              {slide.shot.comment && (
+                <span className="font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap">
+                  "{slide.shot.comment}"
+                </span>
+              )}
             </div>
           </div>
 

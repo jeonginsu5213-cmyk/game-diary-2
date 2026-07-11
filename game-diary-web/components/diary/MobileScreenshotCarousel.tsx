@@ -124,17 +124,11 @@ export default function MobileScreenshotCarousel({
                       ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
                       : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
                   </span>
-                  {shot.comment && (() => {
-                    const hasNewline = shot.comment.includes('\n');
-                    return (
-                      <span className={cn(
-                        "font-medium text-muted-foreground/80 italic tracking-tight whitespace-pre-wrap",
-                        hasNewline ? "mt-0.5 block" : ""
-                      )}>
-                        "{shot.comment}"
-                      </span>
-                    );
-                  })()}
+                  {shot.comment && (
+                    <span className="font-medium text-muted-foreground/80 italic tracking-tight whitespace-pre-wrap">
+                      "{shot.comment}"
+                    </span>
+                  )}
                 </div>
               </div>
             </CarouselItem>
