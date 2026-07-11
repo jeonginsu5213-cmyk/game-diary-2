@@ -80,7 +80,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 active:scale-95 text-foreground rounded-lg border border-border/50 text-[12px] font-bold transition-all cursor-pointer select-none"
               >
                 <Users className="w-3.5 h-3.5 opacity-60" />
-                <span>참여자 ({sortedParticipants.length}명)</span>
+                <span>{sortedParticipants.length}</span>
                 <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform ${isParticipantsDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
               
