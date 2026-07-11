@@ -63,7 +63,7 @@ export default function BackgroundPreview({ hoveredShot, profiles }: BackgroundP
             })()}
 
             {activeShot.comment ? (
-              <p className="text-foreground/80 text-[13px] font-bold leading-tight line-clamp-2 italic flex-1">
+              <p className="text-foreground/80 text-[13px] font-bold leading-tight italic flex-1 whitespace-pre-wrap">
                 "{activeShot.comment}"
               </p>
             ) : (

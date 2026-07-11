@@ -104,7 +104,7 @@ const Slide = ({
                   : maskNickname(profiles?.[slide.shot.uploader_id]?.display_name || 'Anonymous')}
               </span>
               {slide.shot.comment && (
-                <span className="font-medium text-muted-foreground/95 italic tracking-tight">
+                <span className="font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap mt-0.5 block">
                   "{slide.shot.comment}"
                 </span>
               )}

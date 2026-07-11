@@ -2704,7 +2704,7 @@ function HomeContent() {
                     {/* Desktop Participant Card */}
                     {sortedParticipants.length > 0 && (
                       <div className="hidden md:block px-3 md:px-4 pt-4 pb-0">
-                        <div className="relative rounded-2xl overflow-hidden py-3 px-5 bg-card backdrop-blur-sm shadow-xs">
+                        <div className="relative rounded-2xl overflow-hidden py-3 px-5 bg-card backdrop-blur-sm">
                           {/* Background Pattern (Subtle dots) */}
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(233,74,68,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
@@ -2955,7 +2955,7 @@ function HomeContent() {
                                   </div>
 
                                   {/* Desktop Comments Section (Overlay inside Highlight Card on desktop) */}
-                                  <div className="hidden md:flex absolute -right-6 -top-4 -bottom-6 w-[400px] bg-card border-l border-border/40 rounded-l-2xl flex flex-col pt-4 pb-0 px-0 z-20 shadow-xs overflow-hidden">
+                                  <div className="hidden md:flex absolute -right-6 -top-4 -bottom-6 w-[400px] bg-card rounded-l-2xl flex flex-col pt-4 pb-0 px-0 z-20 overflow-hidden">
                                     <div className="flex items-center h-10 mb-4 px-6 shrink-0">
                                       <h3 className="font-semibold text-foreground tracking-tight text-[20px] leading-none">
                                         댓글

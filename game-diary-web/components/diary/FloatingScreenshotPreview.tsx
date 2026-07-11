@@ -92,7 +92,7 @@ export default function FloatingScreenshotPreview({ hoveredShot, profiles }: { h
             })()}
             
             {activeShot.comment ? (
-              <p className="text-foreground/80 text-[12px] font-bold leading-tight line-clamp-2 italic flex-1">
+              <p className="text-foreground/80 text-[12px] font-bold leading-tight italic flex-1 whitespace-pre-wrap">
                 "{activeShot.comment}"
               </p>
             ) : (

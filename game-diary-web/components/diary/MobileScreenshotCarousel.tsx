@@ -125,7 +125,7 @@ export default function MobileScreenshotCarousel({
                       : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
                   </span>
                   {shot.comment && (
-                    <span className="font-medium text-muted-foreground/80 italic tracking-tight">
+                    <span className="font-medium text-muted-foreground/80 italic tracking-tight whitespace-pre-wrap mt-0.5 block">
                       "{shot.comment}"
                     </span>
                   )}
