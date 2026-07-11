@@ -60,7 +60,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
   const remainingCount = sortedParticipants.length - maxVisible;
 
   return (
-    <header className="h-16 flex items-center justify-between pl-3 pr-4 md:pl-6 md:pr-4 bg-card/80 backdrop-blur-2xl sticky top-0 z-30">
+    <header className="h-16 flex items-center justify-between px-4 bg-card/80 backdrop-blur-2xl sticky top-0 z-30">
       <div className="flex items-center gap-1.5 md:gap-6 min-w-0 flex-1">
         {/* 1. Members & Title Section */}
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
