@@ -97,7 +97,7 @@ export default function SignInPage() {
             <span>디스코드로 시작하기</span>
           </motion.a>
 
-          <p className="text-[11px] text-center text-muted-foreground px-2 leading-relaxed mt-2 select-none">
+          <p className="text-[11px] text-center text-muted-foreground px-2 leading-relaxed mt-0 select-none">
             로그인 시{' '}
             <Link href="/terms" className="underline hover:text-[#e94a44] transition-colors font-semibold">
               이용 약관
