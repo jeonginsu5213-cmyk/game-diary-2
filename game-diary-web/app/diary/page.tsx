@@ -1668,10 +1668,10 @@ function HomeContent() {
 
               {/* 3. If listTab === 'trash', render static header with text and divider matching calendar tab */}
               {listTab === 'trash' && (
-                <div className="shrink-0 flex flex-col pt-3 pb-0 select-none animate-in fade-in duration-300">
+                <div className="shrink-0 flex flex-col pt-0 pb-0 select-none animate-in fade-in duration-300">
                   <div className="flex items-center gap-1.5 text-muted-foreground/60 pl-5 relative z-20 pb-2.5">
                     <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                    <span className="text-[10px] font-bold">삭제된 일기는 나에게서만 삭제되며 7일 후 영구 삭제됩니다.</span>
+                    <span className="text-[11px] font-medium">삭제된 일기는 나에게서만 삭제되며 7일 후 영구 삭제됩니다.</span>
                   </div>
                   {/* Divider matching the calendar tab divider exactly */}
                   <div className="mx-4 md:mx-5 border-b border-border/60 shrink-0" />
@@ -2138,7 +2138,7 @@ function HomeContent() {
               ) : (
                 <div 
                   data-scroll-container="true"
-                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-0 md:pb-0 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] ${
+                  className={`flex-1 mt-0 overflow-y-auto overflow-x-hidden scrollbar-hide pb-4 md:pt-0 md:pb-0 touch-pan-y overscroll-contain [-webkit-overflow-scrolling:touch] md:flex md:flex-col ${
                     listTab === 'notifications' 
                       ? 'px-1 md:px-2 pt-12' 
                       : listTab === 'trash'
@@ -2164,7 +2164,7 @@ function HomeContent() {
                     </div>
                   </div>
 
-                  <div className="space-y-0 min-h-[396px] w-full">
+                  <div className="space-y-0 min-h-[396px] md:min-h-0 w-full md:flex-1 md:flex md:flex-col md:h-full">
                     {listTab === 'notifications' ? (
                       <div className="flex flex-col gap-3.5 px-1 pb-4 animate-in fade-in duration-300 select-none relative">
                         {filteredNotifications.length === 0 ? (
@@ -2273,39 +2273,47 @@ function HomeContent() {
                             <p className="text-[12px] font-bold tracking-tight">휴지통이 비어 있습니다</p>
                           </div>
                         ) : calendarSessions.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-6">
-                            <div className="space-y-1.5 max-w-[340px]">
-                              <h3 className="text-[18px] font-bold text-foreground">
-                                {session?.user?.name || '유저'}님 반가워요 👋🏻
-                              </h3>
-                              <p className="text-[12px] text-muted-foreground leading-normal px-1 break-keep">
-                                일기 작성을 도와줄 봇을 디스코드 서버에 초대해 보세요.
-                                <br />
-                                음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
-                              </p>
-                            </div>
-                            <div className="w-full flex flex-col items-center gap-2">
-                              <a
-                                href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full max-w-[280px] py-3 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[13px] rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-primary/10 cursor-pointer"
-                              >
-                                디스코드 봇 초대하기
-                              </a>
-                              <p className="text-[12px] text-muted-foreground">
-                                혼자서 사용할 계획이신가요?{' '}
+                          <>
+                            {/* Mobile-only: Keep original sidebar invite guide block (Untouched design rule) */}
+                            <div className="md:hidden flex flex-col items-center justify-center min-h-[480px] px-6 py-12 text-center select-none animate-in fade-in duration-300 gap-6">
+                              <div className="space-y-1.5 max-w-[340px]">
+                                <h3 className="text-[18px] font-bold text-foreground">
+                                  {session?.user?.name || '유저'}님 반가워요 👋🏻
+                                </h3>
+                                <p className="text-[12px] text-muted-foreground leading-normal px-1 break-keep">
+                                  일기 작성을 도와줄 봇을 디스코드 서버에 초대해 보세요.
+                                  <br />
+                                  음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
+                                </p>
+                              </div>
+                              <div className="w-full flex flex-col items-center gap-2">
                                 <a
-                                  href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
+                                  href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-primary hover:underline hover:text-primary/90 font-medium cursor-pointer"
+                                  className="w-full max-w-[280px] py-3 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[13px] rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-primary/10 cursor-pointer"
                                 >
-                                  봇 추가하기
+                                  디스코드 봇 초대하기
                                 </a>
-                              </p>
+                                <p className="text-[12px] text-muted-foreground">
+                                  혼자서 사용할 계획이신가요?{' '}
+                                  <a
+                                    href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline hover:text-primary/90 font-medium cursor-pointer"
+                                  >
+                                    봇 추가하기
+                                  </a>
+                                </p>
+                              </div>
                             </div>
-                          </div>
+
+                            {/* Desktop-only: Show compact empty state in sidebar */}
+                            <div className="hidden md:flex flex-col items-center justify-center flex-1 w-full text-muted-foreground/30 select-none animate-in fade-in duration-300">
+                              <p className="text-[12px] font-bold tracking-tight">기록된 일기가 없습니다</p>
+                            </div>
+                          </>
                         ) : (
                           <div className="flex flex-col items-center justify-center min-h-[480px] text-muted-foreground/40 gap-2 select-none animate-in fade-in duration-300">
                             <Inbox className="w-8 h-8 opacity-50" />
@@ -2374,7 +2382,7 @@ function HomeContent() {
             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors focus:outline-none cursor-pointer"
             title="설정 메뉴"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-4 h-4" />
           </button>
 
           {/* Desktop Profile Popover */}
@@ -2390,14 +2398,14 @@ function HomeContent() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute bottom-16 right-4 z-50 w-48 overflow-hidden rounded-xl bg-card shadow-lg shadow-black/10 flex flex-col p-1 origin-bottom-right border border-border/30"
+                  className="absolute bottom-16 right-4 z-50 w-48 overflow-hidden rounded-lg bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-bottom-right"
                 >
                   <button 
                     onClick={() => {
                       setIsProfileOpen(false);
                       setIsSettingsOpen(true);
                     }}
-                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2.5 focus:outline-none"
+                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
                   >
                     <Settings className="w-4 h-4 opacity-60 shrink-0" />
                     <span>설정</span>
@@ -2407,7 +2415,7 @@ function HomeContent() {
                       setIsProfileOpen(false);
                       setIsHelpOpen(true);
                     }}
-                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2.5 focus:outline-none"
+                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
                   >
                     <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
                     <span>도움말 및 지원</span>
@@ -2418,7 +2426,7 @@ function HomeContent() {
                       setIsProfileOpen(false);
                       signOut();
                     }}
-                    className="w-full text-left px-3.5 py-2.5 text-[13.5px] font-bold rounded-lg transition-colors text-red-500 hover:bg-red-500/10 hover:text-red-600 flex items-center gap-2.5 focus:outline-none"
+                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-red-500 hover:bg-red-500/10 hover:text-red-600 flex items-center gap-2 focus:outline-none"
                   >
                     <LogOut className="w-4 h-4 opacity-80 shrink-0" />
                     <span>로그아웃</span>
@@ -2439,72 +2447,74 @@ function HomeContent() {
       >
         {(!isMobile || viewMode === 'diary') ? (
           <>
-            <div className="absolute top-0 left-0 right-0 z-30 flex flex-col">
-              <DiaryHeader 
-                current={{ ...current, sessionTitle: current?.title, date: current?.start_time }}
-                profiles={profiles}
-                isEditingTitle={isEditingTitle}
-                tempTitle={tempTitle}
-                onTitleClick={() => setIsEditingTitle(true)}
-                onTitleChange={setNewTitle}
-                onTitleUpdate={handleUpdateTitle}
-                onShare={() => { navigator.clipboard.writeText(window.location.href); alert("공유 링크가 복사되었습니다!"); }}
-                onDelete={async () => { 
-                  if (current) { 
-                    if (window.confirm("일기를 삭제할까요?\n삭제된 일기는 휴지통으로 이동하며 7일간 보관됩니다.")) { 
-                      await handleMoveToTrash(current.id); 
+            {current && (
+              <div className="absolute top-0 left-0 right-0 z-30 flex flex-col">
+                <DiaryHeader 
+                  current={{ ...current, sessionTitle: current?.title, date: current?.start_time }}
+                  profiles={profiles}
+                  isEditingTitle={isEditingTitle}
+                  tempTitle={tempTitle}
+                  onTitleClick={() => setIsEditingTitle(true)}
+                  onTitleChange={setNewTitle}
+                  onTitleUpdate={handleUpdateTitle}
+                  onShare={() => { navigator.clipboard.writeText(window.location.href); alert("공유 링크가 복사되었습니다!"); }}
+                  onDelete={async () => { 
+                    if (current) { 
+                      if (window.confirm("일기를 삭제할까요?\n삭제된 일기는 휴지통으로 이동하며 7일간 보관됩니다.")) { 
+                        await handleMoveToTrash(current.id); 
+                      } 
                     } 
-                  } 
-                }}
-                viewMode={viewMode}
-                isDeleted={isDeleted}
-              />
+                  }}
+                  viewMode={viewMode}
+                  isDeleted={isDeleted}
+                />
 
-              {/* Restore/Permanent Delete Warning Banner for Deleted Diaries */}
-              {isDeleted && current && (
-                <div className="bg-[#e94a44] px-4 py-1.5 flex items-center justify-center gap-3 animate-in fade-in duration-200 shrink-0 shadow-sm">
-                  <button 
-                    onClick={() => handleRestoreDiary(current.id)}
-                    className="px-3.5 py-1.5 bg-white/15 text-white rounded-lg text-[11px] font-black hover:bg-white/25 transition-colors active:scale-[0.98] origin-center flex items-center gap-1.5"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>일기 복원</span>
-                  </button>
-                  <button 
-                    onClick={() => handlePermanentDeleteDiary(current.id)}
-                    className="px-3.5 py-1.5 bg-white/15 text-white rounded-lg text-[11px] font-black hover:bg-white/25 transition-colors active:scale-[0.98] origin-center flex items-center gap-1.5"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>영구 삭제</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div 
-              data-scroll-container="true"
-              className={`flex-1 overflow-y-auto overscroll-y-contain scrollbar-hide ${isDeleted && current ? 'pt-[104px]' : 'pt-16'}`}
-            >
-              {/* Pull-to-refresh Indicator */}
-              <div 
-                data-pull-indicator="true"
-                className="w-full flex items-center justify-center overflow-hidden h-0 opacity-0"
-                style={{
-                  height: isRefreshing ? '50px' : undefined,
-                  opacity: isRefreshing ? 1 : undefined
-                }}
-              >
-                <div className="flex items-center justify-center py-2">
-                  <RotateCcw 
-                    data-pull-icon="true"
-                    strokeWidth={2.75}
-                    className={`w-[22px] h-[22px] text-[#e94a44] ${isRefreshing ? 'animate-spin-reverse' : ''}`}
-                  />
-                </div>
+                {/* Restore/Permanent Delete Warning Banner for Deleted Diaries */}
+                {isDeleted && (
+                  <div className="bg-[#e94a44] px-4 py-1.5 flex items-center justify-center gap-3 animate-in fade-in duration-200 shrink-0 shadow-sm">
+                    <button 
+                      onClick={() => handleRestoreDiary(current.id)}
+                      className="px-3.5 py-1.5 bg-white/15 text-white rounded-lg text-[11px] font-black hover:bg-white/25 transition-colors active:scale-[0.98] origin-center flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>일기 복원</span>
+                    </button>
+                    <button 
+                      onClick={() => handlePermanentDeleteDiary(current.id)}
+                      className="px-3.5 py-1.5 bg-white/15 text-white rounded-lg text-[11px] font-black hover:bg-white/25 transition-colors active:scale-[0.98] origin-center flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>영구 삭제</span>
+                    </button>
+                  </div>
+                )}
               </div>
+            )}
 
-              <div className="w-full pb-72">
-                {current ? (
+            {current ? (
+              <div 
+                data-scroll-container="true"
+                className={`flex-1 overflow-y-auto overscroll-y-contain scrollbar-hide ${isDeleted ? 'pt-[104px]' : 'pt-16'}`}
+              >
+                {/* Pull-to-refresh Indicator */}
+                <div 
+                  data-pull-indicator="true"
+                  className="w-full flex items-center justify-center overflow-hidden h-0 opacity-0"
+                  style={{
+                    height: isRefreshing ? '50px' : undefined,
+                    opacity: isRefreshing ? 1 : undefined
+                  }}
+                >
+                  <div className="flex items-center justify-center py-2">
+                    <RotateCcw 
+                      data-pull-icon="true"
+                      strokeWidth={2.75}
+                      className={`w-[22px] h-[22px] text-[#e94a44] ${isRefreshing ? 'animate-spin-reverse' : ''}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full pb-72">
                   <div className="w-full">
                     {/* Mobile-only collapsible Toss-style Metadata Card */}
                     <div className="md:hidden px-3 pt-2 pb-0">
@@ -2881,14 +2891,54 @@ function HomeContent() {
                     />
                     {/* --- Bento Grid End --- */}
                   </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center w-full h-full px-6">
+                {sortedSessions.length === 0 ? (
+                  /* Desktop-only Discord Bot Invite Guide centered */
+                  <div className="hidden md:flex flex-col items-center justify-center text-center select-none animate-in fade-in duration-300 gap-8 max-w-[460px] mx-auto">
+                    <div className="space-y-3">
+                      <h3 className="text-[24px] font-bold text-foreground tracking-tight">
+                        {session?.user?.name || '유저'}님 반가워요 👋🏻
+                      </h3>
+                      <p className="text-[14px] text-muted-foreground leading-relaxed px-2 break-keep">
+                        일기 작성을 도와줄 봇을 디스코드 서버에 초대해 보세요.
+                        <br />
+                        음성 채널 대화와 스크린샷이 모여 일기로 자동 작성됩니다.
+                      </p>
+                    </div>
+                    <div className="w-full flex flex-col items-center gap-3">
+                      <a
+                        href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full max-w-[340px] h-14 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[18px] rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        디스코드 봇 초대하기
+                      </a>
+                      <p className="text-[14px] text-muted-foreground">
+                        혼자서 사용할 계획이신가요?{' '}
+                        <a
+                          href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline hover:text-primary/90 font-semibold cursor-pointer"
+                        >
+                          봇 추가하기
+                        </a>
+                      </p>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-[60vh]">
+                  /* Default No Session Selected state */
+                  <div className="flex flex-col items-center justify-center">
                     <span className="text-[100px] mb-8 opacity-10">🎮</span>
                     <p className="text-2xl font-black italic tracking-tighter text-muted-foreground/20 uppercase">No Session Selected</p>
                   </div>
                 )}
               </div>
-            </div>
+            )}
             {/* --- Floating Action Button: Uncategorized Moments (Bottom Right) --- */}
             {current && current.screenshots?.some((s: any) => !s.game_title) && (
               <div className="absolute bottom-8 right-8 z-40">
