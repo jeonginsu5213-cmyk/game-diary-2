@@ -2,7 +2,7 @@
 import { IconArrowNarrowRight } from "@tabler/icons-react";
 import { useState, useRef, useId, useEffect } from "react";
 import { Trash2, FolderInput, Download, Gamepad2 } from "lucide-react";
-import { maskNickname } from "@/src/lib/utils";
+import { cn, maskNickname } from "@/src/lib/utils";
 import { supabase } from "@/src/lib/supabase";
 import { ImageZoom } from "@/components/ui/ImageZoom";
 
@@ -103,11 +103,17 @@ const Slide = ({
                   ? (profiles?.[slide.shot.uploader_id]?.display_name || 'Anonymous')
                   : maskNickname(profiles?.[slide.shot.uploader_id]?.display_name || 'Anonymous')}
               </span>
-              {slide.shot.comment && (
-                <span className="font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap mt-0.5 block">
-                  "{slide.shot.comment}"
-                </span>
-              )}
+              {slide.shot.comment && (() => {
+                const hasNewline = slide.shot.comment.includes('\n');
+                return (
+                  <span className={cn(
+                    "font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap",
+                    hasNewline ? "mt-0.5 block" : ""
+                  )}>
+                    "{slide.shot.comment}"
+                  </span>
+                );
+              })()}
             </div>
           </div>
 
