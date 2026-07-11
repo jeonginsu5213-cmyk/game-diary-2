@@ -67,7 +67,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-lg font-bold text-[#1f2937] mb-3">제7조 (개인정보 보호책임자 및 연락처)</h2>
             <p>개인정보 처리 및 민원과 관련하여 문의 사항이 있으신 경우 아래 연락처로 문의해 주시기 바랍니다.</p>
-            <p className="mt-2 font-semibold">이메일: jamsi@jamsiui-MacBookPro.local (또는 디스코드 DM)</p>
+            <p className="mt-2 font-semibold">이메일: insujeong5213@gmail.com (또는 디스코드 DM)</p>
           </section>
         </div>
       </div>
