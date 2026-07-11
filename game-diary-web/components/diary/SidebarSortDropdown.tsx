@@ -15,11 +15,11 @@ function useClickOutside(ref: React.RefObject<HTMLElement | null>, handler: () =
     const handleClickOutside = (event: Event) => {
       if (ref.current && !ref.current.contains(event.target as Node)) handler();
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside, true);
+    document.addEventListener('touchstart', handleClickOutside, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside, true);
+      document.removeEventListener('touchstart', handleClickOutside, true);
     };
   }, [ref, handler]);
 }

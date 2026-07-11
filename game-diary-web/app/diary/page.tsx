@@ -535,6 +535,31 @@ function HomeContent() {
   const [calendarDirection, setCalendarDirection] = useState(0);
   const [calendarTouchStart, setCalendarTouchStart] = useState<number | null>(null);
 
+  // Click outside handler for profile popover (settings gear)
+  const profilePopoverRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleProfileClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (isProfileOpen) {
+        if (
+          profilePopoverRef.current && 
+          !profilePopoverRef.current.contains(event.target as Node) &&
+          profileButtonRef.current &&
+          !profileButtonRef.current.contains(event.target as Node)
+        ) {
+          setIsProfileOpen(false);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleProfileClickOutside, true);
+    document.addEventListener('touchstart', handleProfileClickOutside, true);
+    return () => {
+      document.removeEventListener('mousedown', handleProfileClickOutside, true);
+      document.removeEventListener('touchstart', handleProfileClickOutside, true);
+    };
+  }, [isProfileOpen]);
+
   const handleCalendarTouchStart = (e: React.TouchEvent) => {
     setCalendarTouchStart(e.touches[0].clientX);
   };
@@ -2379,6 +2404,7 @@ function HomeContent() {
 
           {/* Settings gear icon to open popover */}
           <button 
+            ref={profileButtonRef}
             onClick={() => setIsProfileOpen(prev => !prev)}
             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors focus:outline-none cursor-pointer"
             title="설정 메뉴"
@@ -2390,11 +2416,8 @@ function HomeContent() {
           <AnimatePresence>
             {isProfileOpen && (
               <>
-                <div 
-                  className="fixed inset-0 z-40 cursor-default" 
-                  onClick={() => setIsProfileOpen(false)}
-                />
                 <motion.div
+                  ref={profilePopoverRef}
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
