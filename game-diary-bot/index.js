@@ -878,7 +878,7 @@ async function saveSessionToSupabase(session, endTime) {
 
 client.once('ready', async () => {
     console.log('--------------------------------------');
-    console.log('🤖 Game Diary 봇 온라인!');
+    console.log('🤖 PLOG 봇 온라인!');
     console.log('--------------------------------------');
 
     // 💾 저장된 활성 세션 백업 복구
@@ -1367,7 +1367,7 @@ client.on('messageCreate', async (m) => {
             const embed = new EmbedBuilder()
                 .setColor(0xE05D38)
                 .setTitle(`🎮 개인 게임 일기 기록`)
-                .setDescription(`안녕하세요! Game Diary 봇입니다.\n서버에 참여하지 않고도 개인 플레이 일기를 기록하실 수 있습니다.\n\n아래 **기록 시작** 버튼을 누르면 기록을 시작합니다.`);
+                .setDescription(`안녕하세요! PLOG 봇입니다.\n서버에 참여하지 않고도 개인 플레이 일기를 기록하실 수 있습니다.\n\n아래 **기록 시작** 버튼을 누르면 기록을 시작합니다.`);
             const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
                     .setCustomId('btn_solo_start')
