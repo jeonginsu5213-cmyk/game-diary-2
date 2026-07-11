@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn, formatDate, formatDurationText, formatTime, maskNickname } from "../../src/lib/utils";
-import { Clock, Calendar, ChevronLeft } from 'lucide-react';
+import { Clock, Calendar, ChevronLeft, Users, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface DiaryHeaderProps {
@@ -35,6 +35,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
 }) => {
   const router = useRouter();
   const [hoveredMemberId, setHoveredMemberId] = useState<string | null>(null);
+  const [isParticipantsDropdownOpen, setIsParticipantsDropdownOpen] = useState(false);
 
   // 1. Calculate played users (to identify observers)
   const playedUsersSet = React.useMemo(() => {
@@ -73,84 +74,73 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
             </button>
           )}
           {current && (
-            <div className="hidden md:flex items-center shrink-0">
-              <div className="flex items-center">
-                {visibleParticipants.map((p: any, index: number) => {
-                  const isObserver = !playedUsersSet.has(p.user_id);
-                  const isHovered = hoveredMemberId === p.user_id;
-                  const profile = profiles?.[p.user_id];
-                  const hasLoggedIn = !!profile?.has_logged_in;
-                  const displayName = hasLoggedIn 
-                    ? (profile?.display_name || 'Anonymous') 
-                    : maskNickname(profile?.display_name || 'Anonymous');
-                  
-                  return (
-                    <div
-                      key={p.user_id}
-                      className="relative flex items-center justify-center transition-all duration-300"
-                      onMouseEnter={() => setHoveredMemberId(p.user_id)}
-                      onMouseLeave={() => setHoveredMemberId(null)}
-                      style={{
-                        marginLeft: index === 0 ? 0 : "-0.6rem",
-                        zIndex: isHovered ? 100 : visibleParticipants.length - index,
-                      }}
+            <div className="relative shrink-0 hidden md:block">
+              <button 
+                onClick={() => setIsParticipantsDropdownOpen(!isParticipantsDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 active:scale-95 text-foreground rounded-lg border border-border/50 text-[12px] font-bold transition-all cursor-pointer select-none"
+              >
+                <Users className="w-3.5 h-3.5 opacity-60" />
+                <span>참여자 ({sortedParticipants.length}명)</span>
+                <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform ${isParticipantsDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Dropdown Content */}
+              <AnimatePresence>
+                {isParticipantsDropdownOpen && (
+                  <>
+                    {/* Click Outside Overlay (invisible) */}
+                    <div 
+                      className="fixed inset-0 z-40 cursor-default" 
+                      onClick={() => setIsParticipantsDropdownOpen(false)}
+                    />
+                    {/* Panel */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute top-10 left-0 w-64 bg-card border border-border shadow-2xl rounded-2xl p-4 z-50 flex flex-col gap-3 max-h-[300px] overflow-y-auto overscroll-contain"
                     >
-                      <AnimatePresence mode="popLayout">
-                        {isHovered && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                            animate={{
-                              opacity: 1,
-                              y: 0,
-                              scale: 1,
-                              transition: { type: "spring", stiffness: 300, damping: 20 },
-                            }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            className="absolute top-10 whitespace-nowrap flex flex-col items-center justify-center rounded-xl bg-card/90 border border-border shadow-2xl px-4 py-2.5 z-[110] min-w-max backdrop-blur-2xl"
-                          >
-                            <div className="font-black text-foreground text-[13px] flex items-center gap-1.5 mb-0.5">
-                              {displayName}
-                              {isObserver && (
-                                <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
-                                  관전
-                                </span>
-                              )}
+                      <div className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider pl-0.5">
+                        참여자 명단
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                        {sortedParticipants.map((p: any) => {
+                          const isObserver = !playedUsersSet.has(p.user_id);
+                          const profile = profiles?.[p.user_id];
+                          const hasLoggedIn = !!profile?.has_logged_in;
+                          const displayName = hasLoggedIn 
+                            ? (profile?.display_name || 'Anonymous') 
+                            : maskNickname(profile?.display_name || 'Anonymous');
+                          
+                          return (
+                            <div key={p.user_id} className="flex items-center justify-between gap-3 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6.5 h-6.5 rounded-full border border-border overflow-hidden shrink-0">
+                                  <img 
+                                    src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                    className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs scale-110")} 
+                                    alt="" 
+                                  />
+                                </div>
+                                <span className="text-[12px] font-bold text-foreground truncate">{displayName}</span>
+                                {isObserver && (
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1 py-0.5 rounded-md shrink-0">
+                                    관전
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-black text-muted-foreground/70 shrink-0 font-mono">
+                                {formatDurationText(p.duration_min || 0)}
+                              </span>
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-black font-sans tracking-tight opacity-70">
-                              {formatDurationText(p.duration_min || 0)}
-                            </div>
-                            {/* Arrow Pointer */}
-                            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-card border-l border-t border-border rotate-45" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <motion.div
-                        animate={isHovered ? { scale: 1.15 } : { scale: 1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                        className={cn(
-                          "w-7 h-7 rounded-full border-2 overflow-hidden transition-all duration-300 shrink-0 isolate",
-                          isHovered ? "border-primary shadow-lg shadow-primary/20" : "border-card shadow-sm"
-                        )}
-                      >
-                        <img 
-                          src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                          className={cn(
-                            "w-full h-full object-cover",
-                            !hasLoggedIn && "blur-xs scale-110"
-                          )} 
-                          alt="" 
-                        />
-                      </motion.div>
-                    </div>
-                  );
-                })}
-                {remainingCount > 0 && (
-                  <div className="w-7 h-7 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[9px] font-black text-muted-foreground z-0 ml-[-0.6rem] shadow-sm">
-                    +{remainingCount}
-                  </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </>
                 )}
-              </div>
+              </AnimatePresence>
             </div>
           )}
 
