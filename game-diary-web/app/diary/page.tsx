@@ -2703,8 +2703,8 @@ function HomeContent() {
 
                     {/* Desktop Participant Card */}
                     {sortedParticipants.length > 0 && (
-                      <div className="hidden md:block px-3 md:px-4 pt-2 pb-0">
-                        <div className="relative rounded-2xl overflow-hidden py-3 px-5 bg-card backdrop-blur-sm shadow-xs border border-border/40">
+                      <div className="hidden md:block px-3 md:px-4 pt-4 pb-0">
+                        <div className="relative rounded-2xl overflow-hidden py-3 px-5 bg-card backdrop-blur-sm shadow-xs">
                           {/* Background Pattern (Subtle dots) */}
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(233,74,68,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
