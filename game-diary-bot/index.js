@@ -114,20 +114,17 @@ client.on('error', error => {
 client.on('guildCreate', async (guild) => {
     console.log(`[Discord] Joined new guild: ${guild.name} (${guild.id})`);
     try {
-        const existingChannel = guild.channels.cache.find(
+        // 1. Text channel '일기장'
+        const existingTextChannel = guild.channels.cache.find(
             ch => ch.type === ChannelType.GuildText && ch.name === '일기장'
         );
-        if (existingChannel) {
-            console.log(`[Discord] '일기장' channel already exists in ${guild.name}`);
-            return;
-        }
-
-        const newChannel = await guild.channels.create({
-            name: '일기장',
-            type: ChannelType.GuildText,
-            topic: `
+        if (!existingTextChannel) {
+            const newChannel = await guild.channels.create({
+                name: '일기장',
+                type: ChannelType.GuildText,
+                topic: `
 사용방법 보기
-1. 서버의 음성 채널에서 친구들과 게임을 플레이합니다.
+1. 서버의 '일기장' 음성 채널에서 친구들과 게임을 플레이합니다.
 2. 플레이 도중 남길 코멘트나 스크린샷을 이 #일기장 채널에 자유롭게 전송하세요.
 3. 음성 채널의 모든 인원이 퇴장하면, 자동으로 멋진 일기가 완성되어 발행 링크가 전송됩니다!
 
@@ -140,10 +137,27 @@ client.on('guildCreate', async (guild) => {
 💡 유용한 팁
 * 일기 제목 변경: 음성 채널에 들어가면 채널에 생성(고정)되는 봇 메시지의 ‘✏️ 일기 제목 수정’ 버튼을 클릭해 일기 제목을 설정할 수 있습니다.
 * 체크리스트 리마인드: 플레이 도중, 메모) 할일 (예: 메모) 보스 아이템 챙기기) 형태로 메시지를 전송하면 리마인드 메모로 등록됩니다. 다음번에 동일한 게임을 다시 시작할 때, 봇이 과거 메모를 불러와 똑똑하게 리마인드해 줍니다.`
-        });
-        console.log(`[Discord] Created '일기장' channel in ${guild.name}: ${newChannel.id}`);
+            });
+            console.log(`[Discord] Created '일기장' text channel in ${guild.name}: ${newChannel.id}`);
+        } else {
+            console.log(`[Discord] '일기장' text channel already exists in ${guild.name}`);
+        }
+
+        // 2. Voice channel '일기장'
+        const existingVoiceChannel = guild.channels.cache.find(
+            ch => ch.type === ChannelType.GuildVoice && ch.name === '일기장'
+        );
+        if (!existingVoiceChannel) {
+            const newVoiceChannel = await guild.channels.create({
+                name: '일기장',
+                type: ChannelType.GuildVoice
+            });
+            console.log(`[Discord] Created '일기장' voice channel in ${guild.name}: ${newVoiceChannel.id}`);
+        } else {
+            console.log(`[Discord] '일기장' voice channel already exists in ${guild.name}`);
+        }
     } catch (e) {
-        console.error(`[Discord] Failed to create '일기장' channel in ${guild.name}:`, e);
+        console.error(`[Discord] Failed to create '일기장' channels in ${guild.name}:`, e);
     }
 });
 
@@ -902,6 +916,9 @@ client.once('ready', async () => {
         for (const voiceState of guild.voiceStates.cache.values()) {
             if (!voiceState.member || voiceState.member.user.bot || !voiceState.channelId) continue;
             const channelId = voiceState.channelId;
+            const voiceChannel = guild.channels.cache.get(channelId);
+            if (!voiceChannel || voiceChannel.name !== '일기장') continue;
+
             if (!activeSessions.has(channelId)) {
                 activeSessions.set(channelId, {
                     guildId: voiceState.guild.id,
@@ -934,44 +951,48 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     
     if (newState.channel) {
         const channelId = newState.channel.id;
-        if (!activeSessions.has(channelId)) {
-            const session = {
-                guildId: newState.guild.id,
-                guildName: newState.guild.name, guildIcon: newState.guild.iconURL({ format: 'png', size: 512 }),
-                channelName: newState.channel.name, sessionTitle: "오늘의 게임일기", startTime: Date.now(),
-                participants: new Set([userId]), displayNames: new Map([[userId, member.displayName]]), profileImages: new Map([[userId, member.user.displayAvatarURL({ format: 'png', size: 256 })]]),
-                gameLogs: {}, participantLogs: {}, pendingScreenshots: [], controlMessage: null 
-            };
-            activeSessions.set(channelId, session);
-            const logChannel = newState.guild.channels.cache.find(c => c.name === '일기장');
-            if (logChannel) {
-                try {
-                    const pinnedMessages = await logChannel.messages.fetchPinned();
-                    for (const pinnedMsg of pinnedMessages.values()) {
-                        if (pinnedMsg.author.id === client.user.id) await pinnedMsg.unpin();
-                    }
-                } catch (e) { console.error("고정 메시지 해제 실패:", e); }
+        const channelName = newState.channel.name;
 
-                const row = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_edit_title').setLabel('일기 제목 수정').setStyle(ButtonStyle.Primary).setEmoji('✏️')
-                );
-                const msg = await logChannel.send({ content: `🎮 **오늘의 게임일기 작성을 시작합니다!**\n현재 제목: **${session.sessionTitle}**`, components: [row] });
-                try { await msg.pin(); session.controlMessage = msg; } catch (e) {}
+        if (channelName === '일기장') {
+            if (!activeSessions.has(channelId)) {
+                const session = {
+                    guildId: newState.guild.id,
+                    guildName: newState.guild.name, guildIcon: newState.guild.iconURL({ format: 'png', size: 512 }),
+                    channelName: newState.channel.name, sessionTitle: "오늘의 게임일기", startTime: Date.now(),
+                    participants: new Set([userId]), displayNames: new Map([[userId, member.displayName]]), profileImages: new Map([[userId, member.user.displayAvatarURL({ format: 'png', size: 256 })]]),
+                    gameLogs: {}, participantLogs: {}, pendingScreenshots: [], controlMessage: null 
+                };
+                activeSessions.set(channelId, session);
+                const logChannel = newState.guild.channels.cache.find(c => c.name === '일기장');
+                if (logChannel) {
+                    try {
+                        const pinnedMessages = await logChannel.messages.fetchPinned();
+                        for (const pinnedMsg of pinnedMessages.values()) {
+                            if (pinnedMsg.author.id === client.user.id) await pinnedMsg.unpin();
+                        }
+                    } catch (e) { console.error("고정 메시지 해제 실패:", e); }
+
+                    const row = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('btn_edit_title').setLabel('일기 제목 수정').setStyle(ButtonStyle.Primary).setEmoji('✏️')
+                    );
+                    const msg = await logChannel.send({ content: `🎮 **오늘의 게임일기 작성을 시작합니다!**\n현재 제목: **${session.sessionTitle}**`, components: [row] });
+                    try { await msg.pin(); session.controlMessage = msg; } catch (e) {}
+                }
             }
-        }
-        const session = activeSessions.get(channelId);
-        session.participants.add(userId);
-        session.displayNames.set(userId, member.displayName);
-        session.profileImages.set(userId, member.user.displayAvatarURL({ format: 'png', size: 256 }));
-        
-        if (!session.participantLogs[userId]) session.participantLogs[userId] = [];
-        const lastLog = session.participantLogs[userId][session.participantLogs[userId].length - 1];
-        if (!lastLog || lastLog.leaveTime) {
-            session.participantLogs[userId].push({ joinTime: admin.firestore.Timestamp.now(), leaveTime: null });
-        }
+            const session = activeSessions.get(channelId);
+            session.participants.add(userId);
+            session.displayNames.set(userId, member.displayName);
+            session.profileImages.set(userId, member.user.displayAvatarURL({ format: 'png', size: 256 }));
+            
+            if (!session.participantLogs[userId]) session.participantLogs[userId] = [];
+            const lastLog = session.participantLogs[userId][session.participantLogs[userId].length - 1];
+            if (!lastLog || lastLog.leaveTime) {
+                session.participantLogs[userId].push({ joinTime: admin.firestore.Timestamp.now(), leaveTime: null });
+            }
 
-        const activity = member.presence?.activities.find(a => a.type === 0);
-        if (activity) await updateGameLog(session, userId, activity);
+            const activity = member.presence?.activities.find(a => a.type === 0);
+            if (activity) await updateGameLog(session, userId, activity);
+        }
     }
 
     if (oldState.channel && oldState.channel.id !== newState.channel?.id) {
