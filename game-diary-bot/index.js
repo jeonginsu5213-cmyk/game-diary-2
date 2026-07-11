@@ -111,6 +111,19 @@ client.on('error', error => {
     console.error('[Discord Client Error]', error);
 });
 
+const DIARY_CHANNEL_TOPIC = `사용방법 ⤵️
+1. ‘🔊일기장' 음성 채널에서 친구들과 게임을 플레이합니다.
+2. 플레이 도중 남길 코멘트나 스크린샷을 이 ‘#일기장’ 채널에 자유롭게 전송하세요.
+3. 음성 채널의 모든 인원이 퇴장하면, 자동으로 멋진 일기가 완성되어 발행 링크가 전송됩니다!
+
+⚠️ 주의사항
+* 게임 활동 표시 활성화: 디스코드 설정 → 활동 개인정보 → ‘내 활동 공유’를 반드시 켜주셔야 게임이 감지되고 일기장에 작성됩니다.
+* 봇 권한: 봇이 음성 채널 및 ‘#일기장’ 채널에 접근 및 메시지 작성이 가능해야 정상 기록됩니다.
+
+💡 유용한 팁
+* 일기 제목 변경: 음성 채널에 들어가면 채널에 생성(고정)되는 봇 메시지의 ‘✏️ 일기 제목 수정’ 버튼을 클릭해 일기 제목을 설정할 수 있습니다.
+* 체크리스트 리마인드: 플레이 도중, 메모) 할일 (예: 메모) 보스 아이템 챙기기) 형태로 메시지를 전송하면 리마인드 메모로 등록됩니다. 다음번에 동일한 게임을 다시 시작할 때, 봇이 과거 메모를 불러와 똑똑하게 리마인드해 줍니다.`;
+
 client.on('guildCreate', async (guild) => {
     console.log(`[Discord] Joined new guild: ${guild.name} (${guild.id})`);
     try {
@@ -125,21 +138,7 @@ client.on('guildCreate', async (guild) => {
             const newChannel = await guild.channels.create({
                 name: '일기장',
                 type: ChannelType.GuildText,
-                topic: `
-사용방법 보기
-1. 서버의 '일기장' 음성 채널에서 친구들과 게임을 플레이합니다.
-2. 플레이 도중 남길 코멘트나 스크린샷을 이 #일기장 채널에 자유롭게 전송하세요.
-3. 음성 채널의 모든 인원이 퇴장하면, 자동으로 멋진 일기가 완성되어 발행 링크가 전송됩니다!
-
-
-⚠️ 주의사항
-* 게임 활동 표시 활성화: 디스코드 설정 → 활동 개인정보 → ‘내 활동 공유’를 반드시 켜주셔야 게임이 감지되고 일기장에 작성됩니다.
-* 봇 권한: 봇이 음성 채널 및 #일기장 채널에 접근 및 메시지 작성이 가능해야 정상 기록됩니다.
-
-
-💡 유용한 팁
-* 일기 제목 변경: 음성 채널에 들어가면 채널에 생성(고정)되는 봇 메시지의 ‘✏️ 일기 제목 수정’ 버튼을 클릭해 일기 제목을 설정할 수 있습니다.
-* 체크리스트 리마인드: 플레이 도중, 메모) 할일 (예: 메모) 보스 아이템 챙기기) 형태로 메시지를 전송하면 리마인드 메모로 등록됩니다. 다음번에 동일한 게임을 다시 시작할 때, 봇이 과거 메모를 불러와 똑똑하게 리마인드해 줍니다.`
+                topic: DIARY_CHANNEL_TOPIC
             });
             console.log(`[Discord] Created '일기장' text channel in ${guild.name}: ${newChannel.id}`);
         } else {
@@ -926,7 +925,7 @@ client.once('ready', async () => {
                 await guild.channels.create({
                     name: '일기장',
                     type: ChannelType.GuildText,
-                    topic: '일기장 봇 자동 기록용 채널입니다.'
+                    topic: DIARY_CHANNEL_TOPIC
                 });
                 console.log(`[Discord Startup] Created '일기장' text channel in ${guild.name}`);
             }
