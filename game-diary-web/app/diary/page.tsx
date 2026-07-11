@@ -30,6 +30,7 @@ import { Drawer, DrawerPopup, DrawerHeader, DrawerTitle, DrawerDescription, Draw
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarousel';
+import DesktopScreenshotCarousel from '@/components/diary/DesktopScreenshotCarousel';
 
 // --- Diary List Item Component (Swipe to Favorite or Trash layout) ---
 
@@ -2704,65 +2705,72 @@ function HomeContent() {
                               content: (
                                 <div className="flex flex-col h-auto md:h-[450px] md:pr-[424px]">
                                   {/* Header (Desktop only) */}
-                                  {(!isDeleted || gameShots.length > 0) && (
-                                    <div className="hidden md:flex items-center mb-2 pl-[6px]">
-                                      <motion.div 
-                                        whileHover="hover"
-                                        className="flex items-center gap-1 group/label cursor-pointer select-none"
-                                      >
-                                        <span className="text-[12px] font-bold tracking-tight text-primary transition-colors duration-200">
-                                          하이라이트
-                                        </span>
-                                        <motion.div
-                                          variants={{
-                                            hover: { x: 2 }
+                                  <div className="hidden md:flex items-center justify-center mb-4 w-[480px] mx-auto">
+                                    {!isDeleted && gameShots.length > 0 && (
+                                      <div>
+                                        <input 
+                                          type="file" 
+                                          id={`file-upload-desktop-${game.id}`}
+                                          className="hidden" 
+                                          accept="image/*"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setPendingUpload({ file, defaultGame: game.title });
                                           }}
-                                          transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                                          className="text-primary flex items-center"
+                                        />
+                                        <button 
+                                          onClick={() => document.getElementById(`file-upload-desktop-${game.id}`)?.click()}
+                                          className="flex items-center gap-1.5 px-3 py-1 rounded-xl border border-border bg-card hover:bg-muted text-[11px] font-bold transition-all text-muted-foreground hover:text-foreground cursor-pointer shadow-xs"
                                         >
-                                          <ChevronRight className="w-3 h-3" />
-                                        </motion.div>
-                                      </motion.div>
-                                    </div>
-                                  )}
+                                          <Plus className="w-3.5 h-3.5" />
+                                          <span>스크린샷 추가</span>
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
 
-                                  <div className="flex-1">
-                                    {/* Desktop Grid View */}
-                                    <div className="hidden md:grid grid-cols-3 gap-3">
-                                      {(() => {
-                                        const SHOTS_PER_PAGE = 5;
-                                        const currentPage = normalizedScreenshotPages[game.id] || 1;
-                                        const startIndex = (currentPage - 1) * SHOTS_PER_PAGE;
-                                        const slicedShots = gameShots.slice(startIndex, startIndex + SHOTS_PER_PAGE);                                    
-                                        return (
-                                          <>
-                                            {slicedShots.map((shot: any) => (
-                                              <ScreenshotItem 
-                                                key={shot.id}
-                                                shot={shot}
-                                                profiles={profiles}
-                                                current={current}
-                                                session={session}
-                                                isNew={newShotId === shot.id}
-                                                activeMoveShotId={activeMoveShotId}
-                                                setActiveMoveShotId={setActiveMoveShotId}
-                                                setActiveShot={setActiveShot}
-                                                setHoveredShot={setHoveredShot}
-                                                handleDownload={handleDownload}
-                                                handleImageDelete={handleImageDelete}
-                                                fetchData={fetchData}
-                                                isDeleted={isDeleted}
+                                  <div className="flex-1 min-h-0 flex flex-col justify-start">
+                                    {/* Desktop 3D Carousel View */}
+                                    <div className="hidden md:block">
+                                      {gameShots.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl p-8 bg-muted/5 text-muted-foreground w-[480px] h-[260px] mx-auto mt-2">
+                                          <Camera className="w-8 h-8 opacity-25 mb-2" />
+                                          <p className="text-[11px] font-black tracking-tight mb-3">등록된 스크린샷이 없습니다.</p>
+                                          {!isDeleted && (
+                                            <>
+                                              <input 
+                                                type="file" 
+                                                id={`file-upload-desktop-empty-${game.id}`}
+                                                className="hidden" 
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                  const file = e.target.files?.[0];
+                                                  if (file) setPendingUpload({ file, defaultGame: game.title });
+                                                }}
                                               />
-                                            ))}
-                                            {!isDeleted && (
-                                              <UploadPlaceholder 
-                                                key={pendingUpload ? 'active' : 'idle'}
-                                                onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })} 
-                                              />
-                                            )}
-                                          </>
-                                        );
-                                      })()}
+                                              <button 
+                                                onClick={() => document.getElementById(`file-upload-desktop-empty-${game.id}`)?.click()}
+                                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white hover:opacity-90 text-[11px] font-black transition-all cursor-pointer shadow-md"
+                                              >
+                                                <Plus className="w-3.5 h-3.5" />
+                                                <span>첫 스크린샷 올리기</span>
+                                              </button>
+                                            </>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <DesktopScreenshotCarousel
+                                          gameShots={gameShots}
+                                          session={session}
+                                          profiles={profiles}
+                                          current={current}
+                                          fetchData={fetchData}
+                                          onAction={setActiveShot}
+                                          onDownload={handleDownload}
+                                          onDelete={handleImageDelete}
+                                          isDeleted={isDeleted}
+                                        />
+                                      )}
                                     </div>
 
                                     {/* Mobile Carousel View */}
@@ -2785,76 +2793,6 @@ function HomeContent() {
                                       />
                                     </div>
                                   </div>
-                                    
-                                  {gameShots.length > 5 && (
-                                    <div className="hidden md:flex justify-end mt-auto pt-6">
-                                      <Pagination.Root
-                                        count={gameShots.length + 1}
-                                        pageSize={5}
-                                        page={normalizedScreenshotPages[game.id] || 1}
-                                        siblingCount={1}
-                                        onPageChange={(details) => setScreenshotPages(prev => ({ ...prev, [game.id]: details.page }))}
-                                        className="flex items-center gap-1 select-none"
-                                      >
-                                        <Pagination.Context>
-                                          {(pagination) => (
-                                            <button
-                                              onClick={() => pagination.goToFirstPage()}
-                                              disabled={pagination.page === 1}
-                                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors disabled:opacity-10 disabled:pointer-events-none"
-                                            >
-                                              <ChevronsLeft className="w-4 h-4 stroke-[2.5]" />
-                                            </button>
-                                          )}
-                                        </Pagination.Context>
-
-                                        <Pagination.PrevTrigger className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors data-disabled:opacity-10 data-disabled:pointer-events-none">
-                                          <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                                        </Pagination.PrevTrigger>
-
-                                        <Pagination.Context>
-                                          {(pagination) =>
-                                            pagination.pages.map((page, index) =>
-                                              page.type === "page" ? (
-                                                <Pagination.Item
-                                                  key={index}
-                                                  {...page}
-                                                  className="inline-flex items-center justify-center w-8 h-8 text-[11px] font-black tabular-nums rounded-lg transition-all cursor-pointer hover:bg-muted
-                                                             data-selected:bg-primary data-selected:text-foreground-foreground data-selected:shadow-md data-selected:shadow-primary/20"
-                                                >
-                                                  {page.value}
-                                                </Pagination.Item>
-                                              ) : (
-                                                <Pagination.Ellipsis
-                                                  key={index}
-                                                  index={index}
-                                                  className="inline-flex items-center justify-center w-8 h-8 text-[10px] font-black text-muted-foreground/20 tracking-tighter"
-                                                >
-                                                  &#8230;
-                                                </Pagination.Ellipsis>
-                                              )
-                                            )
-                                          }
-                                        </Pagination.Context>
-
-                                        <Pagination.NextTrigger className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors data-disabled:opacity-10 data-disabled:pointer-events-none">
-                                          <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                                        </Pagination.NextTrigger>
-
-                                        <Pagination.Context>
-                                          {(pagination) => (
-                                            <button
-                                              onClick={() => pagination.goToLastPage()}
-                                              disabled={pagination.page === pagination.totalPages}
-                                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground/40 hover:text-foreground rounded-lg transition-colors disabled:opacity-10 disabled:pointer-events-none"
-                                            >
-                                              <ChevronsRight className="w-4 h-4 stroke-[2.5]" />
-                                            </button>
-                                          )}
-                                        </Pagination.Context>
-                                      </Pagination.Root>
-                                    </div>
-                                  )}
 
                                   {/* Mobile Comments Section (Embedded inside Highlight Card on mobile) */}
                                   <div className="block md:hidden mt-4 -mx-4 -mb-4 pt-4 pb-4 px-0 bg-muted rounded-2xl border border-border/40 animate-in fade-in duration-300">
