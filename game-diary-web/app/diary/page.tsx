@@ -1414,7 +1414,7 @@ function HomeContent() {
                 if (val === 'settings') {
                   setIsSettingsOpen(true);
                 } else if (val === 'help') {
-                  setIsHelpOpen(true);
+                  window.location.href = "mailto:insujeong5213@gmail.com";
                 } else if (val === 'logout') {
                   signOut();
                 }
@@ -2456,17 +2456,17 @@ function HomeContent() {
                           className="absolute left-full top-[-36px] pl-1.5 z-50 w-44 origin-top-left"
                         >
                           <div className="rounded-lg bg-card shadow-lg shadow-black/5 p-1 flex flex-col">
-                            <button 
+                            <a 
+                              href="mailto:insujeong5213@gmail.com"
                               onClick={() => {
                                 setIsProfileOpen(false);
-                                setIsHelpOpen(true);
                                 setIsHelpHovered(false);
                               }}
-                              className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
+                              className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none cursor-pointer"
                             >
                               <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
                               <span>고객센터</span>
-                            </button>
+                            </a>
                             <a 
                               href="/privacy"
                               onClick={() => {
@@ -3222,48 +3222,7 @@ function HomeContent() {
         </DrawerPopup>
       </Drawer>
 
-      {/* 도움말 및 지원 모달 (임시) */}
-      <AnimatePresence>
-        {isHelpOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsHelpOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-            />
-            {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ type: "spring", duration: 0.3 }}
-              className="relative w-64 overflow-hidden rounded-xl bg-card/75 dark:bg-card/45 backdrop-blur-2xl border border-white/20 dark:border-border/35 p-4 shadow-2xl shadow-black/10 flex flex-col items-center text-center gap-4 z-10"
-            >
-              <p className="text-[12px] text-muted-foreground whitespace-pre-line leading-relaxed my-2">
-                <span className="font-bold text-foreground">꼬우면 전화해</span>{"\n"}
-                <span className="font-mono font-bold text-foreground text-[13px]">010-7109-8131</span>
-              </p>
-              <div className="flex flex-col w-full gap-1.5">
-                <a 
-                  href="tel:010-7109-8131"
-                  className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-primary text-foreground-foreground font-bold text-[12px] shadow-md shadow-primary/10 hover:bg-primary/90 active:scale-98 transition-all"
-                >
-                  <span>전화걸기</span>
-                </a>
-                <button 
-                  onClick={() => setIsHelpOpen(false)}
-                  className="w-full py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground font-bold text-[12px] active:scale-98 transition-all"
-                >
-                  닫기
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
 
       {/* 설정 뷰 */}
       <AnimatePresence>

@@ -221,13 +221,13 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
                   <h4 className="text-[15px] font-bold text-foreground">고객 지원 및 정보</h4>
                 </div>
 
-                <button 
-                  onClick={() => setIsHelpOpen(true)}
+                <a 
+                  href="mailto:insujeong5213@gmail.com"
                   className="w-full text-left flex items-center justify-between gap-4 outline-none cursor-pointer group"
                 >
                   <span className="text-[15px] font-semibold text-foreground">도움말 및 지원</span>
                   <ChevronRight className="w-4.5 h-4.5 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />
-                </button>
+                </a>
 
                 <button 
                   onClick={() => alert("오픈소스 라이선스는 v1.0.0 MIT 라이선스를 준수합니다.")}
@@ -369,48 +369,7 @@ export default function SettingsView({ onClose, session }: SettingsViewProps) {
         </div>
       </main>
 
-      {/* 도움말 및 지원 모달 (설정 전용 임시 팝업) */}
-      <AnimatePresence>
-        {isHelpOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsHelpOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-            />
-            {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ type: "spring", duration: 0.3 }}
-              className="relative w-64 overflow-hidden rounded-xl bg-card/75 dark:bg-card/45 backdrop-blur-2xl border border-white/20 dark:border-border/35 p-4 shadow-2xl shadow-black/10 flex flex-col items-center text-center gap-4 z-10"
-            >
-              <p className="text-[12px] text-muted-foreground whitespace-pre-line leading-relaxed my-2">
-                <span className="font-bold text-foreground">꼬우면 전화해</span>{"\n"}
-                <span className="font-mono font-bold text-foreground text-[13px]">010-7109-8131</span>
-              </p>
-              <div className="flex flex-col w-full gap-1.5">
-                <a 
-                  href="tel:010-7109-8131"
-                  className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-primary text-primary-foreground font-bold text-[12px] shadow-md shadow-primary/10 hover:bg-primary/90 active:scale-98 transition-all"
-                >
-                  <span>전화걸기</span>
-                </a>
-                <button 
-                  onClick={() => setIsHelpOpen(false)}
-                  className="w-full py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground font-bold text-[12px] active:scale-98 transition-all"
-                >
-                  닫기
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
     </div>
   );
 }
