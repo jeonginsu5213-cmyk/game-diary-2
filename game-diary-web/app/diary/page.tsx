@@ -614,7 +614,6 @@ function HomeContent() {
         setDirection(newDirection);
       }
       
-      setSelectedId(null);
       return newTab;
     });
   }, []);
