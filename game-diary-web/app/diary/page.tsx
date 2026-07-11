@@ -1386,7 +1386,7 @@ function HomeContent() {
   return (
     <div className="flex h-[var(--visual-viewport-height,100vh)] w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className={`w-full bg-background md:border-r md:border-border flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
+      <aside className={`w-full bg-background md:border-r md:border-border/40 flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
         viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-10 md:z-20' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-20'
       }`}>
 
