@@ -2976,11 +2976,11 @@ function HomeContent() {
                         href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&permissions=8&scope=bot%20applications.commands`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full max-w-[340px] h-14 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[18px] rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full max-w-[280px] h-12 bg-primary hover:bg-primary/95 active:scale-[0.98] text-white font-bold text-[14px] rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
                         디스코드 봇 초대하기
                       </a>
-                      <p className="text-[14px] text-muted-foreground">
+                      <p className="text-[12px] text-muted-foreground">
                         혼자서 사용할 계획이신가요?{' '}
                         <a
                           href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '1500540191910264984'}&integration_type=1&scope=applications.commands`}
