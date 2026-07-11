@@ -12,7 +12,7 @@ import { formatDurationText, formatDate, formatTime, getObjectParticle, maskNick
 import DiarySidebar from '@/components/diary/DiarySidebar';
 import DiaryHeader from '@/components/diary/DiaryHeader';
 import { BentoGrid, BentoItem } from '@/components/diary/BentoGrid';
-import { Gamepad2, Camera, MessageCircleMore, MessageCircle, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar, Star, Home as HomeIcon, Inbox, List, Bell, Settings, ArrowLeftRight, Info, RotateCcw, Plus, MoreHorizontal, HelpCircle, LogOut } from 'lucide-react';
+import { Gamepad2, Camera, MessageCircleMore, MessageCircle, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar, Star, Home as HomeIcon, Inbox, List, Bell, Settings, ArrowLeftRight, Info, RotateCcw, Plus, MoreHorizontal, HelpCircle, LogOut, Shield } from 'lucide-react';
 import { Pagination } from "@ark-ui/react/pagination";
 import SidebarSortDropdown from '@/components/diary/SidebarSortDropdown';
 import SettingsView from '@/components/diary/SettingsView';
@@ -2398,7 +2398,7 @@ function HomeContent() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute bottom-14 right-4 z-50 w-48 overflow-hidden rounded-lg bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-bottom-right"
+                  className="absolute bottom-14 right-4 z-50 w-48 overflow-visible rounded-lg bg-card shadow-lg shadow-black/5 flex flex-col p-1 origin-bottom-right"
                 >
                   <button 
                     onClick={() => {
@@ -2410,16 +2410,37 @@ function HomeContent() {
                     <Settings className="w-4 h-4 opacity-60 shrink-0" />
                     <span>설정</span>
                   </button>
-                  <button 
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      setIsHelpOpen(true);
-                    }}
-                    className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
-                  >
-                    <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
-                    <span>도움말 및 지원</span>
-                  </button>
+                  <div className="relative group/sub w-full">
+                    <button 
+                      className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none cursor-pointer"
+                    >
+                      <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
+                      <span>도움말 및 지원</span>
+                      <ChevronRight className="w-3 h-3 ml-auto opacity-40 group-hover/sub:opacity-100 transition-opacity" />
+                    </button>
+                    <div className="absolute left-full bottom-0 pl-1.5 z-50 w-44 hidden group-hover/sub:block animate-in fade-in slide-in-from-left-1.5 duration-150 origin-bottom-left">
+                      <div className="rounded-lg bg-card shadow-lg shadow-black/5 p-1 flex flex-col">
+                        <button 
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            setIsHelpOpen(true);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
+                        >
+                          <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
+                          <span>고객센터</span>
+                        </button>
+                        <a 
+                          href="/privacy"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none cursor-pointer"
+                        >
+                          <Shield className="w-4 h-4 opacity-60 shrink-0" />
+                          <span>개인정보처리방침</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                   <div className="h-[1px] bg-border/40 my-1 mx-2" />
                   <button 
                     onClick={() => {
