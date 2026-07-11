@@ -138,13 +138,19 @@
   --destructive-foreground: #ffffff;
 }
 
-/* Base Reset (TweakCN 스타일 기반 리팩토링) */
 @layer base {
   *, ::before, ::after {
     box-sizing: border-box;
     border-width: 0;
     border-style: solid;
     border-color: var(--border);
+  }
+
+  button,
+  [role="button"],
+  select,
+  a {
+    cursor: pointer;
   }
 
   html {
