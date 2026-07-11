@@ -1694,7 +1694,7 @@ function HomeContent() {
               {/* 3. If listTab === 'trash', render static header with text and divider matching calendar tab */}
               {listTab === 'trash' && (
                 <div className="shrink-0 flex flex-col pt-0 pb-0 select-none animate-in fade-in duration-300">
-                  <div className="flex items-center gap-1.5 text-muted-foreground/60 pl-5 relative z-20 pb-2.5">
+                  <div className="flex items-center gap-1.5 text-muted-foreground/60 pl-5 relative z-20 pt-[10px] md:pt-0 pb-2.5">
                     <Info className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                     <span className="text-[11px] font-medium">삭제된 일기는 나에게서만 삭제되며 7일 후 영구 삭제됩니다.</span>
                   </div>
