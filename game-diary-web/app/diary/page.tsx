@@ -528,6 +528,7 @@ function HomeContent() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHelpHovered, setIsHelpHovered] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(new Date());
   const [calendarViewMode, setCalendarViewMode] = useState<'week' | 'month'>('month');
@@ -2410,7 +2411,11 @@ function HomeContent() {
                     <Settings className="w-4 h-4 opacity-60 shrink-0" />
                     <span>설정</span>
                   </button>
-                  <div className="relative group/sub w-full">
+                  <div 
+                    className="relative group/sub w-full"
+                    onMouseEnter={() => setIsHelpHovered(true)}
+                    onMouseLeave={() => setIsHelpHovered(false)}
+                  >
                     <button 
                       className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none cursor-pointer"
                     >
@@ -2418,28 +2423,42 @@ function HomeContent() {
                       <span>도움말 및 지원</span>
                       <ChevronRight className="w-3 h-3 ml-auto opacity-40 group-hover/sub:opacity-100 transition-opacity" />
                     </button>
-                    <div className="absolute left-full top-[-36px] pl-1.5 z-50 w-44 hidden group-hover/sub:block animate-in fade-in slide-in-from-left-1.5 duration-150 origin-top-left">
-                      <div className="rounded-lg bg-card shadow-lg shadow-black/5 p-1 flex flex-col">
-                        <button 
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            setIsHelpOpen(true);
-                          }}
-                          className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
+                    <AnimatePresence>
+                      {isHelpHovered && (
+                        <motion.div
+                          initial={{ opacity: 0, x: -8, scale: 0.95 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          exit={{ opacity: 0, x: -8, scale: 0.95 }}
+                          transition={{ duration: 0.12, ease: 'easeOut' }}
+                          className="absolute left-full top-[-36px] pl-1.5 z-50 w-44 origin-top-left"
                         >
-                          <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
-                          <span>고객센터</span>
-                        </button>
-                        <a 
-                          href="/privacy"
-                          onClick={() => setIsProfileOpen(false)}
-                          className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none cursor-pointer"
-                        >
-                          <Shield className="w-4 h-4 opacity-60 shrink-0" />
-                          <span>개인정보처리방침</span>
-                        </a>
-                      </div>
-                    </div>
+                          <div className="rounded-lg bg-card shadow-lg shadow-black/5 p-1 flex flex-col">
+                            <button 
+                              onClick={() => {
+                                setIsProfileOpen(false);
+                                setIsHelpOpen(true);
+                                setIsHelpHovered(false);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none"
+                            >
+                              <HelpCircle className="w-4 h-4 opacity-60 shrink-0" />
+                              <span>고객센터</span>
+                            </button>
+                            <a 
+                              href="/privacy"
+                              onClick={() => {
+                                setIsProfileOpen(false);
+                                setIsHelpHovered(false);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-[12px] font-bold rounded-md transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground flex items-center gap-2 focus:outline-none cursor-pointer"
+                            >
+                              <Shield className="w-4 h-4 opacity-60 shrink-0" />
+                              <span>개인정보처리방침</span>
+                            </a>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="h-[1px] bg-border/40 my-1 mx-2" />
                   <button 
