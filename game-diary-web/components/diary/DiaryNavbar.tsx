@@ -29,7 +29,7 @@ const DiaryNavbar: React.FC<DiaryNavbarProps> = ({ session }) => {
               <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="font-black text-sm tracking-tighter text-foreground uppercase">Game Diary</span>
+          <span className="font-black text-sm tracking-tighter text-foreground uppercase">Plog</span>
         </Link>
       </motion.div>
 

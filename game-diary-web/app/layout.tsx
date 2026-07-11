@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "🎮 Game Diary - 우리들의 게임 일기장",
+  title: "🎮 플로그 (Plog) - 우리들의 게임 일기장",
   description: "디스코드 봇이 기록해주는 우리들의 게임 추억",
 };
 

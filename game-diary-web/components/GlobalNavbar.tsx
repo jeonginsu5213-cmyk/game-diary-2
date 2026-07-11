@@ -85,7 +85,7 @@ export default function GlobalNavbar() {
                 <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="font-black text-[15px] tracking-tighter text-foreground uppercase">Game Diary</span>
+            <span className="font-black text-[15px] tracking-tighter text-foreground uppercase">Plog</span>
           </Link>
 
           {/* Desktop Navigation */}

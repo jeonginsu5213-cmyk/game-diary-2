@@ -19,7 +19,7 @@ export default function TermsOfService() {
         <div className="space-y-6 text-sm text-[#4b5563] leading-relaxed font-medium">
           <section>
             <h2 className="text-lg font-bold text-[#1f2937] mb-3">제1조 (목적)</h2>
-            <p>본 약관은 Game Diary(이하 "서비스")가 제공하는 웹서비스 및 디스코드 봇 서비스의 이용 조건 및 절차, 이용자와 서비스 제공자 간의 권리, 의무 및 책임 사항을 규정함을 목적으로 합니다.</p>
+            <p>본 약관은 플로그(Plog)(이하 "서비스")가 제공하는 웹서비스 및 디스코드 봇 서비스의 이용 조건 및 절차, 이용자와 서비스 제공자 간의 권리, 의무 및 책임 사항을 규정함을 목적으로 합니다.</p>
           </section>
 
           <section>

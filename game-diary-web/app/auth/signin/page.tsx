@@ -80,7 +80,7 @@ export default function SignInPage() {
                 <path d="M2 17L12 22L22 17" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2 12L12 17L22 12" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-xl font-bold text-foreground ml-2 tracking-tight">Game Diary</span>
+              <span className="text-xl font-bold text-foreground ml-2 tracking-tight">Plog</span>
             </div>
 
             {/* Action Section */}
