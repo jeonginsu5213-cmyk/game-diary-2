@@ -73,76 +73,7 @@ const DiaryHeader: React.FC<DiaryHeaderProps> = ({
               <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
             </button>
           )}
-          {current && (
-            <div className="relative shrink-0 hidden md:block">
-              <button 
-                onClick={() => setIsParticipantsDropdownOpen(!isParticipantsDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 hover:scale-105 active:scale-95 text-primary rounded-full text-[12px] font-bold transition-all cursor-pointer select-none"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>{sortedParticipants.length}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isParticipantsDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {/* Dropdown Content */}
-              <AnimatePresence>
-                {isParticipantsDropdownOpen && (
-                  <>
-                    {/* Click Outside Overlay (invisible) */}
-                    <div 
-                      className="fixed inset-0 z-40 cursor-default" 
-                      onClick={() => setIsParticipantsDropdownOpen(false)}
-                    />
-                    {/* Panel */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute top-10 left-0 w-max min-w-max bg-card shadow-2xl rounded-2xl p-4 z-50 flex flex-col gap-3 max-h-[300px] overflow-y-auto overscroll-contain"
-                    >
-                      <div className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider pl-0.5">
-                        참여자
-                      </div>
-                      <div className="flex flex-col gap-2.5">
-                        {sortedParticipants.map((p: any) => {
-                          const isObserver = !playedUsersSet.has(p.user_id);
-                          const profile = profiles?.[p.user_id];
-                          const hasLoggedIn = !!profile?.has_logged_in;
-                          const displayName = hasLoggedIn 
-                            ? (profile?.display_name || 'Anonymous') 
-                            : maskNickname(profile?.display_name || 'Anonymous');
-                          
-                          return (
-                            <div key={p.user_id} className="flex items-center justify-between gap-8 min-w-0">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-6.5 h-6.5 rounded-full border border-border overflow-hidden shrink-0">
-                                  <img 
-                                    src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
-                                    className={cn("w-full h-full object-cover", !hasLoggedIn && "blur-xs scale-110")} 
-                                    alt="" 
-                                  />
-                                </div>
-                                <span className="text-[12px] font-bold text-foreground truncate">{displayName}</span>
-                                {isObserver && (
-                                  <span className="text-[9px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1 py-0.5 rounded-md shrink-0">
-                                    관전
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-black text-primary shrink-0 font-mono">
-                                {formatDurationText(p.duration_min || 0)}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+
 
           {/* Title Wrapper */}
           <div className="relative flex items-center gap-3 min-w-0 flex-1 md:flex-initial max-w-[240px] sm:max-w-[360px] md:max-w-[450px]">

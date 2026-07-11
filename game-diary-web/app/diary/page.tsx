@@ -2701,6 +2701,53 @@ function HomeContent() {
                       </div>
                     </div>
 
+                    {/* Desktop Participant Card */}
+                    {sortedParticipants.length > 0 && (
+                      <div className="hidden md:block px-3 md:px-4 pt-2 pb-0">
+                        <div className="relative rounded-2xl overflow-hidden py-3 px-5 bg-card backdrop-blur-sm shadow-xs border border-border/40">
+                          {/* Background Pattern (Subtle dots) */}
+                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(233,74,68,1)_1px,transparent_1px)] bg-[length:24px_24px]" />
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[11px] font-bold text-muted-foreground/60 tracking-wider uppercase pl-0.5 select-none shrink-0">참여자</span>
+                              <div className="flex items-center flex-wrap gap-2.5">
+                                {sortedParticipants.map((p: any) => {
+                                  const isObserver = !playedUsersSet.has(p.user_id);
+                                  const profile = profiles?.[p.user_id];
+                                  const hasLoggedIn = !!profile?.has_logged_in;
+                                  const displayName = hasLoggedIn 
+                                    ? (profile?.display_name || 'Anonymous') 
+                                    : maskNickname(profile?.display_name || 'Anonymous');
+                                  return (
+                                    <div key={p.user_id} className="flex items-center gap-1.5 bg-muted/60 pl-1.5 pr-2.5 py-1.5 rounded-full text-[11px] font-bold text-foreground/80 leading-none">
+                                      <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 isolate border border-border/50">
+                                        <img 
+                                          src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
+                                          className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
+                                          alt="" 
+                                        />
+                                      </div>
+                                      <span className="translate-y-[-0.5px]">{displayName}</span>
+                                      {isObserver && (
+                                        <span className="text-[8px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1 py-0.5 rounded-md shrink-0">
+                                          관전
+                                        </span>
+                                      )}
+                                      <span className="text-primary font-bold font-sans text-[10px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* --- Bento Grid Start --- */}
                     <BentoGrid 
                       items={[
