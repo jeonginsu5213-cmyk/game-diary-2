@@ -34,6 +34,7 @@ function BentoGrid({ items }: BentoGridProps) {
                     key={index}
                     className={cn(
                         "group/card relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-auto md:h-full min-h-0",
+                        item.colSpan === 3 && "md:h-auto",
                         item.isCommentSection ? "pt-5 px-3 pb-3 md:pt-6 md:px-4 md:pb-4" : "p-4 md:p-6",
                         "bg-card backdrop-blur-sm",
                         item.isCommentSection && "md:border md:border-border/50",
