@@ -5,6 +5,7 @@ import { Trash2, FolderInput, Download, Gamepad2 } from "lucide-react";
 import { cn, maskNickname } from "@/src/lib/utils";
 import { supabase } from "@/src/lib/supabase";
 import { ImageZoom } from "@/components/ui/ImageZoom";
+import UploadPlaceholder from "./UploadPlaceholder";
 
 interface SlideData {
   title: string;
@@ -227,6 +228,7 @@ interface DesktopScreenshotCarouselProps {
   onDownload?: (url: string) => void;
   onDelete?: (shotId: string) => void;
   isDeleted?: boolean;
+  onFileSelect?: (file: File) => void;
 }
 
 export default function DesktopScreenshotCarousel({ 
@@ -238,7 +240,8 @@ export default function DesktopScreenshotCarousel({
   onAction, 
   onDownload, 
   onDelete, 
-  isDeleted 
+  isDeleted,
+  onFileSelect
 }: DesktopScreenshotCarouselProps) {
   const [current, setCurrent] = useState(0);
 
@@ -300,6 +303,11 @@ export default function DesktopScreenshotCarousel({
             fetchData={fetchData}
           />
         ))}
+        {!isDeleted && onFileSelect && (
+          <li className="flex flex-1 flex-col items-center justify-center relative text-center text-white opacity-100 transition-all duration-300 ease-in-out w-[480px] h-[316px] mx-[16px] z-10">
+            <UploadPlaceholder onFileSelect={onFileSelect} />
+          </li>
+        )}
       </ul>
 
       <div className="absolute flex justify-center w-full top-[calc(100%+24px)] z-30">

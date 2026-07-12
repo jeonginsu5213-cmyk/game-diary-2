@@ -2830,30 +2830,6 @@ function HomeContent() {
                               colSpan: 3,
                               content: (
                                 <div className="flex flex-col h-auto md:h-[450px] md:pr-[424px]">
-                                  {/* Header (Desktop only) */}
-                                  <div className="hidden md:flex items-center justify-center mb-4 w-[480px] mx-auto">
-                                    {!isDeleted && gameShots.length > 0 && (
-                                      <div>
-                                        <input 
-                                          type="file" 
-                                          id={`file-upload-desktop-${game.id}`}
-                                          className="hidden" 
-                                          accept="image/*"
-                                          onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) setPendingUpload({ file, defaultGame: game.title });
-                                          }}
-                                        />
-                                        <button 
-                                          onClick={() => document.getElementById(`file-upload-desktop-${game.id}`)?.click()}
-                                          className="flex items-center gap-1.5 px-3 py-1 rounded-xl border border-border bg-card hover:bg-muted text-[11px] font-bold transition-all text-muted-foreground hover:text-foreground cursor-pointer shadow-xs"
-                                        >
-                                          <Plus className="w-3.5 h-3.5" />
-                                          <span>스크린샷 추가</span>
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
 
                                   <div className="flex-1 min-h-0 flex flex-col justify-start">
                                     {/* Desktop 3D Carousel View */}
@@ -2895,6 +2871,7 @@ function HomeContent() {
                                           onDownload={handleDownload}
                                           onDelete={handleImageDelete}
                                           isDeleted={isDeleted}
+                                          onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })}
                                         />
                                       )}
                                     </div>
