@@ -87,7 +87,7 @@ const Slide = ({
         </div>
 
         {/* Uploader and comment card below the 16:9 image */}
-        <div className="absolute bottom-0 left-0 w-full py-1.5 px-2.5 bg-muted rounded-xl flex items-center justify-between gap-2.5 animate-in fade-in duration-300 select-none">
+        <div className="absolute bottom-0 left-0 w-full py-1.5 px-2.5 bg-muted rounded-xl flex items-start justify-between gap-2.5 animate-in fade-in duration-300 select-none max-h-[46px] overflow-hidden">
           
           {/* Left section: Avatar + Uploader name + Comment text */}
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -105,7 +105,7 @@ const Slide = ({
                   : maskNickname(profiles?.[slide.shot.uploader_id]?.display_name || 'Anonymous')}
               </span>
               {slide.shot.comment && (
-                <span className="font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap">
+                <span className="font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap line-clamp-1 overflow-hidden">
                   "{slide.shot.comment}"
                 </span>
               )}
