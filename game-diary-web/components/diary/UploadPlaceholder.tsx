@@ -80,7 +80,7 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
 
 // --- Component ---
 
-const UploadPlaceholder = ({ onFileSelect }: { onFileSelect: (file: File) => void }) => {
+const UploadPlaceholder = ({ onFileSelect, className }: { onFileSelect: (file: File) => void; className?: string }) => {
   const {
     fileInputRef,
     isHovered,
@@ -103,11 +103,11 @@ const UploadPlaceholder = ({ onFileSelect }: { onFileSelect: (file: File) => voi
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`relative h-full w-full rounded-[6px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300 group/upload ${
+      className={`relative rounded-[6px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300 group/upload ${
         active 
           ? 'bg-primary/10 shadow-sm' 
           : 'bg-black/5'
-      }`}
+      } ${className ?? 'aspect-video'}`}
     >
       <input 
         type="file" 
