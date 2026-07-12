@@ -2712,7 +2712,21 @@ function HomeContent() {
                           
                           {/* Content */}
                           <div className="relative z-10 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-5">
+                              {/* Server Name & Icon */}
+                              {current.guild_name && current.guild_name !== '개인' && (
+                                <div className="flex items-center gap-2 pr-4 border-r border-border/40 select-none shrink-0">
+                                  <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 bg-muted/80 flex items-center justify-center border border-border/50 text-[10px] font-black text-muted-foreground">
+                                    {current.guild_icon ? (
+                                      <img src={current.guild_icon} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                      current.guild_name.charAt(0)
+                                    )}
+                                  </div>
+                                  <span className="text-[11px] font-bold text-foreground/80 tracking-tight">{current.guild_name}</span>
+                                </div>
+                              )}
+                              
                               <span className="text-[11px] font-bold text-muted-foreground/60 tracking-wider uppercase pl-0.5 select-none shrink-0">참여자</span>
                               <div className="flex items-center flex-wrap gap-2.5">
                                 {sortedParticipants.map((p: any) => {
