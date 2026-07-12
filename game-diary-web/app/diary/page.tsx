@@ -2726,8 +2726,6 @@ function HomeContent() {
                                   <span className="text-[11px] font-bold text-foreground/80 tracking-tight">{current.guild_name}</span>
                                 </div>
                               )}
-                              
-                              <span className="text-[11px] font-bold text-muted-foreground/60 tracking-wider uppercase pl-0.5 select-none shrink-0">참여자</span>
                               <div className="flex items-center flex-wrap gap-2.5">
                                 {sortedParticipants.map((p: any) => {
                                   const isObserver = !playedUsersSet.has(p.user_id);
