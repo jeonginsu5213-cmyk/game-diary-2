@@ -2712,21 +2712,21 @@ function HomeContent() {
                           
                           {/* Content */}
                           <div className="relative z-10 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-5">
                               {/* Server Name & Icon */}
                               {current.guild_name && current.guild_name !== '개인' && (
-                                <div className="flex items-center gap-1.5 pr-3 border-r border-border/40 select-none shrink-0">
-                                  <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 bg-muted/80 flex items-center justify-center border border-border/50 text-[9px] font-black text-muted-foreground">
+                                <div className="flex items-center gap-2 pr-4 border-r border-border/40 select-none shrink-0">
+                                  <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 bg-muted/80 flex items-center justify-center border border-border/50 text-[10px] font-black text-muted-foreground">
                                     {current.guild_icon ? (
                                       <img src={current.guild_icon} className="w-full h-full object-cover" alt="" />
                                     ) : (
                                       current.guild_name.charAt(0)
                                     )}
                                   </div>
-                                  <span className="text-[10.5px] font-bold text-foreground/80 tracking-tight">{current.guild_name}</span>
+                                  <span className="text-[11px] font-bold text-foreground/80 tracking-tight">{current.guild_name}</span>
                                 </div>
                               )}
-                              <div className="flex items-center flex-wrap gap-2">
+                              <div className="flex items-center flex-wrap gap-2.5">
                                 {sortedParticipants.map((p: any) => {
                                   const isObserver = !playedUsersSet.has(p.user_id);
                                   const profile = profiles?.[p.user_id];
@@ -2735,8 +2735,8 @@ function HomeContent() {
                                     ? (profile?.display_name || 'Anonymous') 
                                     : maskNickname(profile?.display_name || 'Anonymous');
                                   return (
-                                    <div key={p.user_id} className="flex items-center gap-1 bg-muted/60 pl-1 pr-2 py-1 rounded-full text-[10px] font-bold text-foreground/80 leading-none">
-                                      <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 isolate border border-border/50">
+                                    <div key={p.user_id} className="flex items-center gap-1.5 bg-muted/60 pl-1.5 pr-2.5 py-1.5 rounded-full text-[11px] font-bold text-foreground/80 leading-none">
+                                      <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 isolate border border-border/50">
                                         <img 
                                           src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.user_id}`} 
                                           className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`} 
@@ -2744,7 +2744,7 @@ function HomeContent() {
                                         />
                                       </div>
                                       <span className="translate-y-[-0.5px]">{displayName}</span>
-                                      <span className="text-primary font-bold font-sans text-[9px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
+                                      <span className="text-primary font-bold font-sans text-[10px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
                                     </div>
                                   );
                                 })}
