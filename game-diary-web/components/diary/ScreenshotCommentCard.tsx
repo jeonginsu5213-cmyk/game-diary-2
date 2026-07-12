@@ -11,8 +11,8 @@ interface ScreenshotCommentCardProps {
 
 /**
  * Expandable screenshot comment card.
- * - Collapsed: single line with ellipsis
- * - Expanded : full comment with whitespace-pre-wrap, avatar top-aligned
+ * - Collapsed: single line (name + comment truncated), all items vertically centered
+ * - Expanded : name stays on first row, full comment appears below — nothing shifts
  */
 export default function ScreenshotCommentCard({
   shot,
@@ -33,43 +33,40 @@ export default function ScreenshotCommentCard({
   const hasComment = !!shot.comment;
 
   return (
-    <div
-      className={`flex items-start gap-2.5 ${className} ${hasComment ? "cursor-pointer select-none" : ""}`}
-      onClick={() => hasComment && setExpanded((v) => !v)}
-    >
-      {/* Avatar — always top-left aligned, never shifts */}
-      <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate mt-0.5">
-        <img
-          src={avatarUrl}
-          alt=""
-          className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
-        />
-      </div>
+    <div className={`flex flex-col ${className} ${hasComment ? "cursor-pointer select-none" : ""}`}
+         onClick={() => hasComment && setExpanded((v) => !v)}>
 
-      {/* Text */}
-      <div className="flex-1 min-w-0 text-[11px] leading-normal text-left">
-        {expanded ? (
-          // Expanded: full text, whitespace-pre-wrap
-          <>
-            <span className="font-semibold text-foreground/90 mr-1.5">{displayName}</span>
-            {hasComment && (
-              <span className="font-medium text-muted-foreground/80 italic tracking-tight whitespace-pre-wrap">
-                &ldquo;{shot.comment}&rdquo;
-              </span>
-            )}
-          </>
-        ) : (
-          // Collapsed: single line with ellipsis
+      {/* ── Row 1: always visible, always items-center — never shifts ─── */}
+      <div className="flex items-center gap-2.5">
+        {/* Avatar */}
+        <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
+          <img
+            src={avatarUrl}
+            alt=""
+            className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
+          />
+        </div>
+
+        {/* Name + collapsed comment on one line */}
+        <div className="flex-1 min-w-0 text-[11px] leading-normal">
           <p className="truncate leading-normal">
             <span className="font-semibold text-foreground/90 mr-1.5">{displayName}</span>
-            {hasComment && (
+            {hasComment && !expanded && (
               <span className="font-medium text-muted-foreground/80 italic tracking-tight">
                 &ldquo;{shot.comment.replace(/\n/g, " ")}&rdquo;
               </span>
             )}
           </p>
-        )}
+        </div>
       </div>
+
+      {/* ── Expanded comment text (below Row 1) ──────────────────────── */}
+      {expanded && hasComment && (
+        <div className="mt-1 text-[11px] leading-relaxed italic text-muted-foreground/80 tracking-tight whitespace-pre-wrap"
+             style={{ paddingLeft: 28 /* avatar(20) + gap-2.5(10) - slight indent */ }}>
+          &ldquo;{shot.comment}&rdquo;
+        </div>
+      )}
     </div>
   );
 }
