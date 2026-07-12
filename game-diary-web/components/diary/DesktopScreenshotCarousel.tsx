@@ -245,14 +245,16 @@ export default function DesktopScreenshotCarousel({
 }: DesktopScreenshotCarouselProps) {
   const [current, setCurrent] = useState(0);
 
+  const totalSlides = gameShots.length + (!isDeleted && onFileSelect ? 1 : 0);
+
   const handlePreviousClick = () => {
     const previous = current - 1;
-    setCurrent(previous < 0 ? gameShots.length - 1 : previous);
+    setCurrent(previous < 0 ? totalSlides - 1 : previous);
   };
 
   const handleNextClick = () => {
     const next = current + 1;
-    setCurrent(next === gameShots.length ? 0 : next);
+    setCurrent(next === totalSlides ? 0 : next);
   };
 
   const handleSlideClick = (index: number) => {
