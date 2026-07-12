@@ -34,13 +34,13 @@ export default function ScreenshotCommentCard({
 
   return (
     <div
-      className={`flex gap-2.5 ${className} ${hasComment ? "cursor-pointer select-none" : ""}`}
+      className={`flex ${expanded ? 'items-start' : 'items-center'} gap-2.5 ${className} ${hasComment ? "cursor-pointer select-none" : ""}`}
       onClick={() => hasComment && setExpanded((v) => !v)}
     >
-      {/* Avatar — top-aligned when expanded, center-aligned when collapsed */}
+      {/* Avatar — top-left when expanded, vertically centered when collapsed */}
       <div
         className={`w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate ${
-          expanded ? "mt-0.5 self-start" : "self-center"
+          expanded ? "mt-0.5" : ""
         }`}
       >
         <img
