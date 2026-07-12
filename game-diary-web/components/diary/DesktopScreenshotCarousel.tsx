@@ -113,14 +113,12 @@ const Slide = ({
 
         {/* Comment card — expands/collapses on click */}
         <div
-          className={`w-full flex-1 bg-muted rounded-xl py-1.5 px-2.5 flex ${commentExpanded ? 'items-start' : 'items-center'} justify-between gap-2.5 select-none overflow-hidden ${hasComment && isActive ? "cursor-pointer" : ""}`}
+          className={`w-full flex-1 bg-muted rounded-xl py-1.5 px-2.5 flex items-start justify-between gap-2.5 select-none overflow-hidden ${hasComment && isActive ? "cursor-pointer" : ""}`}
           onClick={handleCommentClick}
         >
           {/* Left: avatar + name + comment */}
-          <div className={`flex gap-2.5 flex-1 min-w-0 ${commentExpanded ? "items-start" : "items-center"}`}>
-            <div
-              className={`w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate ${commentExpanded ? "mt-0.5" : ""}`}
-            >
+          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate mt-0.5">
               <img
                 src={avatarUrl}
                 alt=""
