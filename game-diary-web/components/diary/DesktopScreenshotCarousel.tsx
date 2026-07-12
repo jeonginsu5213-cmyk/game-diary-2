@@ -306,11 +306,20 @@ export default function DesktopScreenshotCarousel({
           />
         ))}
         {!isDeleted && onFileSelect && (
-          <li className="flex flex-1 flex-col items-center justify-center relative text-center opacity-100 transition-all duration-300 ease-in-out w-[480px] h-[316px] mx-[16px] z-10">
-            <div className="w-full h-full">
-              <UploadPlaceholder onFileSelect={onFileSelect} />
-            </div>
-          </li>
+          <div className="[perspective:1200px] [transform-style:preserve-3d]">
+            <li
+              className="flex flex-1 flex-col items-center justify-center relative text-center opacity-100 transition-all duration-300 ease-in-out w-[480px] h-[316px] mx-[16px] z-10"
+              style={{
+                transform: current !== slides.length ? "scale(0.95) rotateX(8deg)" : "scale(1) rotateX(0deg)",
+                transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                transformOrigin: "bottom",
+              }}
+            >
+              <div className="absolute top-0 left-0 w-full h-[270px] rounded-xl overflow-hidden">
+                <UploadPlaceholder onFileSelect={onFileSelect} />
+              </div>
+            </li>
+          </div>
         )}
       </ul>
 
