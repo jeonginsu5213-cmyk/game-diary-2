@@ -2732,11 +2732,6 @@ function HomeContent() {
                                         />
                                       </div>
                                       <span className="translate-y-[-0.5px]">{displayName}</span>
-                                      {isObserver && (
-                                        <span className="text-[8px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1 py-0.5 rounded-md shrink-0">
-                                          관전
-                                        </span>
-                                      )}
                                       <span className="text-primary font-bold font-sans text-[10px] ml-0.5 translate-y-[-0.5px]">{formatDurationText(p.duration_min || 0)}</span>
                                     </div>
                                   );
