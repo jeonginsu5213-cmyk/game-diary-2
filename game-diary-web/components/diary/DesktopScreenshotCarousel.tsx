@@ -306,8 +306,10 @@ export default function DesktopScreenshotCarousel({
           />
         ))}
         {!isDeleted && onFileSelect && (
-          <li className="flex flex-1 flex-col items-center justify-center relative text-center text-white opacity-100 transition-all duration-300 ease-in-out w-[480px] h-[316px] mx-[16px] z-10">
-            <UploadPlaceholder onFileSelect={onFileSelect} />
+          <li className="flex flex-1 flex-col items-center justify-center relative text-center opacity-100 transition-all duration-300 ease-in-out w-[480px] h-[316px] mx-[16px] z-10">
+            <div className="w-full h-full">
+              <UploadPlaceholder onFileSelect={onFileSelect} />
+            </div>
           </li>
         )}
       </ul>

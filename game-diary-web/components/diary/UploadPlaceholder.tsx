@@ -103,7 +103,7 @@ const UploadPlaceholder = ({ onFileSelect }: { onFileSelect: (file: File) => voi
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`relative aspect-video rounded-[6px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300 group/upload ${
+      className={`relative h-full w-full rounded-[6px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300 group/upload ${
         active 
           ? 'bg-primary/10 shadow-sm' 
           : 'bg-black/5'
