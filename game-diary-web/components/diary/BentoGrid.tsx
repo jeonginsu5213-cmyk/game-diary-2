@@ -78,7 +78,7 @@ function BentoGrid({ items }: BentoGridProps) {
                                     )}
                                 </div>
                                 
-                                <div className="flex items-center justify-end gap-3 shrink-0 md:items-center md:-mt-2">
+                                <div className="flex items-center justify-end gap-3 shrink-0 md:items-center md:-mt-4">
                                     {item.meta && item.colSpan === 3 && (
                                         <div className="hidden md:flex items-center gap-1.5 text-[11.5px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 shrink-0">
                                             <Clock className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
