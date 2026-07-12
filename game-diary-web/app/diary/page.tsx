@@ -2962,7 +2962,7 @@ function HomeContent() {
                                   </div>
 
                                   {/* Desktop Comments Section (Overlay inside Highlight Card on desktop) */}
-                                  <div className="hidden md:flex absolute -right-6 -top-4 -bottom-6 w-[400px] bg-card rounded-l-2xl flex flex-col pt-4 pb-0 px-0 z-20 overflow-hidden border-l border-border/50">
+                                  <div className="hidden md:flex absolute -right-6 -top-6 -bottom-6 w-[400px] bg-card rounded-l-2xl flex flex-col pt-4 pb-0 px-0 z-20 overflow-hidden border-l border-border/50">
                                     <div className="flex items-center h-10 mb-4 px-6 shrink-0">
                                       <h3 className="font-semibold text-foreground tracking-tight text-[20px] leading-none">
                                         댓글
