@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import ScreenshotItem from "./ScreenshotItem";
 import UploadPlaceholder from "./UploadPlaceholder";
-import { cn, maskNickname } from "@/src/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { ChevronRight } from "lucide-react";
+import ScreenshotCommentCard from "./ScreenshotCommentCard";
 
 interface MobileScreenshotCarouselProps {
   gameShots: any[];
@@ -110,26 +111,8 @@ export default function MobileScreenshotCarousel({
                 handleImageDelete={handleImageDelete}
                 fetchData={fetchData}
               />
-              <div className="mt-1.5 p-2 bg-muted rounded-[6px] flex items-center gap-2.5 animate-in fade-in duration-300">
-                <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
-                  <img 
-                    src={profiles?.[shot.uploader_id]?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`}
-                    alt=""
-                    className={`w-full h-full object-cover ${!profiles?.[shot.uploader_id]?.has_logged_in ? 'blur-xs scale-110' : ''}`}
-                  />
-                </div>
-                <div className="flex-1 min-w-0 text-[11px] leading-normal break-words">
-                  <span className="font-semibold text-foreground mr-1.5 select-none">
-                    {profiles?.[shot.uploader_id]?.has_logged_in 
-                      ? (profiles?.[shot.uploader_id]?.display_name || 'Anonymous')
-                      : maskNickname(profiles?.[shot.uploader_id]?.display_name || 'Anonymous')}
-                  </span>
-                  {shot.comment && (
-                    <span className="font-medium text-muted-foreground/80 italic tracking-tight whitespace-pre-wrap">
-                      "{shot.comment}"
-                    </span>
-                  )}
-                </div>
+              <div className="mt-1.5 p-2 bg-muted rounded-[6px]">
+                <ScreenshotCommentCard shot={shot} profiles={profiles} />
               </div>
             </CarouselItem>
           ))}
