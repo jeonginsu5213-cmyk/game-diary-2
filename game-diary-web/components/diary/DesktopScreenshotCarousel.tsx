@@ -16,9 +16,9 @@ const COLLAPSED_H   = IMAGE_H + GAP_H + CARD_H;  // 316
 //   avatar  (h=20): mt = (38-20)/2 = 9
 //   buttons (h=28): mt = (38-28)/2 = 5
 //   text    (h≈17): align with avatar top → mt = 9
-const AVATAR_MT     = 9;
+const AVATAR_MT     = 8;
 const BTN_MT        = 5;
-const TEXT_MT       = 9;
+const TEXT_MT       = 11;
 const TEXT_W        = 320;  // conservative text-area width for measurement
 const ONE_LINE_H    = 18;   // ≈ 1 line of 11 px / leading-normal
 
