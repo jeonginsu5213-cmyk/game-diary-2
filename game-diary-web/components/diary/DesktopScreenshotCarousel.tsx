@@ -7,16 +7,22 @@ import { supabase } from "@/src/lib/supabase";
 import { ImageZoom } from "@/components/ui/ImageZoom";
 import UploadPlaceholder from "./UploadPlaceholder";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const IMAGE_H = 270;
-const GAP_H = 8;
-const CARD_PY = 6;       // py-1.5 = 6 px
-const CONTENT_MT = 3;    // mt-[3px] — aligns content to visual center in collapsed card
-const COLLAPSED_CARD_H = 38;
-const COLLAPSED_SLIDE_H = IMAGE_H + GAP_H + COLLAPSED_CARD_H; // 316
-// Available text width: 480 - px(10) - avatar(20) - gap(10) - buttons(96) - px(10) = 334
-const TEXT_AREA_W = 334;
-const ONE_LINE_H = 18;   // ≈ 1 line of 11px / leading-normal text
+// ── Layout constants ──────────────────────────────────────────────────────────
+const IMAGE_H       = 270;
+const GAP_H         = 8;
+const CARD_H        = 38;   // collapsed card height
+const COLLAPSED_H   = IMAGE_H + GAP_H + CARD_H;  // 316
+// Centering items inside 38 px card (no py padding):
+//   avatar  (h=20): mt = (38-20)/2 = 9
+//   buttons (h=28): mt = (38-28)/2 = 5
+//   text    (h≈17): align with avatar top → mt = 9
+const AVATAR_MT     = 9;
+const BTN_MT        = 5;
+const TEXT_MT       = 9;
+const TEXT_W        = 320;  // conservative text-area width for measurement
+const ONE_LINE_H    = 18;   // ≈ 1 line of 11 px / leading-normal
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface SlideData {
   title: string;
@@ -39,7 +45,6 @@ interface SlideProps {
   onDelete?: (shotId: string) => void;
   fetchData: () => void;
   slideHeight: number;
-  /** True only if this slide's comment is long enough to need expansion */
   canExpand: boolean;
   onCommentToggle: (isExpanded: boolean) => void;
 }
@@ -60,16 +65,15 @@ const Slide = ({
 }: SlideProps) => {
   const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [commentExpanded, setCommentExpanded] = useState(false);
-  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { src, title, isUploader, shot, uploaderName, uploaderAvatar, hasLoggedIn } = slide;
-  const isActive = current === index;
+  const isActive  = current === index;
   const hasComment = !!shot.comment;
 
-  // Collapse and reset when slide becomes inactive
   useEffect(() => {
     if (!isActive) {
-      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
       setCommentExpanded(false);
       setShowMoveMenu(false);
     }
@@ -78,16 +82,12 @@ const Slide = ({
   const handleCommentClick = (e: React.MouseEvent) => {
     if (!canExpand || !isActive) return;
     e.stopPropagation();
-
     if (commentExpanded) {
-      // ── Collapsing ──────────────────────────────────────────────────────────
-      // Start the height transition first; reset text after animation completes
+      // Start height collapse first; switch text after animation
       onCommentToggle(false);
-      collapseTimerRef.current = setTimeout(() => setCommentExpanded(false), 300);
+      collapseTimer.current = setTimeout(() => setCommentExpanded(false), 300);
     } else {
-      // ── Expanding ───────────────────────────────────────────────────────────
-      // Switch to full text immediately; height catches up via transition
-      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
       setCommentExpanded(true);
       onCommentToggle(true);
     }
@@ -100,55 +100,62 @@ const Slide = ({
         style={{
           height: slideHeight,
           transform: !isActive ? "scale(0.95) rotateX(8deg)" : "scale(1) rotateX(0deg)",
-          transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+          // height transition drives the card-bg animation; transform for 3-D effect
+          transition:
+            "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           transformOrigin: "bottom",
         }}
         onClick={() => { if (!isActive) handleSlideClick(index); }}
       >
-        {/* ── Image ─────────────────────────────────────────────────────────── */}
+        {/* ── Image ──────────────────────────────────────────────────────── */}
         <div
           className="w-full shrink-0 bg-[#1D1F2F] rounded-xl overflow-hidden relative"
           style={{ height: IMAGE_H }}
         >
           <ImageZoom
-            src={src}
-            alt={title}
-            width={480}
-            height={270}
-            unoptimized
+            src={src} alt={title} width={480} height={270} unoptimized
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-600 ease-in-out"
             zoomProps={{ isDisabled: !isActive }}
           />
         </div>
 
-        {/* ── Gap ───────────────────────────────────────────────────────────── */}
+        {/* ── Gap ────────────────────────────────────────────────────────── */}
         <div className="shrink-0" style={{ height: GAP_H }} />
 
-        {/* ── Comment card ──────────────────────────────────────────────────── */}
+        {/* ── Comment card ───────────────────────────────────────────────── */}
         {/*
-          Layout rules:
-          • Always items-start so nothing shifts on expand
-          • Avatar, text, buttons all get mt-[3px] → visually centered in the 38 px collapsed card
-            (6 px py-top + 3 px mt + 20 px avatar = 29 px from top; 6 px py-bottom → total 35 px in 38 px card)
-          • overflow-hidden clips during the height transition → creates a smooth reveal
+          No py-padding on the card — we use explicit mt on each child so they
+          are mathematically centred in the 38 px collapsed card height.
+
+          Avatar  (h=20): mt=9  →  top:9  bottom:9  ✓
+          Text    (h≈17): mt=9  →  aligned with avatar top   ✓
+          Buttons (h=28): mt=5  →  top:5  bottom:5  ✓
+
+          overflow-hidden clips the text when it overflows downward (expanded).
+          As the li height transitions, the card bg and revealed text both animate.
         */}
         <div
-          className={`w-full flex-1 bg-muted rounded-xl flex items-start gap-2.5 py-1.5 px-2.5 overflow-hidden select-none ${
+          className={`w-full flex-1 bg-muted rounded-xl flex items-start gap-2.5 px-2.5 overflow-hidden select-none ${
             canExpand && isActive ? "cursor-pointer" : ""
           }`}
           onClick={handleCommentClick}
         >
           {/* Avatar */}
-          <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate mt-[3px]">
+          <div
+            className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate"
+            style={{ marginTop: AVATAR_MT }}
+          >
             <img
-              src={uploaderAvatar}
-              alt=""
+              src={uploaderAvatar} alt=""
               className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
             />
           </div>
 
-          {/* Name + comment — inline, full text when expanded */}
-          <div className="flex-1 min-w-0 text-[11px] leading-normal mt-[3px]">
+          {/* Name + comment — inline; whitespace-pre-wrap when expanded */}
+          <div
+            className="flex-1 min-w-0 text-[11px] leading-normal"
+            style={{ marginTop: TEXT_MT }}
+          >
             {commentExpanded ? (
               <>
                 <span className="font-semibold text-foreground/90 mr-1.5">{uploaderName}</span>
@@ -170,11 +177,12 @@ const Slide = ({
             )}
           </div>
 
-          {/* Action buttons — icon-only, same vertical position as avatar */}
+          {/* Action buttons */}
           <div
-            className={`flex items-center gap-1.5 shrink-0 relative mt-[3px] transition-opacity duration-300 ${
+            className={`flex items-center gap-1.5 shrink-0 relative transition-opacity duration-300 ${
               isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}
+            style={{ marginTop: BTN_MT }}
             onClick={(e) => e.stopPropagation()}
           >
             {!isDeleted && (
@@ -196,9 +204,7 @@ const Slide = ({
                     key={g.id}
                     onClick={(e) => {
                       e.stopPropagation();
-                      supabase
-                        .from("screenshots")
-                        .update({ game_title: g.title })
+                      supabase.from("screenshots").update({ game_title: g.title })
                         .eq("id", shot.id)
                         .then(() => { fetchData(); setShowMoveMenu(false); });
                     }}
@@ -208,11 +214,9 @@ const Slide = ({
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     }`}
                   >
-                    {g.icon_url ? (
-                      <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
-                    ) : (
-                      <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />
-                    )}
+                    {g.icon_url
+                      ? <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
+                      : <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />}
                     <span className="truncate">{g.title}</span>
                   </button>
                 ))}
@@ -248,21 +252,12 @@ const Slide = ({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CarouselControl = ({
-  type,
-  title,
-  handleClick,
-}: {
-  type: string;
-  title: string;
-  handleClick: () => void;
-}) => (
+const CarouselControl = ({ type, title, handleClick }: { type: string; title: string; handleClick: () => void }) => (
   <button
     className={`w-9 h-9 flex items-center mx-1.5 justify-center bg-card hover:bg-muted border border-border rounded-full focus:outline-none hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 cursor-pointer ${
       type === "previous" ? "rotate-180" : ""
     }`}
-    title={title}
-    onClick={handleClick}
+    title={title} onClick={handleClick}
   >
     <IconArrowNarrowRight className="text-muted-foreground hover:text-foreground w-4 h-4" />
   </button>
@@ -284,112 +279,77 @@ interface DesktopScreenshotCarouselProps {
 }
 
 export default function DesktopScreenshotCarousel({
-  gameShots,
-  session,
-  profiles,
-  current: currentDiary,
-  fetchData,
-  onDownload,
-  onDelete,
-  isDeleted,
-  onFileSelect,
+  gameShots, session, profiles, current: currentDiary,
+  fetchData, onDownload, onDelete, isDeleted, onFileSelect,
 }: DesktopScreenshotCarouselProps) {
-  const [current, setCurrent] = useState(0);
-  const [slideHeight, setSlideHeight] = useState(COLLAPSED_SLIDE_H);
-  const [expandedSlideHeights, setExpandedSlideHeights] = useState<number[]>([]);
-  const [canExpandSlides, setCanExpandSlides] = useState<boolean[]>([]);
+  const [current, setCurrent]                   = useState(0);
+  const [slideHeight, setSlideHeight]           = useState(COLLAPSED_H);
+  const [expandedHeights, setExpandedHeights]   = useState<number[]>([]);
+  const [canExpandArr, setCanExpandArr]         = useState<boolean[]>([]);
 
   const totalSlides = gameShots.length + (!isDeleted && onFileSelect ? 1 : 0);
   const id = useId();
-
-  // Measurement refs — one per slide, measures the full inline text block
   const measureRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const slides: SlideData[] = gameShots.map((shot) => {
     const p = profiles?.[shot.uploader_id];
     const hasLoggedIn = p?.has_logged_in ?? false;
-    const isUploader = session?.user?.id === shot.uploader_id;
     return {
       title: `${p?.display_name || "게이머"}님의 스크린샷`,
-      src: shot.url,
-      shot,
-      isUploader,
-      uploaderName: hasLoggedIn
-        ? p?.display_name || "Anonymous"
-        : maskNickname(p?.display_name || "Anonymous"),
-      uploaderAvatar:
-        p?.avatar_url ||
-        `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`,
+      src: shot.url, shot,
+      isUploader: session?.user?.id === shot.uploader_id,
+      uploaderName: hasLoggedIn ? (p?.display_name || "Anonymous") : maskNickname(p?.display_name || "Anonymous"),
+      uploaderAvatar: p?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`,
       hasLoggedIn,
     };
   });
 
-  // After first render, measure each slide's full-text height to know:
-  // (a) whether expansion is needed, (b) what height to expand to
+  // Measure expanded text height → derive canExpand and expandedHeight per slide
   useLayoutEffect(() => {
     const results = measureRefs.current.map((el, i) => {
-      if (!el || !slides[i]?.shot?.comment) {
-        return { canExpand: false, expandedH: COLLAPSED_SLIDE_H };
-      }
-      const textH = el.offsetHeight;
-      const needsExpand = textH > ONE_LINE_H;
-      // Expanded card height = py-top + mt + textH + py-bottom
-      const expandedCardH = CARD_PY + CONTENT_MT + textH + CARD_PY;
-      const expandedH = needsExpand
-        ? Math.max(COLLAPSED_SLIDE_H, IMAGE_H + GAP_H + expandedCardH)
-        : COLLAPSED_SLIDE_H;
-      return { canExpand: needsExpand, expandedH };
+      if (!el || !slides[i]?.shot?.comment) return { canExpand: false, expandedH: COLLAPSED_H };
+      const textH    = el.offsetHeight;
+      const canExpand = textH > ONE_LINE_H;
+      // card height when expanded = AVATAR_MT (top) + textH + AVATAR_MT (bottom symmetry)
+      const cardH    = AVATAR_MT + textH + AVATAR_MT;
+      const expandedH = canExpand ? Math.max(COLLAPSED_H, IMAGE_H + GAP_H + cardH) : COLLAPSED_H;
+      return { canExpand, expandedH };
     });
-
-    setCanExpandSlides(results.map((r) => r.canExpand));
-    setExpandedSlideHeights(results.map((r) => r.expandedH));
+    setCanExpandArr(results.map(r => r.canExpand));
+    setExpandedHeights(results.map(r => r.expandedH));
   }, [gameShots.length]);
 
-  const collapse = () => setSlideHeight(COLLAPSED_SLIDE_H);
-
-  const handlePreviousClick = () => { setCurrent((p) => (p <= 0 ? totalSlides - 1 : p - 1)); collapse(); };
-  const handleNextClick = () => { setCurrent((p) => (p >= totalSlides - 1 ? 0 : p + 1)); collapse(); };
-  const handleSlideClick = (index: number) => { setCurrent(index); collapse(); };
-
-  const handleCommentToggle = (isExpanded: boolean) => {
-    setSlideHeight(
-      isExpanded ? (expandedSlideHeights[current] ?? COLLAPSED_SLIDE_H) : COLLAPSED_SLIDE_H
-    );
-  };
+  const collapse = () => setSlideHeight(COLLAPSED_H);
+  const handlePreviousClick = () => { setCurrent(p => p <= 0 ? totalSlides - 1 : p - 1); collapse(); };
+  const handleNextClick     = () => { setCurrent(p => p >= totalSlides - 1 ? 0 : p + 1); collapse(); };
+  const handleSlideClick    = (i: number) => { setCurrent(i); collapse(); };
+  const handleCommentToggle = (expanded: boolean) =>
+    setSlideHeight(expanded ? (expandedHeights[current] ?? COLLAPSED_H) : COLLAPSED_H);
 
   return (
     <div className="relative w-[480px] mx-auto">
-      {/* ── Hidden measurement divs ────────────────────────────────────────────
-          Each div renders name + full comment at TEXT_AREA_W with whitespace-pre-wrap.
-          offsetHeight tells us whether/how much the comment overflows 1 line.       ── */}
-      <div
-        className="absolute top-0 left-0 invisible pointer-events-none overflow-hidden"
-        style={{ zIndex: -1, width: 480 }}
-      >
+
+      {/* ── Hidden measurement divs (full inline text at TEXT_W) ─────────── */}
+      <div className="absolute top-0 left-0 invisible pointer-events-none overflow-hidden" style={{ zIndex: -1, width: 480 }}>
         {slides.map((slide, i) => (
           <div
             key={i}
-            ref={(el) => { measureRefs.current[i] = el; }}
+            ref={el => { measureRefs.current[i] = el; }}
             className="text-[11px] leading-normal whitespace-pre-wrap"
-            style={{ width: TEXT_AREA_W }}
+            style={{ width: TEXT_W }}
           >
             <span className="font-semibold mr-1.5">{slide.uploaderName}</span>
             {slide.shot.comment && (
-              <span className="font-medium italic">
-                &ldquo;{slide.shot.comment}&rdquo;
-              </span>
+              <span className="font-medium italic">&ldquo;{slide.shot.comment}&rdquo;</span>
             )}
           </div>
         ))}
       </div>
 
-      {/* ── Carousel ────────────────────────────────────────────────────────── */}
+      {/* ── Carousel ─────────────────────────────────────────────────────── */}
       <div
         className="relative w-[480px] overflow-visible"
-        style={{
-          height: slideHeight,
-          transition: "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        }}
+        style={{ height: slideHeight, transition: "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}
         aria-labelledby={`carousel-heading-${id}`}
       >
         <ul
@@ -402,17 +362,12 @@ export default function DesktopScreenshotCarousel({
           {slides.map((slide, index) => (
             <Slide
               key={index}
-              slide={slide}
-              index={index}
-              current={current}
+              slide={slide} index={index} current={current}
               handleSlideClick={handleSlideClick}
-              isDeleted={isDeleted}
-              currentDiary={currentDiary}
-              onDownload={onDownload}
-              onDelete={onDelete}
-              fetchData={fetchData}
+              isDeleted={isDeleted} currentDiary={currentDiary}
+              onDownload={onDownload} onDelete={onDelete} fetchData={fetchData}
               slideHeight={slideHeight}
-              canExpand={canExpandSlides[index] ?? false}
+              canExpand={canExpandArr[index] ?? false}
               onCommentToggle={handleCommentToggle}
             />
           ))}
@@ -424,18 +379,12 @@ export default function DesktopScreenshotCarousel({
                 className="flex flex-col w-[480px] mx-[16px] z-10"
                 style={{
                   height: slideHeight,
-                  transform:
-                    current !== slides.length
-                      ? "scale(0.95) rotateX(8deg)"
-                      : "scale(1) rotateX(0deg)",
-                  transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: current !== slides.length ? "scale(0.95) rotateX(8deg)" : "scale(1) rotateX(0deg)",
+                  transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   transformOrigin: "bottom",
                 }}
               >
-                <div
-                  className="w-full shrink-0 rounded-xl overflow-hidden"
-                  style={{ height: IMAGE_H }}
-                >
+                <div className="w-full shrink-0 rounded-xl overflow-hidden" style={{ height: IMAGE_H }}>
                   <UploadPlaceholder onFileSelect={onFileSelect} className="h-full" />
                 </div>
               </li>
@@ -444,10 +393,10 @@ export default function DesktopScreenshotCarousel({
         </ul>
       </div>
 
-      {/* ── Navigation ────────────────────────────────────────────────────── */}
+      {/* ── Navigation ───────────────────────────────────────────────────── */}
       <div className="flex justify-center w-full mt-6">
         <CarouselControl type="previous" title="Go to previous slide" handleClick={handlePreviousClick} />
-        <CarouselControl type="next" title="Go to next slide" handleClick={handleNextClick} />
+        <CarouselControl type="next"     title="Go to next slide"     handleClick={handleNextClick} />
       </div>
     </div>
   );
