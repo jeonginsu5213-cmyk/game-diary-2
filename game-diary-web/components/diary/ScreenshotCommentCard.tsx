@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import { maskNickname } from "@/src/lib/utils";
 
 interface ScreenshotCommentCardProps {
@@ -9,10 +9,14 @@ interface ScreenshotCommentCardProps {
   className?: string;
 }
 
+const ONE_LINE_PX = 18; // ≈ 1 line of text at 11 px / leading-normal
+
 /**
- * Expandable screenshot comment card.
- * - Collapsed: single line (name + comment truncated), all items vertically centered
- * - Expanded : name stays on first row, full comment appears below — nothing shifts
+ * Expandable screenshot comment card (mobile).
+ *
+ * - Short comments (fit on 1 line): no expand, always shown inline
+ * - Long comments: click to expand → comment continues inline from name
+ * - Smooth max-height animation on expand / collapse
  */
 export default function ScreenshotCommentCard({
   shot,
@@ -20,6 +24,9 @@ export default function ScreenshotCommentCard({
   className = "",
 }: ScreenshotCommentCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [canExpand, setCanExpand] = useState(false);
+
+  const textRef = useRef<HTMLDivElement>(null);
 
   const profile = profiles?.[shot.uploader_id];
   const hasLoggedIn = profile?.has_logged_in ?? false;
@@ -32,41 +39,57 @@ export default function ScreenshotCommentCard({
 
   const hasComment = !!shot.comment;
 
+  // Detect if the single-line text is truncated (i.e., needs expansion)
+  useLayoutEffect(() => {
+    if (!hasComment) { setCanExpand(false); return; }
+    if (shot.comment.includes("\n")) { setCanExpand(true); return; }
+    const el = textRef.current;
+    if (el) {
+      // scrollHeight > clientHeight means content overflows the clamped height
+      setCanExpand(el.scrollHeight > el.clientHeight);
+    }
+  }, [shot.comment, displayName]);
+
+  const handleClick = () => {
+    if (canExpand) setExpanded((v) => !v);
+  };
+
   return (
-    <div className={`flex flex-col ${className} ${hasComment ? "cursor-pointer select-none" : ""}`}
-         onClick={() => hasComment && setExpanded((v) => !v)}>
-
-      {/* ── Row 1: always visible, always items-center — never shifts ─── */}
-      <div className="flex items-center gap-2.5">
-        {/* Avatar */}
-        <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
-          <img
-            src={avatarUrl}
-            alt=""
-            className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
-          />
-        </div>
-
-        {/* Name + collapsed comment on one line */}
-        <div className="flex-1 min-w-0 text-[11px] leading-normal">
-          <p className="truncate leading-normal">
-            <span className="font-semibold text-foreground/90 mr-1.5">{displayName}</span>
-            {hasComment && !expanded && (
-              <span className="font-medium text-muted-foreground/80 italic tracking-tight">
-                &ldquo;{shot.comment.replace(/\n/g, " ")}&rdquo;
-              </span>
-            )}
-          </p>
-        </div>
+    <div
+      className={`flex items-start gap-2.5 ${className} ${canExpand ? "cursor-pointer select-none" : ""}`}
+      onClick={handleClick}
+    >
+      {/* Avatar */}
+      <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate mt-0.5">
+        <img
+          src={avatarUrl}
+          alt=""
+          className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
+        />
       </div>
 
-      {/* ── Expanded comment text (below Row 1) ──────────────────────── */}
-      {expanded && hasComment && (
-        <div className="mt-1 text-[11px] leading-relaxed italic text-muted-foreground/80 tracking-tight whitespace-pre-wrap"
-             style={{ paddingLeft: 28 /* avatar(20) + gap-2.5(10) - slight indent */ }}>
-          &ldquo;{shot.comment}&rdquo;
+      {/* Text — clipped to 1 line when collapsed, full when expanded */}
+      <div
+        ref={textRef}
+        className="flex-1 min-w-0 overflow-hidden"
+        style={{
+          maxHeight: expanded ? "400px" : `${ONE_LINE_PX}px`,
+          transition: "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div
+          className={`text-[11px] leading-normal ${
+            expanded ? "whitespace-pre-wrap" : "truncate"
+          }`}
+        >
+          <span className="font-semibold text-foreground/90 mr-1.5">{displayName}</span>
+          {hasComment && (
+            <span className="font-medium text-muted-foreground/80 italic tracking-tight">
+              &ldquo;{expanded ? shot.comment : shot.comment.replace(/\n/g, " ")}&rdquo;
+            </span>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

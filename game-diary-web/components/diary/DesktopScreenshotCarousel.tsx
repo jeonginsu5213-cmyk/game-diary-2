@@ -7,11 +7,25 @@ import { supabase } from "@/src/lib/supabase";
 import { ImageZoom } from "@/components/ui/ImageZoom";
 import UploadPlaceholder from "./UploadPlaceholder";
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+const IMAGE_H = 270;
+const GAP_H = 8;
+const CARD_PY = 6;       // py-1.5 = 6 px
+const CONTENT_MT = 3;    // mt-[3px] — aligns content to visual center in collapsed card
+const COLLAPSED_CARD_H = 38;
+const COLLAPSED_SLIDE_H = IMAGE_H + GAP_H + COLLAPSED_CARD_H; // 316
+// Available text width: 480 - px(10) - avatar(20) - gap(10) - buttons(96) - px(10) = 334
+const TEXT_AREA_W = 334;
+const ONE_LINE_H = 18;   // ≈ 1 line of 11px / leading-normal text
+
 interface SlideData {
   title: string;
   src: string;
   shot: any;
   isUploader: boolean;
+  uploaderName: string;
+  uploaderAvatar: string;
+  hasLoggedIn: boolean;
 }
 
 interface SlideProps {
@@ -24,17 +38,11 @@ interface SlideProps {
   onDownload?: (url: string) => void;
   onDelete?: (shotId: string) => void;
   fetchData: () => void;
-  profiles: any;
   slideHeight: number;
+  /** True only if this slide's comment is long enough to need expansion */
+  canExpand: boolean;
   onCommentToggle: (isExpanded: boolean) => void;
 }
-
-// ── Constants ───────────────────────────────────────────────────────────────
-const IMAGE_H = 270;
-const GAP_H = 8;
-/** The fixed height of the first (header) row in the comment card */
-const FIRST_ROW_H = 38;
-const COLLAPSED_SLIDE_H = IMAGE_H + GAP_H + FIRST_ROW_H; // 316
 
 const Slide = ({
   slide,
@@ -46,42 +54,44 @@ const Slide = ({
   onDownload,
   onDelete,
   fetchData,
-  profiles,
   slideHeight,
+  canExpand,
   onCommentToggle,
 }: SlideProps) => {
   const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [commentExpanded, setCommentExpanded] = useState(false);
-  const { src, title, isUploader, shot } = slide;
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { src, title, isUploader, shot, uploaderName, uploaderAvatar, hasLoggedIn } = slide;
   const isActive = current === index;
-
-  // Collapse when navigating away
-  useEffect(() => {
-    if (!isActive && commentExpanded) {
-      setCommentExpanded(false);
-      onCommentToggle(false);
-    }
-    if (!isActive) setShowMoveMenu(false);
-  }, [isActive]);
-
   const hasComment = !!shot.comment;
 
-  const handleCommentClick = (e: React.MouseEvent) => {
-    if (!hasComment || !isActive) return;
-    e.stopPropagation();
-    const next = !commentExpanded;
-    setCommentExpanded(next);
-    onCommentToggle(next);
-  };
+  // Collapse and reset when slide becomes inactive
+  useEffect(() => {
+    if (!isActive) {
+      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+      setCommentExpanded(false);
+      setShowMoveMenu(false);
+    }
+  }, [isActive]);
 
-  const profile = profiles?.[shot.uploader_id];
-  const hasLoggedIn = profile?.has_logged_in ?? false;
-  const displayName = hasLoggedIn
-    ? profile?.display_name || "Anonymous"
-    : maskNickname(profile?.display_name || "Anonymous");
-  const avatarUrl =
-    profile?.avatar_url ||
-    `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`;
+  const handleCommentClick = (e: React.MouseEvent) => {
+    if (!canExpand || !isActive) return;
+    e.stopPropagation();
+
+    if (commentExpanded) {
+      // ── Collapsing ──────────────────────────────────────────────────────────
+      // Start the height transition first; reset text after animation completes
+      onCommentToggle(false);
+      collapseTimerRef.current = setTimeout(() => setCommentExpanded(false), 300);
+    } else {
+      // ── Expanding ───────────────────────────────────────────────────────────
+      // Switch to full text immediately; height catches up via transition
+      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+      setCommentExpanded(true);
+      onCommentToggle(true);
+    }
+  };
 
   return (
     <div className="[perspective:1200px] [transform-style:preserve-3d] shrink-0">
@@ -89,17 +99,17 @@ const Slide = ({
         className="flex flex-col w-[480px] mx-[16px] z-10 cursor-pointer"
         style={{
           height: slideHeight,
-          transform: !isActive
-            ? "scale(0.95) rotateX(8deg)"
-            : "scale(1) rotateX(0deg)",
+          transform: !isActive ? "scale(0.95) rotateX(8deg)" : "scale(1) rotateX(0deg)",
           transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
           transformOrigin: "bottom",
         }}
         onClick={() => { if (!isActive) handleSlideClick(index); }}
       >
-        {/* ── Image — fixed 16:9, no shadow ──────────────────────────────── */}
-        <div className="w-full shrink-0 bg-[#1D1F2F] rounded-xl overflow-hidden relative"
-             style={{ height: IMAGE_H }}>
+        {/* ── Image ─────────────────────────────────────────────────────────── */}
+        <div
+          className="w-full shrink-0 bg-[#1D1F2F] rounded-xl overflow-hidden relative"
+          style={{ height: IMAGE_H }}
+        >
           <ImageZoom
             src={src}
             alt={title}
@@ -111,128 +121,132 @@ const Slide = ({
           />
         </div>
 
-        {/* ── Gap ────────────────────────────────────────────────────────── */}
+        {/* ── Gap ───────────────────────────────────────────────────────────── */}
         <div className="shrink-0" style={{ height: GAP_H }} />
 
-        {/* ── Comment card ───────────────────────────────────────────────── */}
-        <div className="w-full flex-1 bg-muted rounded-xl flex flex-col overflow-hidden">
+        {/* ── Comment card ──────────────────────────────────────────────────── */}
+        {/*
+          Layout rules:
+          • Always items-start so nothing shifts on expand
+          • Avatar, text, buttons all get mt-[3px] → visually centered in the 38 px collapsed card
+            (6 px py-top + 3 px mt + 20 px avatar = 29 px from top; 6 px py-bottom → total 35 px in 38 px card)
+          • overflow-hidden clips during the height transition → creates a smooth reveal
+        */}
+        <div
+          className={`w-full flex-1 bg-muted rounded-xl flex items-start gap-2.5 py-1.5 px-2.5 overflow-hidden select-none ${
+            canExpand && isActive ? "cursor-pointer" : ""
+          }`}
+          onClick={handleCommentClick}
+        >
+          {/* Avatar */}
+          <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate mt-[3px]">
+            <img
+              src={uploaderAvatar}
+              alt=""
+              className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
+            />
+          </div>
 
-          {/* ── Row 1: fixed height, items-center — NEVER moves ──────────── */}
-          <div
-            className={`shrink-0 flex items-center gap-2.5 px-2.5 ${hasComment && isActive ? "cursor-pointer" : ""}`}
-            style={{ height: FIRST_ROW_H }}
-            onClick={handleCommentClick}
-          >
-            {/* Avatar */}
-            <div className="w-5 h-5 rounded-full overflow-hidden border border-border/40 shrink-0 isolate">
-              <img
-                src={avatarUrl}
-                alt=""
-                className={`w-full h-full object-cover ${!hasLoggedIn ? "blur-xs scale-110" : ""}`}
-              />
-            </div>
-
-            {/* Name + comment (collapsed: one-line truncated) */}
-            <div className="flex-1 min-w-0 text-[11px] leading-normal">
+          {/* Name + comment — inline, full text when expanded */}
+          <div className="flex-1 min-w-0 text-[11px] leading-normal mt-[3px]">
+            {commentExpanded ? (
+              <>
+                <span className="font-semibold text-foreground/90 mr-1.5">{uploaderName}</span>
+                {hasComment && (
+                  <span className="font-medium text-muted-foreground/95 italic tracking-tight whitespace-pre-wrap">
+                    &ldquo;{shot.comment}&rdquo;
+                  </span>
+                )}
+              </>
+            ) : (
               <p className="truncate leading-normal">
-                <span className="font-semibold text-foreground/90 mr-1.5 select-none">
-                  {displayName}
-                </span>
-                {hasComment && !commentExpanded && (
+                <span className="font-semibold text-foreground/90 mr-1.5">{uploaderName}</span>
+                {hasComment && (
                   <span className="font-medium text-muted-foreground/95 italic tracking-tight">
                     &ldquo;{shot.comment.replace(/\n/g, " ")}&rdquo;
                   </span>
                 )}
               </p>
-            </div>
-
-            {/* Action buttons — icon-only, no bg/border */}
-            <div
-              className={`flex items-center gap-1.5 shrink-0 relative transition-opacity duration-300 ${
-                isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {!isDeleted && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowMoveMenu(!showMoveMenu); }}
-                  className={`w-7 h-7 flex items-center justify-center transition-all cursor-pointer rounded-md hover:bg-muted-foreground/10 ${
-                    showMoveMenu ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="이미지 이동"
-                >
-                  <FolderInput className="w-3.5 h-3.5" />
-                </button>
-              )}
-
-              {showMoveMenu && (
-                <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-50 w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl p-1 flex flex-col text-foreground">
-                  {currentDiary.session_games?.map((g: any) => (
-                    <button
-                      key={g.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        supabase
-                          .from("screenshots")
-                          .update({ game_title: g.title })
-                          .eq("id", shot.id)
-                          .then(() => { fetchData(); setShowMoveMenu(false); });
-                      }}
-                      className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer ${
-                        shot.game_title === g.title
-                          ? "bg-primary/5 text-primary"
-                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                      }`}
-                    >
-                      {g.icon_url ? (
-                        <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
-                      ) : (
-                        <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />
-                      )}
-                      <span className="truncate">{g.title}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <button
-                onClick={(e) => { e.stopPropagation(); onDownload?.(shot.url); }}
-                className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10 rounded-md transition-all cursor-pointer"
-                title="이미지 다운로드"
-              >
-                <Download className="w-3.5 h-3.5" />
-              </button>
-
-              {isUploader && !isDeleted && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm("스크린샷을 삭제할까요?")) onDelete?.(shot.id);
-                  }}
-                  className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all cursor-pointer"
-                  title="이미지 삭제"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* ── Expanded comment text (below Row 1, pushes card down) ─────── */}
-          {commentExpanded && hasComment && (
-            <div
-              className="shrink-0 pb-2 text-[11px] leading-relaxed italic text-muted-foreground/95 tracking-tight whitespace-pre-wrap"
-              style={{ paddingLeft: 40, paddingRight: 10 }}
-              onClick={(e) => e.stopPropagation()}
+          {/* Action buttons — icon-only, same vertical position as avatar */}
+          <div
+            className={`flex items-center gap-1.5 shrink-0 relative mt-[3px] transition-opacity duration-300 ${
+              isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {!isDeleted && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowMoveMenu(!showMoveMenu); }}
+                className={`w-7 h-7 flex items-center justify-center transition-all cursor-pointer rounded-md hover:bg-muted-foreground/10 ${
+                  showMoveMenu ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="이미지 이동"
+              >
+                <FolderInput className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {showMoveMenu && (
+              <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-50 w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl p-1 flex flex-col text-foreground">
+                {currentDiary.session_games?.map((g: any) => (
+                  <button
+                    key={g.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      supabase
+                        .from("screenshots")
+                        .update({ game_title: g.title })
+                        .eq("id", shot.id)
+                        .then(() => { fetchData(); setShowMoveMenu(false); });
+                    }}
+                    className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer ${
+                      shot.game_title === g.title
+                        ? "bg-primary/5 text-primary"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    }`}
+                  >
+                    {g.icon_url ? (
+                      <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
+                    ) : (
+                      <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />
+                    )}
+                    <span className="truncate">{g.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onDownload?.(shot.url); }}
+              className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10 rounded-md transition-all cursor-pointer"
+              title="이미지 다운로드"
             >
-              &ldquo;{shot.comment}&rdquo;
-            </div>
-          )}
+              <Download className="w-3.5 h-3.5" />
+            </button>
+
+            {isUploader && !isDeleted && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm("스크린샷을 삭제할까요?")) onDelete?.(shot.id);
+                }}
+                className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all cursor-pointer"
+                title="이미지 삭제"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </li>
     </div>
   );
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const CarouselControl = ({
   type,
@@ -253,6 +267,8 @@ const CarouselControl = ({
     <IconArrowNarrowRight className="text-muted-foreground hover:text-foreground w-4 h-4" />
   </button>
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface DesktopScreenshotCarouselProps {
   gameShots: any[];
@@ -280,61 +296,72 @@ export default function DesktopScreenshotCarousel({
 }: DesktopScreenshotCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [slideHeight, setSlideHeight] = useState(COLLAPSED_SLIDE_H);
-  // Pre-measured expanded heights per slide
   const [expandedSlideHeights, setExpandedSlideHeights] = useState<number[]>([]);
+  const [canExpandSlides, setCanExpandSlides] = useState<boolean[]>([]);
 
   const totalSlides = gameShots.length + (!isDeleted && onFileSelect ? 1 : 0);
   const id = useId();
 
-  // Measurement refs — each measures only the expanded comment text block
-  const expandedMeasureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Measurement refs — one per slide, measures the full inline text block
+  const measureRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const slides: SlideData[] = gameShots.map((shot) => {
-    const uploaderProfile = profiles?.[shot.uploader_id];
+    const p = profiles?.[shot.uploader_id];
+    const hasLoggedIn = p?.has_logged_in ?? false;
     const isUploader = session?.user?.id === shot.uploader_id;
     return {
-      title: `${uploaderProfile?.display_name || "게이머"}님의 스크린샷`,
+      title: `${p?.display_name || "게이머"}님의 스크린샷`,
       src: shot.url,
       shot,
       isUploader,
+      uploaderName: hasLoggedIn
+        ? p?.display_name || "Anonymous"
+        : maskNickname(p?.display_name || "Anonymous"),
+      uploaderAvatar:
+        p?.avatar_url ||
+        `https://api.dicebear.com/7.x/adventurer/svg?seed=${shot.uploader_id}`,
+      hasLoggedIn,
     };
   });
 
-  // Measure expanded text height for each slide once on mount
+  // After first render, measure each slide's full-text height to know:
+  // (a) whether expansion is needed, (b) what height to expand to
   useLayoutEffect(() => {
-    const heights = expandedMeasureRefs.current.map((el, i) => {
-      if (!slides[i]?.shot?.comment) return 0;
-      return el?.offsetHeight ?? 0;
+    const results = measureRefs.current.map((el, i) => {
+      if (!el || !slides[i]?.shot?.comment) {
+        return { canExpand: false, expandedH: COLLAPSED_SLIDE_H };
+      }
+      const textH = el.offsetHeight;
+      const needsExpand = textH > ONE_LINE_H;
+      // Expanded card height = py-top + mt + textH + py-bottom
+      const expandedCardH = CARD_PY + CONTENT_MT + textH + CARD_PY;
+      const expandedH = needsExpand
+        ? Math.max(COLLAPSED_SLIDE_H, IMAGE_H + GAP_H + expandedCardH)
+        : COLLAPSED_SLIDE_H;
+      return { canExpand: needsExpand, expandedH };
     });
-    setExpandedSlideHeights(
-      heights.map((h) => (h > 0 ? COLLAPSED_SLIDE_H + h : COLLAPSED_SLIDE_H))
-    );
+
+    setCanExpandSlides(results.map((r) => r.canExpand));
+    setExpandedSlideHeights(results.map((r) => r.expandedH));
   }, [gameShots.length]);
 
-  const handlePreviousClick = () => {
-    setCurrent((p) => (p <= 0 ? totalSlides - 1 : p - 1));
-    setSlideHeight(COLLAPSED_SLIDE_H);
-  };
-  const handleNextClick = () => {
-    setCurrent((p) => (p >= totalSlides - 1 ? 0 : p + 1));
-    setSlideHeight(COLLAPSED_SLIDE_H);
-  };
-  const handleSlideClick = (index: number) => {
-    setCurrent(index);
-    setSlideHeight(COLLAPSED_SLIDE_H);
-  };
+  const collapse = () => setSlideHeight(COLLAPSED_SLIDE_H);
+
+  const handlePreviousClick = () => { setCurrent((p) => (p <= 0 ? totalSlides - 1 : p - 1)); collapse(); };
+  const handleNextClick = () => { setCurrent((p) => (p >= totalSlides - 1 ? 0 : p + 1)); collapse(); };
+  const handleSlideClick = (index: number) => { setCurrent(index); collapse(); };
 
   const handleCommentToggle = (isExpanded: boolean) => {
-    if (isExpanded) {
-      setSlideHeight(expandedSlideHeights[current] ?? COLLAPSED_SLIDE_H);
-    } else {
-      setSlideHeight(COLLAPSED_SLIDE_H);
-    }
+    setSlideHeight(
+      isExpanded ? (expandedSlideHeights[current] ?? COLLAPSED_SLIDE_H) : COLLAPSED_SLIDE_H
+    );
   };
 
   return (
     <div className="relative w-[480px] mx-auto">
-      {/* ── Hidden measurement: expanded comment text only ──────────────── */}
+      {/* ── Hidden measurement divs ────────────────────────────────────────────
+          Each div renders name + full comment at TEXT_AREA_W with whitespace-pre-wrap.
+          offsetHeight tells us whether/how much the comment overflows 1 line.       ── */}
       <div
         className="absolute top-0 left-0 invisible pointer-events-none overflow-hidden"
         style={{ zIndex: -1, width: 480 }}
@@ -342,20 +369,21 @@ export default function DesktopScreenshotCarousel({
         {slides.map((slide, i) => (
           <div
             key={i}
-            ref={(el) => { expandedMeasureRefs.current[i] = el; }}
-            className="text-[11px] leading-relaxed italic whitespace-pre-wrap"
-            style={{
-              paddingLeft: 40,   // matches pl on expanded text (px-2.5 + avatar + gap)
-              paddingRight: 10,  // matches pr-2.5
-              paddingBottom: 8,  // matches pb-2
-            }}
+            ref={(el) => { measureRefs.current[i] = el; }}
+            className="text-[11px] leading-normal whitespace-pre-wrap"
+            style={{ width: TEXT_AREA_W }}
           >
-            {slide.shot.comment ? `"${slide.shot.comment}"` : ""}
+            <span className="font-semibold mr-1.5">{slide.uploaderName}</span>
+            {slide.shot.comment && (
+              <span className="font-medium italic">
+                &ldquo;{slide.shot.comment}&rdquo;
+              </span>
+            )}
           </div>
         ))}
       </div>
 
-      {/* ── Carousel ─────────────────────────────────────────────────────── */}
+      {/* ── Carousel ────────────────────────────────────────────────────────── */}
       <div
         className="relative w-[480px] overflow-visible"
         style={{
@@ -383,8 +411,8 @@ export default function DesktopScreenshotCarousel({
               onDownload={onDownload}
               onDelete={onDelete}
               fetchData={fetchData}
-              profiles={profiles}
               slideHeight={slideHeight}
+              canExpand={canExpandSlides[index] ?? false}
               onCommentToggle={handleCommentToggle}
             />
           ))}
@@ -404,7 +432,10 @@ export default function DesktopScreenshotCarousel({
                   transformOrigin: "bottom",
                 }}
               >
-                <div className="w-full shrink-0 rounded-xl overflow-hidden" style={{ height: IMAGE_H }}>
+                <div
+                  className="w-full shrink-0 rounded-xl overflow-hidden"
+                  style={{ height: IMAGE_H }}
+                >
                   <UploadPlaceholder onFileSelect={onFileSelect} className="h-full" />
                 </div>
               </li>
@@ -413,7 +444,7 @@ export default function DesktopScreenshotCarousel({
         </ul>
       </div>
 
-      {/* ── Navigation ───────────────────────────────────────────────────── */}
+      {/* ── Navigation ────────────────────────────────────────────────────── */}
       <div className="flex justify-center w-full mt-6">
         <CarouselControl type="previous" title="Go to previous slide" handleClick={handlePreviousClick} />
         <CarouselControl type="next" title="Go to next slide" handleClick={handleNextClick} />
