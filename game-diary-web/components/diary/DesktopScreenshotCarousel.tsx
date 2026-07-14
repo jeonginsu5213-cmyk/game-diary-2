@@ -1,6 +1,7 @@
 "use client";
 import { IconArrowNarrowRight } from "@tabler/icons-react";
 import { useState, useRef, useId, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { Trash2, FolderInput, Download, Gamepad2 } from "lucide-react";
 import { maskNickname } from "@/src/lib/utils";
 import { supabase } from "@/src/lib/supabase";
@@ -65,7 +66,33 @@ const Slide = ({
 }: SlideProps) => {
   const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [commentExpanded, setCommentExpanded] = useState(false);
+  const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const updateCoords = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        bottom: window.innerHeight - rect.top + 8,
+        left: rect.right - 192,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (showMoveMenu) {
+      updateCoords();
+      window.addEventListener("resize", updateCoords);
+      window.addEventListener("scroll", updateCoords, true);
+      return () => {
+        window.removeEventListener("resize", updateCoords);
+        window.removeEventListener("scroll", updateCoords, true);
+      };
+    } else {
+      setCoords(null);
+    }
+  }, [showMoveMenu]);
 
   const { src, title, isUploader, shot, uploaderName, uploaderAvatar, hasLoggedIn } = slide;
   const isActive  = current === index;
@@ -187,6 +214,7 @@ const Slide = ({
           >
             {!isDeleted && (
               <button
+                ref={buttonRef}
                 onClick={(e) => { e.stopPropagation(); setShowMoveMenu(!showMoveMenu); }}
                 className={`w-7 h-7 flex items-center justify-center transition-all cursor-pointer rounded-md hover:bg-muted-foreground/10 ${
                   showMoveMenu ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -197,30 +225,40 @@ const Slide = ({
               </button>
             )}
 
-            {showMoveMenu && (
-              <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-50 w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl p-1 flex flex-col text-foreground">
-                {currentDiary.session_games?.map((g: any) => (
-                  <button
-                    key={g.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      supabase.from("screenshots").update({ game_title: g.title })
-                        .eq("id", shot.id)
-                        .then(() => { fetchData(); setShowMoveMenu(false); });
-                    }}
-                    className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer ${
-                      shot.game_title === g.title
-                        ? "bg-primary/5 text-primary"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    }`}
-                  >
-                    {g.icon_url
-                      ? <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
-                      : <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />}
-                    <span className="truncate">{g.title}</span>
-                  </button>
-                ))}
-              </div>
+            {typeof document !== 'undefined' && createPortal(
+              showMoveMenu && coords && (
+                <div 
+                  className="fixed z-[350] w-48 overflow-hidden rounded-xl bg-card border border-border shadow-2xl p-1 flex flex-col text-foreground animate-in fade-in slide-in-from-bottom-2 duration-150"
+                  style={{
+                    left: `${coords.left}px`,
+                    bottom: `${coords.bottom}px`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {currentDiary.session_games?.map((g: any) => (
+                    <button
+                      key={g.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        supabase.from("screenshots").update({ game_title: g.title })
+                          .eq("id", shot.id)
+                          .then(() => { fetchData(); setShowMoveMenu(false); });
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer ${
+                        shot.game_title === g.title
+                          ? "bg-primary/5 text-primary"
+                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                      }`}
+                    >
+                      {g.icon_url
+                        ? <img src={g.icon_url} className="w-3.5 h-3.5 object-contain shrink-0" alt="" />
+                        : <Gamepad2 className="w-3.5 h-3.5 shrink-0 opacity-50" />}
+                      <span className="truncate">{g.title}</span>
+                    </button>
+                  ))}
+                </div>
+              ),
+              document.body
             )}
 
             <button
