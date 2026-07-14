@@ -2829,7 +2829,7 @@ function HomeContent() {
 
                                   <div className="flex-1 min-h-0 flex flex-col justify-start">
                                     {/* Desktop 3D Carousel View */}
-                                    <div className="hidden md:block relative overflow-hidden">
+                                    <div className="hidden md:block relative overflow-hidden -mx-6">
 
                                       {gameShots.length === 0 ? (
                                         <div className="w-[480px] h-[260px] mx-auto mt-2 select-none">
