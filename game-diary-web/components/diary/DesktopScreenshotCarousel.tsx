@@ -413,8 +413,9 @@ export default function DesktopScreenshotCarousel({
         <ul
           className="absolute flex mx-[-16px] h-full"
           style={{
+            left: "50%",
             transition: "transform 1000ms cubic-bezier(0.4, 0, 0.2, 1)",
-            transform: `translate3d(calc(50% - 240px - ${current * 512}px), 0, 0)`,
+            transform: `translate3d(-${current * 512 + 240}px, 0, 0)`,
           }}
         >
           {slides.map((slide, index) => (
