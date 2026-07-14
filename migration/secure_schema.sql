@@ -115,7 +115,7 @@ create policy "Allow authenticated users to insert sessions" on public.sessions 
 create policy "Allow session participants to update sessions" on public.sessions for update using (
   exists (
     select 1 from public.session_participants 
-    where session_id = id and user_id = public.get_auth_user_id()
+    where session_id = sessions.id and user_id = public.get_auth_user_id()
   )
 );
 
