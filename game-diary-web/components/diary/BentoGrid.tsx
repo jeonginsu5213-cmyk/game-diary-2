@@ -71,7 +71,7 @@ function BentoGrid({ items }: BentoGridProps) {
                                     </div>
                                     {item.meta && (
                                         <div className={cn(
-                                            "text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-0.5",
+                                            "text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-[-1.5px]",
                                             item.colSpan === 3 && "md:hidden"
                                         )}>
                                             {item.meta}
