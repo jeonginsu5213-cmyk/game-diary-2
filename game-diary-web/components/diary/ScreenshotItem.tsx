@@ -15,7 +15,6 @@ interface ScreenshotItemProps {
   activeMoveShotId: string | null;
   setActiveMoveShotId: (id: string | null) => void;
   setActiveShot: (shot: any) => void;
-  setHoveredShot: (shot: any | null) => void;
   handleDownload: (url: string) => void;
   handleImageDelete: (id: string) => void;
   fetchData: () => void;
@@ -35,7 +34,6 @@ const ScreenshotItem = ({
   activeMoveShotId,
   setActiveMoveShotId,
   setActiveShot,
-  setHoveredShot,
   handleDownload,
   handleImageDelete,
   fetchData,
@@ -88,10 +86,8 @@ const ScreenshotItem = ({
       } : { opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="relative group aspect-video z-10 hover:z-30 transform-gpu"
-      onMouseEnter={() => typeof window !== 'undefined' && window.innerWidth >= 768 && !isActionsHovered && setHoveredShot({ ...shot, positionHint, isDrawer })}
       onMouseLeave={() => {
         setActiveMoveShotId(null);
-        setHoveredShot(null);
         setIsActionsHovered(false);
       }}
     >
@@ -157,11 +153,9 @@ const ScreenshotItem = ({
         className="absolute top-2 right-2 flex gap-1.5 z-40 transition-all duration-300 opacity-100 translate-y-0 md:opacity-0 md:group-hover:opacity-100 md:translate-y-[-4px] md:group-hover:translate-y-0"
         onMouseEnter={() => {
           setIsActionsHovered(true);
-          setHoveredShot(null);
         }}
         onMouseLeave={() => {
           setIsActionsHovered(false);
-          setHoveredShot(shot);
         }}
       >
         {!isDeleted && (

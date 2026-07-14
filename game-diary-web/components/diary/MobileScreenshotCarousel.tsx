@@ -17,7 +17,6 @@ interface MobileScreenshotCarouselProps {
   activeMoveShotId: string | null;
   setActiveMoveShotId: (id: string | null) => void;
   setActiveShot: (shot: any) => void;
-  setHoveredShot: (shot: any | null) => void;
   handleDownload: (url: string) => void;
   handleImageDelete: (id: string) => void;
   fetchData: () => void;
@@ -34,7 +33,6 @@ export default function MobileScreenshotCarousel({
   activeMoveShotId,
   setActiveMoveShotId,
   setActiveShot,
-  setHoveredShot,
   handleDownload,
   handleImageDelete,
   fetchData,
@@ -106,7 +104,6 @@ export default function MobileScreenshotCarousel({
                 activeMoveShotId={activeMoveShotId}
                 setActiveMoveShotId={setActiveMoveShotId}
                 setActiveShot={setActiveShot}
-                setHoveredShot={setHoveredShot}
                 handleDownload={handleDownload}
                 handleImageDelete={handleImageDelete}
                 fetchData={fetchData}

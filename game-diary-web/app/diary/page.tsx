@@ -24,8 +24,6 @@ import GameCommentInput from '@/components/diary/GameCommentInput';
 import GameCommentList from '@/components/diary/GameCommentList';
 import DownloadButton, { handleDownload } from '@/components/diary/DownloadButton';
 import ScreenshotItem from '@/components/diary/ScreenshotItem';
-import FloatingScreenshotPreview from '@/components/diary/FloatingScreenshotPreview';
-import BackgroundPreview from '@/components/diary/BackgroundPreview';
 import { Drawer, DrawerPopup, DrawerHeader, DrawerTitle, DrawerDescription, DrawerPanel, DrawerTrigger, DrawerClose, Button } from '@/components/diary/Drawer';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -286,8 +284,6 @@ function HomeContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeShot, setActiveShot] = useState<any | null>(null);
-  const [hoveredShot, setHoveredShot] = useState<any | null>(null);
-  const [hoveredUncatShot, setHoveredUncatShot] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setNewTitle] = useState("");
@@ -2887,7 +2883,6 @@ function HomeContent() {
                                         activeMoveShotId={activeMoveShotId}
                                         setActiveMoveShotId={setActiveMoveShotId}
                                         setActiveShot={setActiveShot}
-                                        setHoveredShot={setHoveredShot}
                                         handleDownload={handleDownload}
                                         handleImageDelete={handleImageDelete}
                                         fetchData={fetchData}
@@ -3109,7 +3104,7 @@ function HomeContent() {
                                           activeMoveShotId={activeMoveShotId}
                                           setActiveMoveShotId={setActiveMoveShotId}
                                           setActiveShot={setActiveShot}
-                                          setHoveredShot={setHoveredUncatShot}
+
                                           handleDownload={handleDownload}
                                           handleImageDelete={handleImageDelete}
                                           fetchData={fetchData}
@@ -3161,9 +3156,6 @@ function HomeContent() {
           onComplete={handleUploadComplete} 
         />
       )}
-
-      <FloatingScreenshotPreview hoveredShot={hoveredShot} profiles={profiles} />
-      <BackgroundPreview hoveredShot={hoveredUncatShot} profiles={profiles} />
 
       {activeShot && (
         <Lightbox 
