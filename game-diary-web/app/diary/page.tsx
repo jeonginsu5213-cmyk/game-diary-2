@@ -2830,30 +2830,7 @@ function HomeContent() {
                                   <div className="flex-1 min-h-0 flex flex-col justify-start">
                                     {/* Desktop 3D Carousel View */}
                                     <div className="hidden md:block relative overflow-hidden">
-                                      {gameShots.length > 0 && (
-                                        <>
-                                          {/* Left blur + fade overlay */}
-                                          <div 
-                                            className="absolute left-0 top-0 bg-gradient-to-r from-card to-transparent backdrop-blur-md pointer-events-none z-20" 
-                                            style={{
-                                              width: 'calc(50% - 240px)',
-                                              height: '270px',
-                                              maskImage: 'linear-gradient(to right, black, transparent)',
-                                              WebkitMaskImage: 'linear-gradient(to right, black, transparent)'
-                                            }}
-                                          />
-                                          {/* Right blur + fade overlay */}
-                                          <div 
-                                            className="absolute right-0 top-0 bg-gradient-to-l from-card to-transparent backdrop-blur-md pointer-events-none z-20" 
-                                            style={{
-                                              width: 'calc(50% - 240px)',
-                                              height: '270px',
-                                              maskImage: 'linear-gradient(to left, black, transparent)',
-                                              WebkitMaskImage: 'linear-gradient(to left, black, transparent)'
-                                            }}
-                                          />
-                                        </>
-                                      )}
+
                                       {gameShots.length === 0 ? (
                                         <div className="w-[480px] h-[260px] mx-auto mt-2 select-none">
                                           {isDeleted ? (
@@ -2875,7 +2852,7 @@ function HomeContent() {
                                           )}
                                         </div>
                                       ) : (
-                                        <DesktopScreenshotCarousel
+                                        <DesktopScreenshotCarousel key={`${current.id}-${game.id}`}
                                           gameShots={gameShots}
                                           session={session}
                                           profiles={profiles}
@@ -2892,7 +2869,7 @@ function HomeContent() {
 
                                     {/* Mobile Carousel View */}
                                     <div className="block md:hidden">
-                                      <MobileScreenshotCarousel
+                                      <MobileScreenshotCarousel key={`${current.id}-${game.id}`}
                                         gameShots={gameShots}
                                         profiles={profiles}
                                         current={current}
