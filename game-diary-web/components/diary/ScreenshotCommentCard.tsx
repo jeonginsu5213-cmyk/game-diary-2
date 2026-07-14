@@ -89,7 +89,7 @@ export default function ScreenshotCommentCard({
       </div>
 
       {/* Text area */}
-      <div className="flex-1 min-w-0 relative">
+      <div className="flex-1 min-w-0 relative mt-[1.5px]">
 
         {/*
           Hidden measurement div.
