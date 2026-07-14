@@ -58,23 +58,23 @@ function BentoGrid({ items }: BentoGridProps) {
                             )}
                             
                             <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
-                                <div className="flex items-start justify-between gap-4 md:flex-1 min-w-0">
-                                    <div className="flex flex-col min-w-0 mt-0.5 md:mt-0">
-                                        <h3 className="font-semibold text-foreground tracking-tight text-lg truncate mt-0.5 md:mt-1 leading-normal pb-0.5">
+                                <div className="flex flex-col gap-1 md:flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <h3 className="font-semibold text-foreground tracking-tight text-lg truncate leading-normal">
                                             {item.title}
                                         </h3>
-                                        {item.meta && (
-                                            <div className={cn(
-                                                "text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-1",
-                                                item.colSpan === 3 && "md:hidden"
-                                            )}>
-                                                {item.meta}
+                                        {item.status && (
+                                            <div className="md:hidden shrink-0 flex items-center">
+                                                {item.status}
                                             </div>
                                         )}
                                     </div>
-                                    {item.status && (
-                                        <div className="md:hidden shrink-0 flex items-start mt-0">
-                                            {item.status}
+                                    {item.meta && (
+                                        <div className={cn(
+                                            "text-[10px] text-muted-foreground font-sans font-bold uppercase tracking-wider opacity-60 mt-0.5",
+                                            item.colSpan === 3 && "md:hidden"
+                                        )}>
+                                            {item.meta}
                                         </div>
                                     )}
                                 </div>
