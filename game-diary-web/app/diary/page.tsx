@@ -2829,7 +2829,13 @@ function HomeContent() {
 
                                   <div className="flex-1 min-h-0 flex flex-col justify-start">
                                     {/* Desktop 3D Carousel View */}
-                                    <div className="hidden md:block">
+                                    <div className="hidden md:block relative overflow-hidden">
+                                      {gameShots.length > 0 && (
+                                        <>
+                                          <div className="absolute left-0 top-0 bottom-16 w-24 bg-gradient-to-r from-card to-transparent pointer-events-none z-20" />
+                                          <div className="absolute right-0 top-0 bottom-16 w-24 bg-gradient-to-l from-card to-transparent pointer-events-none z-20" />
+                                        </>
+                                      )}
                                       {gameShots.length === 0 ? (
                                         <div className="w-[480px] h-[260px] mx-auto mt-2 select-none">
                                           {isDeleted ? (

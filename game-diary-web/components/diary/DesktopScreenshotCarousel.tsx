@@ -126,7 +126,7 @@ const Slide = ({
   return (
     <div className="[perspective:1200px] [transform-style:preserve-3d] shrink-0">
       <li
-        className="flex flex-col w-[480px] mx-[16px] z-10 cursor-pointer"
+        className="flex flex-col w-[480px] mx-[16px] z-10 cursor-pointer relative"
         style={{
           height: slideHeight,
           transform: !isActive ? "scale(0.95) rotateX(8deg)" : "scale(1) rotateX(0deg)",
@@ -137,6 +137,15 @@ const Slide = ({
         }}
         onClick={() => { if (!isActive) handleSlideClick(index); }}
       >
+        {!isActive && (
+          <div 
+            className="absolute inset-0 z-30 cursor-pointer bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSlideClick(index);
+            }}
+          />
+        )}
         {/* ── Image ──────────────────────────────────────────────────────── */}
         <div
           className="w-full shrink-0 bg-[#1D1F2F] rounded-xl overflow-hidden relative"
@@ -425,14 +434,28 @@ export default function DesktopScreenshotCarousel({
           {!isDeleted && onFileSelect && (
             <div className="[perspective:1200px] [transform-style:preserve-3d] shrink-0">
               <li
-                className="flex flex-col w-[480px] mx-[16px] z-10"
+                className="flex flex-col w-[480px] mx-[16px] z-10 relative cursor-pointer"
                 style={{
                   height: slideHeight,
                   transform: current !== slides.length ? "scale(0.95) rotateX(8deg)" : "scale(1) rotateX(0deg)",
                   transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   transformOrigin: "bottom",
                 }}
+                onClick={() => {
+                  if (current !== slides.length) {
+                    handleSlideClick(slides.length);
+                  }
+                }}
               >
+                {current !== slides.length && (
+                  <div 
+                    className="absolute inset-0 z-30 cursor-pointer bg-transparent"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSlideClick(slides.length);
+                    }}
+                  />
+                )}
                 <div className="w-full shrink-0 rounded-xl overflow-hidden" style={{ height: IMAGE_H }}>
                   <UploadPlaceholder onFileSelect={onFileSelect} className="h-full" />
                 </div>
