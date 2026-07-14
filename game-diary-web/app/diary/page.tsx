@@ -2831,29 +2831,23 @@ function HomeContent() {
                                     {/* Desktop 3D Carousel View */}
                                     <div className="hidden md:block">
                                       {gameShots.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl p-8 bg-muted/5 text-muted-foreground w-[480px] h-[260px] mx-auto mt-2">
-                                          <Camera className="w-8 h-8 opacity-25 mb-2" />
-                                          <p className="text-[11px] font-black tracking-tight mb-3">등록된 스크린샷이 없습니다.</p>
-                                          {!isDeleted && (
-                                            <>
-                                              <input 
-                                                type="file" 
-                                                id={`file-upload-desktop-empty-${game.id}`}
-                                                className="hidden" 
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                  const file = e.target.files?.[0];
-                                                  if (file) setPendingUpload({ file, defaultGame: game.title });
-                                                }}
-                                              />
-                                              <button 
-                                                onClick={() => document.getElementById(`file-upload-desktop-empty-${game.id}`)?.click()}
-                                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white hover:opacity-90 text-[11px] font-black transition-all cursor-pointer shadow-md"
-                                              >
-                                                <Plus className="w-3.5 h-3.5" />
-                                                <span>첫 스크린샷 올리기</span>
-                                              </button>
-                                            </>
+                                        <div className="w-[480px] h-[260px] mx-auto mt-2 select-none">
+                                          {isDeleted ? (
+                                            <div className="w-full h-full rounded-2xl bg-black/5 flex flex-col items-center justify-center gap-2 text-[#6b7280]">
+                                              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#dddfe2] text-[#6b7280]">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                              </div>
+                                              <div className="text-center">
+                                                <p className="text-[11px] font-bold text-[#333333]">등록된 스크린샷이 없습니다</p>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <UploadPlaceholder
+                                              onFileSelect={(file: File) => setPendingUpload({ file, defaultGame: game.title })}
+                                              className="w-full h-full rounded-2xl"
+                                            />
                                           )}
                                         </div>
                                       ) : (
