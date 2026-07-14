@@ -75,7 +75,7 @@ const Slide = ({
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setCoords({
-        bottom: window.innerHeight - rect.top + 8,
+        top: rect.bottom + 8,
         left: rect.right - 192,
       });
     }
@@ -230,14 +230,14 @@ const Slide = ({
               <AnimatePresence>
                 {showMoveMenu && coords && (
                   <motion.div
-                    initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -4, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: 'easeOut' }}
                     className="fixed z-[350] w-48 overflow-hidden rounded-xl bg-card shadow-2xl"
                     style={{
                       left: `${coords.left}px`,
-                      bottom: `${coords.bottom}px`,
+                      top: `${coords.top}px`,
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
