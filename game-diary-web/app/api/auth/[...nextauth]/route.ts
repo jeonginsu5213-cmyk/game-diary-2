@@ -1,5 +1,11 @@
 import NextAuth from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import crypto from "crypto";
+
+function getSupabaseSignature(userId: string) {
+  const secret = process.env.NEXTAUTH_SECRET || "default_local_secret_key_for_dev";
+  return crypto.createHmac("sha256", secret).update(userId).digest("hex");
+}
 
 const handler = NextAuth({
   providers: [
@@ -35,9 +41,9 @@ const handler = NextAuth({
   callbacks: {
     async signIn({ user }: any) {
       if (user?.id) {
-        const { supabase } = require("@/src/lib/supabase");
+        const { supabaseService } = require("@/src/lib/supabase");
         try {
-          await supabase.from('profiles').upsert({
+          await supabaseService.from('profiles').upsert({
             id: user.id,
             display_name: user.name,
             avatar_url: user.image,
@@ -55,6 +61,7 @@ const handler = NextAuth({
         token.id = user.id;
         token.username = (user as any).username;
         token.image = user.image;
+        token.signature = getSupabaseSignature(user.id);
       }
       return token;
     },
@@ -63,6 +70,7 @@ const handler = NextAuth({
         session.user.id = token.id;
         session.user.username = token.username;
         session.user.image = token.image;
+        session.user.signature = token.signature;
       }
       return session;
     },

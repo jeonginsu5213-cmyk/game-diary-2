@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     const authHeader = request.headers.get("Authorization");
     const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
     
-    if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+    if (!webhookSecret || authHeader !== `Bearer ${webhookSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
