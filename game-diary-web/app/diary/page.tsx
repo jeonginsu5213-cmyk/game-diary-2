@@ -2825,7 +2825,7 @@ function HomeContent() {
                               ),
                               colSpan: 3,
                               content: (
-                                <div className="flex flex-col h-auto md:min-h-[402px] md:pr-[424px]">
+                                <div className="flex flex-col h-auto md:min-h-[402px] md:pr-[400px]">
 
                                   <div className="flex-1 min-h-0 flex flex-col justify-start">
                                     {/* Desktop 3D Carousel View */}
