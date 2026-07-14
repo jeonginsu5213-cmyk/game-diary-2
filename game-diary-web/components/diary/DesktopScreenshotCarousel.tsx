@@ -385,7 +385,7 @@ export default function DesktopScreenshotCarousel({
     setSlideHeight(expanded ? (expandedHeights[current] ?? COLLAPSED_H) : COLLAPSED_H);
 
   return (
-    <div className="relative w-[480px] mx-auto">
+    <div className="relative w-full overflow-visible flex flex-col items-center">
 
       {/* ── Hidden measurement divs (full inline text at TEXT_W) ─────────── */}
       <div className="absolute top-0 left-0 invisible pointer-events-none overflow-hidden" style={{ zIndex: -1, width: 480 }}>
@@ -406,7 +406,7 @@ export default function DesktopScreenshotCarousel({
 
       {/* ── Carousel ─────────────────────────────────────────────────────── */}
       <div
-        className="relative w-[480px] overflow-visible"
+        className="relative w-full overflow-visible"
         style={{ height: slideHeight, transition: "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}
         aria-labelledby={`carousel-heading-${id}`}
       >
@@ -414,7 +414,7 @@ export default function DesktopScreenshotCarousel({
           className="absolute flex mx-[-16px] h-full"
           style={{
             transition: "transform 1000ms cubic-bezier(0.4, 0, 0.2, 1)",
-            transform: `translate3d(-${current * 512}px, 0, 0)`,
+            transform: `translate3d(calc(50% - 240px - ${current * 512}px), 0, 0)`,
           }}
         >
           {slides.map((slide, index) => (

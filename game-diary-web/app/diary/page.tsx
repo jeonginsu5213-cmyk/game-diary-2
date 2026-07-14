@@ -2832,8 +2832,20 @@ function HomeContent() {
                                     <div className="hidden md:block relative overflow-hidden">
                                       {gameShots.length > 0 && (
                                         <>
-                                          <div className="absolute left-0 top-0 bottom-16 w-24 bg-gradient-to-r from-card to-transparent pointer-events-none z-20" />
-                                          <div className="absolute right-0 top-0 bottom-16 w-24 bg-gradient-to-l from-card to-transparent pointer-events-none z-20" />
+                                          <div 
+                                            className="absolute left-0 top-0 bottom-16 w-24 backdrop-blur-md pointer-events-none z-20" 
+                                            style={{
+                                              maskImage: 'linear-gradient(to right, black, transparent)',
+                                              WebkitMaskImage: 'linear-gradient(to right, black, transparent)'
+                                            }}
+                                          />
+                                          <div 
+                                            className="absolute right-0 top-0 bottom-16 w-24 backdrop-blur-md pointer-events-none z-20" 
+                                            style={{
+                                              maskImage: 'linear-gradient(to left, black, transparent)',
+                                              WebkitMaskImage: 'linear-gradient(to left, black, transparent)'
+                                            }}
+                                          />
                                         </>
                                       )}
                                       {gameShots.length === 0 ? (
