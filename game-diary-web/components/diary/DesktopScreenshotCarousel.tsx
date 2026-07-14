@@ -74,9 +74,11 @@ const Slide = ({
   const updateCoords = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const cardEl = buttonRef.current.closest(".bg-muted");
+      const left = cardEl ? cardEl.getBoundingClientRect().right - 192 : rect.right - 192;
       setCoords({
         top: rect.bottom + 8,
-        left: rect.right - 192,
+        left,
       });
     }
   };
