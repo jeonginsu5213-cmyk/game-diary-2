@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { getSession } from 'next-auth/react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -18,6 +17,7 @@ if (typeof window !== 'undefined') {
 const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (typeof window !== 'undefined') {
     try {
+      const { getSession } = await import('next-auth/react');
       const session: any = await getSession();
       if (session?.user?.id && session?.user?.signature) {
         init = init || {};
