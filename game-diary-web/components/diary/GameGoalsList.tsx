@@ -112,6 +112,11 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   } else {
     rateColorClass = "text-[#e94a44]";
   }
+  // Sort goals by creation time to prevent Postgres heap order shifts on update
+  const stableGoals = [...localGoals].sort((a, b) => 
+    new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+  );
+
   return (
     <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-2">
@@ -133,7 +138,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
         </div>
       </div>
       <div className="space-y-1.5">
-        {localGoals.map((goal) => (
+        {stableGoals.map((goal) => (
           <div
             key={goal.id}
             onClick={() => handleToggle(goal)}
