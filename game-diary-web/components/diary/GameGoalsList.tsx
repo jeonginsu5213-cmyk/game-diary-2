@@ -24,11 +24,15 @@ interface GameGoalsListProps {
 }
 
 export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }: GameGoalsListProps) {
-  const [localGoals, setLocalGoals] = useState<Goal[]>(goals);
+  const [localGoals, setLocalGoals] = useState<Goal[]>(goals || []);
   const pendingTogglesRef = useRef<Record<string, boolean>>({});
 
   // Keep local goals state in sync with incoming props, avoiding overwriting pending optimistic states
   useEffect(() => {
+    if (!goals) {
+      setLocalGoals([]);
+      return;
+    }
     setLocalGoals((prevLocal) => {
       return goals.map((incomingGoal) => {
         const pendingState = pendingTogglesRef.current[incomingGoal.id];
