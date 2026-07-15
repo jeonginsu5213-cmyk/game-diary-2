@@ -1206,6 +1206,7 @@ client.on('interactionCreate', async (i) => {
                     .eq('guild_id', guildId)
                     .eq('game_name', gameName)
                     .eq('creator_id', creatorId)
+                    .is('session_id', null)
                     .gte('created_at', startTime);
 
                 if (userGoals && userGoals.length > 0) {
@@ -1266,6 +1267,7 @@ client.on('interactionCreate', async (i) => {
                 .eq('guild_id', guildId)
                 .eq('game_name', gameName)
                 .eq('creator_id', creatorId)
+                .is('session_id', null)
                 .gte('created_at', startTime);
 
             if (deleteError) {
@@ -1305,6 +1307,7 @@ client.on('interactionCreate', async (i) => {
                 .select('*')
                 .eq('guild_id', guildId)
                 .eq('game_name', gameName)
+                .is('session_id', null)
                 .gte('created_at', startTime);
 
             if (fetchError) {
