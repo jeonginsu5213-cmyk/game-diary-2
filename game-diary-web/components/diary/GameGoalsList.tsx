@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { cn, maskNickname } from "@/src/lib/utils";
 import { Gauge } from "@/components/ui/gauge";
@@ -24,6 +24,13 @@ interface GameGoalsListProps {
 }
 
 export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }: GameGoalsListProps) {
+  const [localGoals, setLocalGoals] = useState<Goal[]>(goals);
+
+  // Keep local goals state in sync with incoming props (real-time updates or page changes)
+  useEffect(() => {
+    setLocalGoals(goals);
+  }, [goals]);
+
   if (!goals || goals.length === 0) return null;
 
   const handleToggle = async (goal: Goal) => {
@@ -31,37 +38,49 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
 
     const nextAchieved = !goal.is_achieved;
 
-    // Update in DB
-    const { error } = await supabase
+    // 1. Optimistic Update: Update UI state instantly
+    setLocalGoals((prev) =>
+      prev.map((g) => (g.id === goal.id ? { ...g, is_achieved: nextAchieved } : g))
+    );
+
+    // 2. Play confetti immediately if setting to achieved
+    if (nextAchieved) {
+      import("canvas-confetti")
+        .then((module) => {
+          const confetti = module.default;
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.8 },
+            colors: ["#e94a44", "#f7ced1", "#ffffff", "#d6e4f0"],
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to load canvas-confetti dynamically:", err);
+        });
+    }
+
+    // 3. Trigger network update in the background (Optimistic)
+    supabase
       .from("goals")
       .update({ is_achieved: nextAchieved })
-      .eq("id", goal.id);
-
-    if (error) {
-      console.error("Failed to update goal status:", error.message);
-      return;
-    }
-
-    if (nextAchieved) {
-      // Fire confetti celebration!
-      import("canvas-confetti").then((module) => {
-        const confetti = module.default;
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.8 },
-          colors: ["#e94a44", "#f7ced1", "#ffffff", "#d6e4f0"]
-        });
-      }).catch((err) => {
-        console.error("Failed to load canvas-confetti dynamically:", err);
+      .eq("id", goal.id)
+      .then(({ error }) => {
+        if (error) {
+          console.error("Failed to update goal status:", error.message);
+          // Rollback on error
+          setLocalGoals((prev) =>
+            prev.map((g) => (g.id === goal.id ? { ...g, is_achieved: !nextAchieved } : g))
+          );
+        } else {
+          // Trigger parent refetch to keep data matching
+          fetchData();
+        }
       });
-    }
-
-    fetchData();
   };
 
-  const totalGoals = goals.length;
-  const achievedGoals = goals.filter((g) => g.is_achieved).length;
+  const totalGoals = localGoals.length;
+  const achievedGoals = localGoals.filter((g) => g.is_achieved).length;
   const achievementRate = totalGoals > 0 ? Math.round((achievedGoals / totalGoals) * 100) : 0;
 
   // Determine color matching the gauge thresholds
@@ -95,7 +114,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
         </div>
       </div>
       <div className="space-y-1.5">
-        {goals.map((goal) => (
+        {localGoals.map((goal) => (
           <div
             key={goal.id}
             onClick={() => handleToggle(goal)}
