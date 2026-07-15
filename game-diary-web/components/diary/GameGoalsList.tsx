@@ -148,7 +148,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   return (
     <div className={cn("-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 border rounded-2xl animate-in fade-in duration-300", sectionClasses)}>
       <div className="flex items-center justify-between mb-2">
-        <div className="relative overflow-hidden h-[22px] flex items-center translate-x-[4px] translate-y-[-0.5px]">
+        <div className="relative overflow-hidden h-[22px] flex-1 min-w-0 flex items-center translate-x-[4px] translate-y-[-0.5px]">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.h4
               key={titleText}
