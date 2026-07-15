@@ -126,12 +126,16 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
 
   // Determine color matching the gauge thresholds
   let rateColorClass = "text-primary";
+  let sectionClasses = "bg-primary/5 border-primary/10";
   if (achievementRate >= 70) {
     rateColorClass = "text-[#22c55e]";
+    sectionClasses = "bg-[#22c55e]/5 border-[#22c55e]/10";
   } else if (achievementRate >= 40) {
     rateColorClass = "text-[#ffa500]";
+    sectionClasses = "bg-[#ffa500]/5 border-[#ffa500]/10";
   } else {
     rateColorClass = "text-[#e94a44]";
+    sectionClasses = "bg-[#e94a44]/5 border-[#e94a44]/10";
   }
 
   // Sort goals by creation time to prevent Postgres heap order shifts on update
@@ -140,7 +144,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   );
 
   return (
-    <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
+    <div className={cn("-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 border rounded-2xl animate-in fade-in duration-300 transition-colors duration-500", sectionClasses)}>
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[4px] translate-y-[-0.5px]">오늘의 목표 🔥</h4>
         <div className="flex items-center gap-2 shrink-0 -translate-x-[4px]">
