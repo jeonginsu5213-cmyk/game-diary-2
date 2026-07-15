@@ -137,7 +137,12 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
     titleText = "좋은 출발이에요! 🌱";
   }
 
-  const rateColorClass = "text-primary";
+  let rateColorClass = "text-[#e94a44]";
+  if (achievementRate >= 70) {
+    rateColorClass = "text-[#22c55e]";
+  } else if (achievementRate >= 40) {
+    rateColorClass = "text-[#ffa500]";
+  }
   const sectionClasses = "bg-primary/5 border-primary/10";
 
   // Sort goals by creation time to prevent Postgres heap order shifts on update
