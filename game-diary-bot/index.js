@@ -394,6 +394,15 @@ async function startSoloSession(interaction, userId, gameName, sessionTitle, act
         
         // 아이콘 조회 및 추가
         newSession.gameLogs[gameName].iconURL = await getGameIconURL(gameName, activity);
+
+        // 게임 시작 알림 전송 (목표 등록 버튼 포함)
+        (async () => {
+            try {
+                await sendGameStartNotification(newSession, userId, gameName);
+            } catch (e) {
+                console.error("[startSoloSession] 게임 시작 알림 전송 실패:", e);
+            }
+        })();
     }
 
     // 제어 패널 메시지 업데이트 (서버와 동일한 양식의 content + 안내 embed + 2개 버튼 구성)
