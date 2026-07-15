@@ -127,15 +127,19 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   // Determine color matching the gauge thresholds
   let rateColorClass = "text-primary";
   let sectionClasses = "bg-primary/5 border-primary/10";
+  let checkedCardClasses = "bg-primary/10 border-primary/20";
   if (achievementRate >= 70) {
     rateColorClass = "text-[#22c55e]";
     sectionClasses = "bg-[#22c55e]/5 border-[#22c55e]/10";
+    checkedCardClasses = "bg-[#22c55e]/10 border-[#22c55e]/20";
   } else if (achievementRate >= 40) {
     rateColorClass = "text-[#ffa500]";
     sectionClasses = "bg-[#ffa500]/5 border-[#ffa500]/10";
+    checkedCardClasses = "bg-[#ffa500]/10 border-[#ffa500]/20";
   } else {
     rateColorClass = "text-[#e94a44]";
     sectionClasses = "bg-[#e94a44]/5 border-[#e94a44]/10";
+    checkedCardClasses = "bg-[#e94a44]/10 border-[#e94a44]/20";
   }
 
   // Sort goals by creation time to prevent Postgres heap order shifts on update
@@ -169,10 +173,10 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
             key={goal.id}
             onClick={() => handleToggle(goal)}
             className={cn(
-              "flex items-center justify-between gap-3 py-2 px-3 rounded-xl transition-all select-none border",
+              "flex items-center justify-between gap-3 py-2 px-3 rounded-xl select-none border transition-all duration-500",
               isDeleted ? "cursor-default" : "cursor-pointer hover:bg-primary/5 active:scale-[0.99]",
               goal.is_achieved 
-                ? "bg-primary/10 border-primary/20" 
+                ? checkedCardClasses 
                 : "bg-card border-border/40 hover:border-primary/20"
             )}
           >
@@ -201,7 +205,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
               className={cn(
                 "h-[26px] flex items-center justify-center font-bold rounded-lg shrink-0 select-none border",
                 goal.is_achieved
-                  ? "bg-transparent text-primary border-transparent shadow-none text-[14px] pl-2.5 pr-0"
+                  ? cn("bg-transparent border-transparent shadow-none text-[14px] pl-2.5 pr-0", rateColorClass)
                   : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 text-[11px] px-2.5"
               )}
             >
