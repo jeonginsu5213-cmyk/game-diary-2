@@ -3,7 +3,6 @@
 import React from "react";
 import { Check } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
-import confetti from "canvas-confetti";
 import { cn } from "@/src/lib/utils";
 
 interface Goal {
@@ -44,11 +43,16 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
 
     if (nextAchieved) {
       // Fire confetti celebration!
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.8 },
-        colors: ["#e94a44", "#f7ced1", "#ffffff", "#d6e4f0"]
+      import("canvas-confetti").then((module) => {
+        const confetti = module.default;
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.8 },
+          colors: ["#e94a44", "#f7ced1", "#ffffff", "#d6e4f0"]
+        });
+      }).catch((err) => {
+        console.error("Failed to load canvas-confetti dynamically:", err);
       });
     }
 
