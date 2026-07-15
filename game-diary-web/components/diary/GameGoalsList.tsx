@@ -62,7 +62,7 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
   return (
     <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 py-4 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center gap-2 mb-3">
-        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[2px] translate-y-[-6.5px]">오늘의 목표 🔥</h4>
+        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-y-[-0.5px]">오늘의 목표 🔥</h4>
       </div>
       <div className="space-y-1.5">
         {goals.map((goal) => (
