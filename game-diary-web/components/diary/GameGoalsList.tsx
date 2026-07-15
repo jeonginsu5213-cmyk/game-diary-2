@@ -175,7 +175,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
               className={cn(
                 "px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all duration-300 shrink-0 select-none border",
                 goal.is_achieved
-                  ? "bg-primary text-white border-transparent shadow-sm shadow-primary/20"
+                  ? "bg-transparent text-primary border-transparent shadow-none"
                   : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
               )}
             >
