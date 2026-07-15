@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { cn, maskNickname } from "@/src/lib/utils";
 import { Gauge } from "@/components/ui/gauge";
@@ -25,10 +25,26 @@ interface GameGoalsListProps {
 
 export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }: GameGoalsListProps) {
   const [localGoals, setLocalGoals] = useState<Goal[]>(goals);
+  const pendingTogglesRef = useRef<Record<string, boolean>>({});
 
-  // Keep local goals state in sync with incoming props (real-time updates or page changes)
+  // Keep local goals state in sync with incoming props, avoiding overwriting pending optimistic states
   useEffect(() => {
-    setLocalGoals(goals);
+    setLocalGoals((prevLocal) => {
+      return goals.map((incomingGoal) => {
+        const pendingState = pendingTogglesRef.current[incomingGoal.id];
+        if (pendingState !== undefined) {
+          if (incomingGoal.is_achieved === pendingState) {
+            // DB has caught up! Clear the pending toggle
+            delete pendingTogglesRef.current[incomingGoal.id];
+            return incomingGoal;
+          }
+          // DB has not caught up yet: keep our optimistic local state
+          const localGoal = prevLocal.find((g) => g.id === incomingGoal.id);
+          return localGoal || incomingGoal;
+        }
+        return incomingGoal;
+      });
+    });
   }, [goals]);
 
   if (!goals || goals.length === 0) return null;
@@ -37,6 +53,9 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
     if (isDeleted) return;
 
     const nextAchieved = !goal.is_achieved;
+
+    // Set pending state
+    pendingTogglesRef.current[goal.id] = nextAchieved;
 
     // 1. Optimistic Update: Update UI state instantly
     setLocalGoals((prev) =>
@@ -68,7 +87,8 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
       .then(({ error }) => {
         if (error) {
           console.error("Failed to update goal status:", error.message);
-          // Rollback on error
+          // Rollback on error: clear pending state and revert UI
+          delete pendingTogglesRef.current[goal.id];
           setLocalGoals((prev) =>
             prev.map((g) => (g.id === goal.id ? { ...g, is_achieved: !nextAchieved } : g))
           );
