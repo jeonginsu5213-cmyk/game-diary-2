@@ -107,7 +107,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
             )}
           >
             {/* Title & Creator */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 min-w-0 flex items-baseline gap-1.5 flex-wrap">
               <span
                 className={cn(
                   "text-[13px] font-medium leading-tight break-words transition-all duration-300",
@@ -119,8 +119,8 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
                 {goal.title}
               </span>
               {goal.creator_id && (
-                <span className="text-[10px] text-muted-foreground/60 mt-0.5 font-bold">
-                  등록: {profiles[goal.creator_id]?.has_logged_in 
+                <span className="text-[10px] text-muted-foreground/50 font-bold shrink-0">
+                  · {profiles[goal.creator_id]?.has_logged_in 
                     ? (profiles[goal.creator_id]?.display_name || "알 수 없음") 
                     : maskNickname(profiles[goal.creator_id]?.display_name || "알 수 없음")}
                 </span>
