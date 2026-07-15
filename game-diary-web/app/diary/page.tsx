@@ -29,6 +29,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/com
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarousel';
 import DesktopScreenshotCarousel from '@/components/diary/DesktopScreenshotCarousel';
+import { TextShimmer } from '@/components/ui/text-shimmer';
 
 // --- Diary List Item Component (Swipe to Favorite or Trash layout) ---
 
@@ -1374,7 +1375,7 @@ function HomeContent() {
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-6">
       <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      <p className="font-semibold text-[14px] uppercase animate-pulse opacity-40">일기장 불러오는 중...</p>
+      <TextShimmer className="font-semibold text-[14px] uppercase opacity-80">일기장 불러오는 중...</TextShimmer>
     </div>
   );
 
@@ -3264,7 +3265,7 @@ export default function Home() {
     <Suspense fallback={
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-6">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="font-black text-xs tracking-[0.4em] uppercase animate-pulse opacity-40">Loading...</p>
+        <TextShimmer className="font-black text-xs tracking-[0.4em] uppercase opacity-80">Loading...</TextShimmer>
       </div>
     }>
       <HomeContent />
