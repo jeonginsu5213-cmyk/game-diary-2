@@ -61,13 +61,13 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
         <span className="text-[16px]">🎯</span>
         <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-y-[-0.5px]">오늘의 목표</h4>
       </div>
-      <div className="space-y-2.5">
+      <div className="space-y-1.5">
         {goals.map((goal) => (
           <div
             key={goal.id}
             onClick={() => handleToggle(goal)}
             className={cn(
-              "flex items-start gap-3 p-2.5 rounded-xl transition-all select-none border",
+              "flex items-start gap-3 py-1.5 px-2.5 rounded-xl transition-all select-none border",
               isDeleted ? "cursor-default" : "cursor-pointer hover:bg-primary/5 active:scale-[0.99]",
               goal.is_achieved 
                 ? "bg-primary/10 border-primary/20" 
