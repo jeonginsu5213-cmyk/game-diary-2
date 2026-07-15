@@ -64,15 +64,33 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   const achievedGoals = goals.filter((g) => g.is_achieved).length;
   const achievementRate = totalGoals > 0 ? Math.round((achievedGoals / totalGoals) * 100) : 0;
 
+  // Determine color matching the gauge thresholds
+  let rateColorClass = "text-primary";
+  if (achievementRate >= 70) {
+    rateColorClass = "text-[#22c55e]";
+  } else if (achievementRate >= 40) {
+    rateColorClass = "text-[#ffa500]";
+  } else {
+    rateColorClass = "text-[#e94a44]";
+  }
+
   return (
     <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-4 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[2px] translate-y-[-0.5px]">오늘의 목표 🔥</h4>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[12px] font-sans font-bold text-primary translate-y-[-0.5px]">
+          <span className={cn("text-[12px] font-sans font-bold translate-y-[-0.5px]", rateColorClass)}>
             {achievementRate}%
           </span>
-          <Gauge value={achievementRate} size="tiny" />
+          <Gauge 
+            value={achievementRate} 
+            size="tiny" 
+            colors={{
+              "0": "#e94a44",   // Red
+              "40": "#ffa500",  // Orange
+              "70": "#22c55e"   // Green
+            }}
+          />
         </div>
       </div>
       <div className="space-y-1.5">
