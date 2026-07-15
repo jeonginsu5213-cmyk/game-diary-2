@@ -492,7 +492,8 @@ async function sendGameStartNotification(session, userId, gameName) {
                     content: `📢 **[${gameName}] 플레이가 감지되었습니다.**`,
                     flags: [MessageFlags.SuppressNotifications]
                 });
-                await user.send(payload);
+                const newMsg = await user.send(payload);
+                session.initialRegisterMessageId = newMsg.id;
             }
         } else {
             const guild = client.guilds.cache.find(g => g.name === session.guildName) || Array.from(client.guilds.cache.values())[0];
@@ -502,7 +503,8 @@ async function sendGameStartNotification(session, userId, gameName) {
                     content: `📢 **[${gameName}] 플레이가 감지되었습니다.**`,
                     flags: [MessageFlags.SuppressNotifications]
                 });
-                await logChannel.send(payload);
+                const newMsg = await logChannel.send(payload);
+                session.initialRegisterMessageId = newMsg.id;
             }
         }
     } catch (e) {
@@ -1315,41 +1317,84 @@ client.on('interactionCreate', async (i) => {
             }
 
             if (destChannel) {
-                // Format goals list embed
-                const embed = new EmbedBuilder()
-                    .setColor(0xE05D38)
-                    .setTitle(`🎯 [${gameName}] 오늘의 목표 현황`)
-                    .setDescription(allGoals && allGoals.length > 0 
-                        ? allGoals.map((g, idx) => `${idx + 1}. **${g.title}** (등록: <@${g.creator_id}>)`).join('\n')
-                        : '등록된 목표가 없습니다.');
-
-                const buttonCustomId = `btn_goal_reg:${guildId}:${gameName}`;
-                const row = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(buttonCustomId)
-                        .setLabel('🎯 오늘의 목표 추가/수정하기')
-                        .setStyle(ButtonStyle.Primary)
-                );
-
-                const payload = {
-                    embeds: [embed],
-                    components: [row]
-                };
-
-                // Delete previous goals status message if it exists
-                if (session && session.goalsMessageId) {
-                    try {
-                        const oldMsg = await destChannel.messages.fetch(session.goalsMessageId);
-                        if (oldMsg) await oldMsg.delete();
-                    } catch (e) {
-                        console.log("[goals] 이전 메시지 삭제 실패 또는 이미 삭제됨:", e.message);
+                if (allGoals && allGoals.length > 0) {
+                    // 1. Hide the button on the Initial Register Message (if it exists)
+                    if (session && session.initialRegisterMessageId) {
+                        try {
+                            const startMsg = await destChannel.messages.fetch(session.initialRegisterMessageId);
+                            if (startMsg) {
+                                await startMsg.edit({ components: [] });
+                            }
+                        } catch (e) {
+                            console.log("[goals] 시작 메시지 버튼 제거 실패 또는 이미 제거됨:", e.message);
+                        }
                     }
-                }
 
-                // Send new goals status message
-                const newMsg = await destChannel.send(payload);
-                if (session) {
-                    session.goalsMessageId = newMsg.id;
+                    // Format goals list embed with the Edit button
+                    const embed = new EmbedBuilder()
+                        .setColor(0xE05D38)
+                        .setTitle(`🎯 [${gameName}] 오늘의 목표 현황`)
+                        .setDescription(allGoals.map((g, idx) => `${idx + 1}. **${g.title}** (등록: <@${g.creator_id}>)`).join('\n'));
+
+                    const buttonCustomId = `btn_goal_reg:${guildId}:${gameName}`;
+                    const row = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(buttonCustomId)
+                            .setLabel('🎯 오늘의 목표 추가/수정하기')
+                            .setStyle(ButtonStyle.Primary)
+                    );
+
+                    const payload = {
+                        embeds: [embed],
+                        components: [row]
+                    };
+
+                    // Delete previous goals status message if it exists
+                    if (session && session.goalsMessageId) {
+                        try {
+                            const oldMsg = await destChannel.messages.fetch(session.goalsMessageId);
+                            if (oldMsg) await oldMsg.delete();
+                        } catch (e) {
+                            console.log("[goals] 이전 메시지 삭제 실패 또는 이미 삭제됨:", e.message);
+                        }
+                    }
+
+                    // Send new goals status message
+                    const newMsg = await destChannel.send(payload);
+                    if (session) {
+                        session.goalsMessageId = newMsg.id;
+                    }
+                } else {
+                    // All goals have been deleted
+                    // 1. Delete previous goals status message if it exists
+                    if (session && session.goalsMessageId) {
+                        try {
+                            const oldMsg = await destChannel.messages.fetch(session.goalsMessageId);
+                            if (oldMsg) await oldMsg.delete();
+                        } catch (e) {
+                            console.log("[goals] 이전 메시지 삭제 실패 또는 이미 삭제됨:", e.message);
+                        }
+                        session.goalsMessageId = null;
+                    }
+
+                    // 2. Restore the button on the Initial Register Message (if it exists)
+                    if (session && session.initialRegisterMessageId) {
+                        try {
+                            const startMsg = await destChannel.messages.fetch(session.initialRegisterMessageId);
+                            if (startMsg) {
+                                const buttonCustomId = `btn_goal_reg:${guildId}:${gameName}`;
+                                const row = new ActionRowBuilder().addComponents(
+                                    new ButtonBuilder()
+                                        .setCustomId(buttonCustomId)
+                                        .setLabel('🎯 오늘의 목표 등록하기')
+                                        .setStyle(ButtonStyle.Primary)
+                                );
+                                await startMsg.edit({ components: [row] });
+                            }
+                        } catch (e) {
+                            console.log("[goals] 시작 메시지 버튼 복구 실패:", e.message);
+                        }
+                    }
                 }
             }
             return;
