@@ -26,6 +26,7 @@ interface GameGoalsListProps {
 export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }: GameGoalsListProps) {
   const [localGoals, setLocalGoals] = useState<Goal[]>(goals || []);
   const pendingTogglesRef = useRef<Record<string, boolean>>({});
+  const debounceTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   // Keep local goals state in sync with incoming props, avoiding overwriting pending optimistic states
   useEffect(() => {
@@ -51,15 +52,19 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
     });
   }, [goals]);
 
+  // Clean up debounce timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimeoutsRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
   if (!goals || goals.length === 0) return null;
 
   const handleToggle = async (goal: Goal) => {
     if (isDeleted) return;
 
     const nextAchieved = !goal.is_achieved;
-
-    // Set pending state
-    pendingTogglesRef.current[goal.id] = nextAchieved;
 
     // 1. Optimistic Update: Update UI state instantly
     setLocalGoals((prev) =>
@@ -83,24 +88,36 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
         });
     }
 
-    // 3. Trigger network update in the background (Optimistic)
-    supabase
-      .from("goals")
-      .update({ is_achieved: nextAchieved })
-      .eq("id", goal.id)
-      .then(({ error }) => {
-        if (error) {
-          console.error("Failed to update goal status:", error.message);
-          // Rollback on error: clear pending state and revert UI
-          delete pendingTogglesRef.current[goal.id];
-          setLocalGoals((prev) =>
-            prev.map((g) => (g.id === goal.id ? { ...g, is_achieved: !nextAchieved } : g))
-          );
-        } else {
-          // Trigger parent refetch to keep data matching
-          fetchData();
-        }
-      });
+    // 3. Set pending target state
+    pendingTogglesRef.current[goal.id] = nextAchieved;
+
+    // 4. Cancel any previous pending debounce write for this goal
+    if (debounceTimeoutsRef.current[goal.id]) {
+      clearTimeout(debounceTimeoutsRef.current[goal.id]);
+    }
+
+    // 5. Debounce the network request by 300ms to group rapid clicks
+    debounceTimeoutsRef.current[goal.id] = setTimeout(() => {
+      delete debounceTimeoutsRef.current[goal.id];
+
+      supabase
+        .from("goals")
+        .update({ is_achieved: nextAchieved })
+        .eq("id", goal.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error("Failed to update goal status:", error.message);
+            // Rollback on error: clear pending state and revert UI
+            delete pendingTogglesRef.current[goal.id];
+            setLocalGoals((prev) =>
+              prev.map((g) => (g.id === goal.id ? { ...g, is_achieved: !nextAchieved } : g))
+            );
+          } else {
+            // Trigger parent refetch to keep data matching
+            fetchData();
+          }
+        });
+    }, 300);
   };
 
   const totalGoals = localGoals.length;
@@ -116,6 +133,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   } else {
     rateColorClass = "text-[#e94a44]";
   }
+
   // Sort goals by creation time to prevent Postgres heap order shifts on update
   const stableGoals = [...localGoals].sort((a, b) => 
     new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
