@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Check } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
 import { cn, maskNickname } from "@/src/lib/utils";
 
@@ -78,25 +77,13 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
             key={goal.id}
             onClick={() => handleToggle(goal)}
             className={cn(
-              "flex items-center gap-3 py-1.5 px-2.5 rounded-xl transition-all select-none border",
+              "flex items-center justify-between gap-3 py-2 px-3 rounded-xl transition-all select-none border",
               isDeleted ? "cursor-default" : "cursor-pointer hover:bg-primary/5 active:scale-[0.99]",
               goal.is_achieved 
                 ? "bg-primary/10 border-primary/20" 
                 : "bg-card border-border/40 hover:border-primary/20"
             )}
           >
-            {/* Custom Checkbox */}
-            <div
-              className={cn(
-                "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
-                goal.is_achieved
-                  ? "bg-primary border-primary text-white"
-                  : "border-muted-foreground/30 bg-background"
-              )}
-            >
-              {goal.is_achieved && <Check className="w-3.5 h-3.5 stroke-[3px]" />}
-            </div>
-
             {/* Title & Creator */}
             <div className="flex-1 flex flex-col min-w-0">
               <span
@@ -116,6 +103,18 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
                     : maskNickname(profiles[goal.creator_id]?.display_name || "알 수 없음")}
                 </span>
               )}
+            </div>
+
+            {/* Achieve Button */}
+            <div
+              className={cn(
+                "px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all duration-300 shrink-0 select-none",
+                goal.is_achieved
+                  ? "bg-primary text-white shadow-sm shadow-primary/20"
+                  : "bg-primary/5 text-primary border border-primary/20 hover:bg-primary/10"
+              )}
+            >
+              {goal.is_achieved ? "완료 ✨" : "달성"}
             </div>
           </div>
         ))}
