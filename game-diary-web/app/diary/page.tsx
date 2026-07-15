@@ -2831,6 +2831,7 @@ function HomeContent() {
                                 <div className="flex flex-col h-auto md:min-h-[402px] md:pr-[400px]">
                                   <GameGoalsList 
                                     goals={current.goals?.filter((g: any) => g.game_name === game.title) || []}
+                                    profiles={profiles}
                                     isDeleted={isDeleted}
                                     fetchData={fetchData}
                                   />

@@ -3,7 +3,7 @@
 import React from "react";
 import { Check } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
-import { cn } from "@/src/lib/utils";
+import { cn, maskNickname } from "@/src/lib/utils";
 
 interface Goal {
   id: string;
@@ -18,11 +18,12 @@ interface Goal {
 
 interface GameGoalsListProps {
   goals: Goal[];
+  profiles: Record<string, any>;
   isDeleted?: boolean;
   fetchData: () => void;
 }
 
-export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoalsListProps) {
+export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }: GameGoalsListProps) {
   if (!goals || goals.length === 0) return null;
 
   const handleToggle = async (goal: Goal) => {
@@ -77,7 +78,7 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
             key={goal.id}
             onClick={() => handleToggle(goal)}
             className={cn(
-              "flex items-start gap-3 py-1.5 px-2.5 rounded-xl transition-all select-none border",
+              "flex items-center gap-3 py-1.5 px-2.5 rounded-xl transition-all select-none border",
               isDeleted ? "cursor-default" : "cursor-pointer hover:bg-primary/5 active:scale-[0.99]",
               goal.is_achieved 
                 ? "bg-primary/10 border-primary/20" 
@@ -87,7 +88,7 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
             {/* Custom Checkbox */}
             <div
               className={cn(
-                "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors mt-0.5",
+                "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
                 goal.is_achieved
                   ? "bg-primary border-primary text-white"
                   : "border-muted-foreground/30 bg-background"
@@ -96,17 +97,26 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
               {goal.is_achieved && <Check className="w-3.5 h-3.5 stroke-[3px]" />}
             </div>
 
-            {/* Title */}
-            <span
-              className={cn(
-                "text-[13px] font-medium leading-tight flex-1 break-words transition-all duration-300",
-                goal.is_achieved 
-                  ? "text-muted-foreground line-through decoration-muted-foreground/60" 
-                  : "text-foreground"
+            {/* Title & Creator */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <span
+                className={cn(
+                  "text-[13px] font-medium leading-tight break-words transition-all duration-300",
+                  goal.is_achieved 
+                    ? "text-muted-foreground line-through decoration-muted-foreground/60" 
+                    : "text-foreground"
+                )}
+              >
+                {goal.title}
+              </span>
+              {goal.creator_id && (
+                <span className="text-[10px] text-muted-foreground/60 mt-0.5 font-bold">
+                  등록: {profiles[goal.creator_id]?.has_logged_in 
+                    ? (profiles[goal.creator_id]?.display_name || "알 수 없음") 
+                    : maskNickname(profiles[goal.creator_id]?.display_name || "알 수 없음")}
+                </span>
               )}
-            >
-              {goal.title}
-            </span>
+            </div>
           </div>
         ))}
       </div>
