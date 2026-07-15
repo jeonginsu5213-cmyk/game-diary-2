@@ -14,6 +14,7 @@ interface GaugeProps {
     [key: string]: string | undefined;
   };
   arcPriority?: "equal" | "default";
+  className?: string;
 }
 
 const sizeConfig = {
@@ -46,6 +47,7 @@ export function Gauge({
   indeterminate = false,
   colors,
   arcPriority = "default",
+  className,
 }: GaugeProps) {
   const config = sizeConfig[size] || sizeConfig.medium;
   const radius = (config.dimension - config.strokeWidth) / 2;
@@ -94,9 +96,11 @@ export function Gauge({
       <svg
         width={config.dimension}
         height={config.dimension}
+        viewBox={`0 0 ${config.dimension} ${config.dimension}`}
         className={cn(
           "-rotate-90 origin-center transition-transform",
-          indeterminate && "animate-spin"
+          indeterminate && "animate-spin",
+          className
         )}
         style={{
           animationDuration: indeterminate ? "1.4s" : undefined,

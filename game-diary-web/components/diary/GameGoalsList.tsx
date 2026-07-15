@@ -85,6 +85,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
           <Gauge 
             value={achievementRate} 
             size="tiny" 
+            className="w-[22px] h-[22px] md:w-[28px] md:h-[28px]"
             colors={{
               "0": "#e94a44",   // Red
               "40": "#ffa500",  // Orange
