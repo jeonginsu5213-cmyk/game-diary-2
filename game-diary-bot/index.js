@@ -1321,7 +1321,8 @@ client.on('interactionCreate', async (i) => {
             let destChannel = null;
             if (guildId === 'personal') {
                 try {
-                    destChannel = await client.users.fetch(creatorId);
+                    const user = await client.users.fetch(creatorId);
+                    destChannel = await user.createDM();
                 } catch (e) {
                     console.error("[goals] DM 채널 가져오기 실패:", e.message);
                 }
