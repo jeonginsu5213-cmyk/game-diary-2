@@ -56,7 +56,7 @@ export function GameGoalsList({ goals, isDeleted = false, fetchData }: GameGoals
   };
 
   return (
-    <div className="mb-4 px-4 md:px-6 py-4 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
+    <div className="-mt-2 md:mt-0 mb-4 px-4 md:px-6 py-4 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[16px]">🎯</span>
         <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-y-[-0.5px]">오늘의 목표</h4>
