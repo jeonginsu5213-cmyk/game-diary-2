@@ -116,8 +116,8 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   return (
     <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[2px] translate-y-[-0.5px]">오늘의 목표 🔥</h4>
-        <div className="flex items-center gap-2 shrink-0 -translate-x-[2px]">
+        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[4px] translate-y-[-0.5px]">오늘의 목표 🔥</h4>
+        <div className="flex items-center gap-2 shrink-0 -translate-x-[4px]">
           <span className={cn("text-[12px] font-sans font-bold translate-y-[-0.5px]", rateColorClass)}>
             {achievementRate}%
           </span>
