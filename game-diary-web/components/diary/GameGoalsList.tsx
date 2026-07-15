@@ -177,10 +177,10 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
 
             <div
               className={cn(
-                "h-[26px] px-2.5 flex items-center justify-center font-bold rounded-lg transition-all duration-300 shrink-0 select-none border",
+                "h-[26px] flex items-center justify-center font-bold rounded-lg transition-all duration-300 shrink-0 select-none border",
                 goal.is_achieved
-                  ? "bg-transparent text-primary border-transparent shadow-none text-[14px]"
-                  : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 text-[11px]"
+                  ? "bg-transparent text-primary border-transparent shadow-none text-[14px] pl-2.5 pr-0"
+                  : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 text-[11px] px-2.5"
               )}
             >
               {goal.is_achieved ? "달성 🔥" : "달성"}
