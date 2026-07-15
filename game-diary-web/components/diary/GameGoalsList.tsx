@@ -136,7 +136,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
                   : "bg-primary/5 text-primary border border-primary/20 hover:bg-primary/10"
               )}
             >
-              {goal.is_achieved ? "완료 ✨" : "달성"}
+              {goal.is_achieved ? "달성🔥" : "달성"}
             </div>
           </div>
         ))}
