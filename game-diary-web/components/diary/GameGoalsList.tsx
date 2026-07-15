@@ -112,15 +112,6 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   } else {
     rateColorClass = "text-[#e94a44]";
   }
-  // Sort goals: unachieved (false) first, achieved (true) last.
-  // Within those groups, preserve creation order (chronological).
-  const sortedGoals = [...localGoals].sort((a, b) => {
-    if (a.is_achieved === b.is_achieved) {
-      return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-    }
-    return a.is_achieved ? 1 : -1;
-  });
-
   return (
     <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-2">
@@ -142,7 +133,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
         </div>
       </div>
       <div className="space-y-1.5">
-        {sortedGoals.map((goal) => (
+        {localGoals.map((goal) => (
           <div
             key={goal.id}
             onClick={() => handleToggle(goal)}
