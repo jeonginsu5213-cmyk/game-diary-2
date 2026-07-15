@@ -166,13 +166,12 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
               )}
             </div>
 
-            {/* Achieve Button */}
             <div
               className={cn(
-                "px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all duration-300 shrink-0 select-none",
+                "px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all duration-300 shrink-0 select-none border",
                 goal.is_achieved
-                  ? "bg-primary text-white shadow-sm shadow-primary/20"
-                  : "bg-primary/5 text-primary border border-primary/20 hover:bg-primary/10"
+                  ? "bg-primary text-white border-transparent shadow-sm shadow-primary/20"
+                  : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
               )}
             >
               {goal.is_achieved ? "달성🔥" : "달성"}
