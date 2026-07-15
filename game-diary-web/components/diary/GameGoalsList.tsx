@@ -3,6 +3,7 @@
 import React from "react";
 import { supabase } from "@/src/lib/supabase";
 import { cn, maskNickname } from "@/src/lib/utils";
+import { Gauge } from "@/components/ui/gauge";
 
 interface Goal {
   id: string;
@@ -67,9 +68,12 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
     <div className="-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-4 bg-primary/5 border border-primary/10 rounded-2xl animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[2px] translate-y-[-0.5px]">오늘의 목표 🔥</h4>
-        <span className="text-[12px] font-sans font-bold text-primary translate-y-[-0.5px]">
-          {achievementRate}%
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[12px] font-sans font-bold text-primary translate-y-[-0.5px]">
+            {achievementRate}%
+          </span>
+          <Gauge value={achievementRate} size="tiny" />
+        </div>
       </div>
       <div className="space-y-1.5">
         {goals.map((goal) => (
