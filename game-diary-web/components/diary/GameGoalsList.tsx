@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { cn, maskNickname } from "@/src/lib/utils";
 import { Gauge } from "@/components/ui/gauge";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Goal {
   id: string;
@@ -131,7 +132,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   } else if (achievementRate >= 70) {
     titleText = "목표 달성이 코앞이에요! ⚡";
   } else if (achievementRate >= 40) {
-    titleText = "목표 절반 돌파! 🛡️";
+    titleText = "목표 달성 절반 돌파! 🛡️";
   } else if (achievementRate > 0) {
     titleText = "좋은 출발이에요! 🌱";
   }
@@ -147,7 +148,20 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   return (
     <div className={cn("-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 border rounded-2xl animate-in fade-in duration-300", sectionClasses)}>
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[4px] translate-y-[-0.5px]">{titleText}</h4>
+        <div className="relative overflow-hidden h-[22px] flex items-center translate-x-[4px] translate-y-[-0.5px]">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.h4
+              key={titleText}
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -15, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="font-bold text-foreground text-[14px] tracking-tight whitespace-nowrap"
+            >
+              {titleText}
+            </motion.h4>
+          </AnimatePresence>
+        </div>
         <div className="flex items-center gap-2 shrink-0 -translate-x-[4px]">
           <span className={cn("text-[12px] font-sans font-bold translate-y-[-0.5px]", rateColorClass)}>
             {achievementRate}%
