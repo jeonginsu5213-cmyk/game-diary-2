@@ -2829,7 +2829,11 @@ function HomeContent() {
                               colSpan: 3,
                               content: (
                                 <div className="flex flex-col h-auto md:min-h-[402px] md:pr-[400px]">
-
+                                  <GameGoalsList 
+                                    goals={current.goals?.filter((g: any) => g.game_name === game.title) || []}
+                                    isDeleted={isDeleted}
+                                    fetchData={fetchData}
+                                  />
                                   <div className="flex-1 min-h-0 flex flex-col justify-start">
                                     {/* Desktop 3D Carousel View */}
                                     <div className="hidden md:block relative overflow-hidden -mx-6">
@@ -2898,11 +2902,6 @@ function HomeContent() {
                                       </h3>
                                     </div>
                                     <div className="px-3.5">
-                                      <GameGoalsList 
-                                        goals={current.goals?.filter((g: any) => g.game_name === game.title) || []}
-                                        isDeleted={isDeleted}
-                                        fetchData={fetchData}
-                                      />
                                       {renderChecklist(game)}
                                     </div>
                                     <div className={`flex flex-col ${(game.comments?.filter((c: any) => !c.is_checklist) || []).reduce((acc: number, c: any) => acc + 1 + (c.replies?.length || 0), 0) > 5 ? "h-[320px]" : "h-auto"}`}>
@@ -2944,11 +2943,6 @@ function HomeContent() {
                                       </h3>
                                     </div>
                                     <div className="flex-1 flex flex-col min-h-0">
-                                      <GameGoalsList 
-                                        goals={current.goals?.filter((g: any) => g.game_name === game.title) || []}
-                                        isDeleted={isDeleted}
-                                        fetchData={fetchData}
-                                      />
                                       {renderChecklist(game)}
                                       <GameCommentList 
                                         game={game}
