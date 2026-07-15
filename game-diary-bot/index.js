@@ -1278,14 +1278,16 @@ client.on('interactionCreate', async (i) => {
             // Parse goals split by newline
             const titles = title.split('\n').map(t => t.trim()).filter(t => t.length > 0);
 
-            // 2. Insert new goals if any
+            // 2. Insert new goals if any (with sequential created_at timestamps to maintain input order)
             if (titles.length > 0) {
-                const inserts = titles.map(t => ({
+                const now = Date.now();
+                const inserts = titles.map((t, idx) => ({
                     guild_id: guildId,
                     game_name: gameName,
                     creator_id: creatorId,
                     title: t,
-                    is_achieved: false
+                    is_achieved: false,
+                    created_at: new Date(now + idx).toISOString()
                 }));
 
                 const { error: insertError } = await supabase.from('goals').insert(inserts);

@@ -145,10 +145,16 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   }
   const sectionClasses = "bg-primary/5 border-primary/10";
 
-  // Sort goals by creation time to prevent Postgres heap order shifts on update
-  const stableGoals = [...localGoals].sort((a, b) => 
-    new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
-  );
+  // Sort goals by creation time to prevent Postgres heap order shifts on update.
+  // If creation times are identical, use ID as a stable secondary sort key.
+  const stableGoals = [...localGoals].sort((a, b) => {
+    const timeA = new Date(a.created_at || 0).getTime();
+    const timeB = new Date(b.created_at || 0).getTime();
+    if (timeA !== timeB) {
+      return timeA - timeB;
+    }
+    return a.id.localeCompare(b.id);
+  });
 
   return (
     <div className={cn("-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 border rounded-2xl animate-in fade-in duration-300", sectionClasses)}>
