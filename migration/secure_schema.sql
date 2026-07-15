@@ -169,3 +169,23 @@ create policy "Allow users to delete own favorites" on public.session_favorites 
 
 -- app_settings
 create policy "Allow public read app_settings" on public.app_settings for select using (true);
+
+-- Goals (Today's Goals)
+create table if not exists public.goals (
+  id uuid primary key default gen_random_uuid(),
+  session_id text references public.sessions(id) on delete cascade,
+  guild_id text not null,
+  game_name text not null,
+  creator_id text references public.profiles(id) on delete cascade,
+  title text not null,
+  is_achieved boolean default false,
+  created_at timestamptz default now()
+);
+
+alter table public.goals enable row level security;
+
+create policy "Allow public read goals" on public.goals for select using (true);
+create policy "Allow authenticated to insert goals" on public.goals for insert with check (public.get_auth_user_id() is not null);
+create policy "Allow authenticated to update goals" on public.goals for update using (public.get_auth_user_id() is not null);
+create policy "Allow creator to delete goals" on public.goals for delete using (public.get_auth_user_id() = creator_id);
+

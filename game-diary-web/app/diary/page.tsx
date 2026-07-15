@@ -30,6 +30,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import MobileScreenshotCarousel from '@/components/diary/MobileScreenshotCarousel';
 import DesktopScreenshotCarousel from '@/components/diary/DesktopScreenshotCarousel';
 import { TextShimmer } from '@/components/ui/text-shimmer';
+import { GameGoalsList } from '@/components/diary/GameGoalsList';
 
 // --- Diary List Item Component (Swipe to Favorite or Trash layout) ---
 
@@ -675,7 +676,7 @@ function HomeContent() {
 
     const { data, error } = await supabase
       .from('sessions')
-      .select('*, session_games(*, comments(*), session_game_players(*)), screenshots(*), session_participants(*)')
+      .select('*, session_games(*, comments(*), session_game_players(*)), screenshots(*), session_participants(*), goals(*)')
       .order('start_time', { ascending: false });
 
     if (error) {
@@ -713,6 +714,7 @@ function HomeContent() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'screenshots' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_favorites' }, fetchFavorites)
       .subscribe();
     return () => { supabase.removeChannel(channels); };
@@ -2896,6 +2898,11 @@ function HomeContent() {
                                       </h3>
                                     </div>
                                     <div className="px-3.5">
+                                      <GameGoalsList 
+                                        goals={current.goals?.filter((g: any) => g.game_name === game.title) || []}
+                                        isDeleted={isDeleted}
+                                        fetchData={fetchData}
+                                      />
                                       {renderChecklist(game)}
                                     </div>
                                     <div className={`flex flex-col ${(game.comments?.filter((c: any) => !c.is_checklist) || []).reduce((acc: number, c: any) => acc + 1 + (c.replies?.length || 0), 0) > 5 ? "h-[320px]" : "h-auto"}`}>
@@ -2937,6 +2944,11 @@ function HomeContent() {
                                       </h3>
                                     </div>
                                     <div className="flex-1 flex flex-col min-h-0">
+                                      <GameGoalsList 
+                                        goals={current.goals?.filter((g: any) => g.game_name === game.title) || []}
+                                        isDeleted={isDeleted}
+                                        fetchData={fetchData}
+                                      />
                                       {renderChecklist(game)}
                                       <GameCommentList 
                                         game={game}

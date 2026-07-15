@@ -462,6 +462,44 @@ async function sendNotification(session, userId, messageText, iconURL) {
     }
 }
 
+// 📢 게임 시작 시 목표 설정 버튼을 포함한 알림 함수
+async function sendGameStartNotification(session, userId, gameName) {
+    try {
+        const guildId = session.guildId || 'personal';
+        const buttonCustomId = `btn_goal_reg:${guildId}:${gameName}`;
+
+        const embed = new EmbedBuilder()
+            .setColor(0xE05D38)
+            .setTitle(`🎮 [${gameName}] 기록을 시작합니다!`)
+            .setDescription(`오늘 게임의 목표를 설정해 보세요.\n등록된 목표는 일기장에 함께 기록되고 달성 현황을 체크할 수 있습니다.`);
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(buttonCustomId)
+                .setLabel('🎯 오늘의 목표 등록하기')
+                .setStyle(ButtonStyle.Primary)
+        );
+
+        const payload = {
+            embeds: [embed],
+            components: [row]
+        };
+
+        if (session.guildName === '개인 플레이') {
+            const user = await client.users.fetch(userId);
+            if (user) await user.send(payload);
+        } else {
+            const guild = client.guilds.cache.find(g => g.name === session.guildName) || Array.from(client.guilds.cache.values())[0];
+            const logChannel = guild?.channels.cache.find(c => c.name === '일기장');
+            if (logChannel) {
+                await logChannel.send(payload);
+            }
+        }
+    } catch (e) {
+        console.error("[Notification] 게임 시작 알림 전송 실패:", e);
+    }
+}
+
 
 
 // 🌟 [최종 확인된 수동 매칭 리스트]
@@ -742,10 +780,10 @@ async function updateGameLog(session, userId, activity) {
         session.gameLogs[originalName].endTime = Date.now();
         console.log(`✅ [기록 시작] ${originalName}`);
 
-        // 게임 시작 알림 전송
+        // 게임 시작 알림 전송 (목표 등록 버튼 포함)
         (async () => {
             try {
-                await sendNotification(session, userId, `${originalName} 기록을 시작합니다.`);
+                await sendGameStartNotification(session, userId, originalName);
             } catch (e) {
                 console.error("[updateGameLog] 게임 시작 알림 전송 실패:", e);
             }
@@ -882,6 +920,22 @@ async function saveSessionToSupabase(session, endTime) {
                 comment: shot.comment,
                 created_at: new Date().toISOString()
             });
+        }
+
+        // 6. goals 테이블의 session_id를 생성된 sessionId로 업데이트
+        const guildId = session.guildId || 'personal';
+        const startTimeStr = new Date(session.startTime).toISOString();
+        const { error: goalsError } = await supabase
+            .from('goals')
+            .update({ session_id: sessionId })
+            .eq('guild_id', guildId)
+            .is('session_id', null)
+            .gte('created_at', startTimeStr);
+
+        if (goalsError) {
+            console.error(`[Supabase] goals session_id 매핑 실패:`, goalsError);
+        } else {
+            console.log(`[Supabase] goals session_id 매핑 완료: ${sessionId}`);
         }
 
         console.log(`[Supabase] 세션 저장 완료: ${sessionId}`);
@@ -1101,6 +1155,61 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 client.on('interactionCreate', async (i) => {
     try {
+        // 공통: 오늘의 목표 등록 버튼 및 모달 처리
+        if (i.isButton() && i.customId.startsWith('btn_goal_reg:')) {
+            const parts = i.customId.split(':');
+            const guildId = parts[1];
+            const gameName = parts[2];
+
+            const modalCustomId = `modal_goal_reg:${guildId}:${gameName}`;
+            const m = new ModalBuilder()
+                .setCustomId(modalCustomId)
+                .setTitle('오늘의 목표 등록');
+
+            m.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('input_goal_title')
+                        .setLabel('목표 내용을 입력해 주세요.')
+                        .setPlaceholder('예: 3연승 하기, 보스 처치')
+                        .setStyle(TextInputStyle.Short)
+                        .setMaxLength(100)
+                        .setRequired(true)
+                )
+            );
+
+            await i.showModal(m);
+            return;
+        }
+
+        if (i.isModalSubmit() && i.customId.startsWith('modal_goal_reg:')) {
+            const parts = i.customId.split(':');
+            const guildId = parts[1];
+            const gameName = parts[2];
+            const title = i.fields.getTextInputValue('input_goal_title');
+            const creatorId = i.user.id;
+
+            // 1. Supabase에 목표 등록
+            const { error } = await supabase.from('goals').insert({
+                guild_id: guildId,
+                game_name: gameName,
+                creator_id: creatorId,
+                title: title,
+                is_achieved: false
+            });
+
+            if (error) {
+                console.error("[goals] 목표 저장 실패:", error.message);
+                return i.reply({ content: `❌ 목표 저장에 실패했습니다: ${error.message}`, flags: [MessageFlags.Ephemeral] });
+            }
+
+            // 2. 등록 완료 피드백 메시지 전송
+            await i.reply({
+                content: `🎯 **오늘의 목표가 등록되었습니다!**\n- 게임: **${gameName}**\n- 목표: **${title}**\n\n*일기가 발행되면 웹 앱의 해당 게임 섹션에서 달성 여부를 체크할 수 있습니다!*`
+            });
+            return;
+        }
+
         // 1:1 DM 인터랙션 처리 (길드가 없는 경우)
         if (!i.guild) {
             if (i.isButton()) {
