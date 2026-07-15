@@ -124,7 +124,18 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   const achievedGoals = localGoals.filter((g) => g.is_achieved).length;
   const achievementRate = totalGoals > 0 ? Math.round((achievedGoals / totalGoals) * 100) : 0;
 
-  // Determine color matching the gauge thresholds
+  // Get dynamic title text based on progress rate
+  let titleText = "달성한 목표를 체크해보세요 👑";
+  if (achievementRate === 100) {
+    titleText = "오늘의 목표 올 클리어! 🏆";
+  } else if (achievementRate >= 70) {
+    titleText = "목표 달성이 코앞이에요! ⚡";
+  } else if (achievementRate >= 40) {
+    titleText = "목표 절반 돌파! 🛡️";
+  } else if (achievementRate > 0) {
+    titleText = "좋은 출발이에요! 🌱";
+  }
+
   const rateColorClass = "text-primary";
   const sectionClasses = "bg-primary/5 border-primary/10";
 
@@ -136,7 +147,7 @@ export function GameGoalsList({ goals, profiles, isDeleted = false, fetchData }:
   return (
     <div className={cn("-mt-2 md:mt-0 mb-4 px-2 md:px-6 pt-2 pb-2 border rounded-2xl animate-in fade-in duration-300", sectionClasses)}>
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[4px] translate-y-[-0.5px]">오늘의 목표 🔥</h4>
+        <h4 className="font-bold text-foreground text-[14px] tracking-tight translate-x-[4px] translate-y-[-0.5px]">{titleText}</h4>
         <div className="flex items-center gap-2 shrink-0 -translate-x-[4px]">
           <span className={cn("text-[12px] font-sans font-bold translate-y-[-0.5px]", rateColorClass)}>
             {achievementRate}%
