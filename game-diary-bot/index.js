@@ -487,11 +487,21 @@ async function sendGameStartNotification(session, userId, gameName) {
 
         if (session.guildName === '개인 플레이') {
             const user = await client.users.fetch(userId);
-            if (user) await user.send(payload);
+            if (user) {
+                await user.send({
+                    content: `📢 **[${gameName}] 플레이가 감지되었습니다.**`,
+                    flags: [MessageFlags.SuppressNotifications]
+                });
+                await user.send(payload);
+            }
         } else {
             const guild = client.guilds.cache.find(g => g.name === session.guildName) || Array.from(client.guilds.cache.values())[0];
             const logChannel = guild?.channels.cache.find(c => c.name === '일기장');
             if (logChannel) {
+                await logChannel.send({
+                    content: `📢 **[${gameName}] 플레이가 감지되었습니다.**`,
+                    flags: [MessageFlags.SuppressNotifications]
+                });
                 await logChannel.send(payload);
             }
         }
@@ -1160,21 +1170,55 @@ client.on('interactionCreate', async (i) => {
             const parts = i.customId.split(':');
             const guildId = parts[1];
             const gameName = parts[2];
+            const creatorId = i.user.id;
+
+            // 1. Fetch current user's existing goals for this session to prepopulate
+            let session = null;
+            if (guildId === 'personal') {
+                session = activeSoloSessions.get(creatorId);
+            } else {
+                for (const s of activeSessions.values()) {
+                    if (s.guildId === guildId) {
+                        session = s;
+                        break;
+                    }
+                }
+            }
+
+            const startTime = session ? new Date(session.startTime).toISOString() : new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+            
+            let initialValue = '';
+            try {
+                const { data: userGoals } = await supabase
+                    .from('goals')
+                    .select('title')
+                    .eq('guild_id', guildId)
+                    .eq('game_name', gameName)
+                    .eq('creator_id', creatorId)
+                    .gte('created_at', startTime);
+
+                if (userGoals && userGoals.length > 0) {
+                    initialValue = userGoals.map(g => g.title).join('\n');
+                }
+            } catch (e) {
+                console.error("[goals] 기존 목표 로드 실패:", e.message);
+            }
 
             const modalCustomId = `modal_goal_reg:${guildId}:${gameName}`;
             const m = new ModalBuilder()
                 .setCustomId(modalCustomId)
-                .setTitle('오늘의 목표 등록');
+                .setTitle('오늘의 목표 등록 / 수정');
 
             m.addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('input_goal_title')
-                        .setLabel('목표 내용을 입력해 주세요.')
-                        .setPlaceholder('예: 3연승 하기, 보스 처치')
-                        .setStyle(TextInputStyle.Short)
-                        .setMaxLength(100)
-                        .setRequired(true)
+                        .setLabel('목표 내용을 입력해 주세요. (줄바꿈 구분)')
+                        .setPlaceholder('예:\n3연승 하기\n보스 처치\n레벨 50 달성')
+                        .setStyle(TextInputStyle.Paragraph)
+                        .setValue(initialValue)
+                        .setMaxLength(500)
+                        .setRequired(false) // Make it optional so they can clear all goals!
                 )
             );
 
@@ -1186,27 +1230,128 @@ client.on('interactionCreate', async (i) => {
             const parts = i.customId.split(':');
             const guildId = parts[1];
             const gameName = parts[2];
-            const title = i.fields.getTextInputValue('input_goal_title');
+            const title = i.fields.getTextInputValue('input_goal_title') || '';
             const creatorId = i.user.id;
 
-            // 1. Supabase에 목표 등록
-            const { error } = await supabase.from('goals').insert({
-                guild_id: guildId,
-                game_name: gameName,
-                creator_id: creatorId,
-                title: title,
-                is_achieved: false
-            });
-
-            if (error) {
-                console.error("[goals] 목표 저장 실패:", error.message);
-                return i.reply({ content: `❌ 목표 저장에 실패했습니다: ${error.message}`, flags: [MessageFlags.Ephemeral] });
+            // Find session
+            let session = null;
+            if (guildId === 'personal') {
+                session = activeSoloSessions.get(creatorId);
+            } else {
+                for (const s of activeSessions.values()) {
+                    if (s.guildId === guildId) {
+                        session = s;
+                        break;
+                    }
+                }
             }
 
-            // 2. 등록 완료 피드백 메시지 전송
+            const startTime = session ? new Date(session.startTime).toISOString() : new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+
+            // 1. Delete this user's existing goals for this session & game
+            const { error: deleteError } = await supabase
+                .from('goals')
+                .delete()
+                .eq('guild_id', guildId)
+                .eq('game_name', gameName)
+                .eq('creator_id', creatorId)
+                .gte('created_at', startTime);
+
+            if (deleteError) {
+                console.error("[goals] 기존 목표 삭제 실패:", deleteError.message);
+                return i.reply({ content: `❌ 목표 업데이트에 실패했습니다: ${deleteError.message}`, flags: [MessageFlags.Ephemeral] });
+            }
+
+            // Parse goals split by newline
+            const titles = title.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+
+            // 2. Insert new goals if any
+            if (titles.length > 0) {
+                const inserts = titles.map(t => ({
+                    guild_id: guildId,
+                    game_name: gameName,
+                    creator_id: creatorId,
+                    title: t,
+                    is_achieved: false
+                }));
+
+                const { error: insertError } = await supabase.from('goals').insert(inserts);
+                if (insertError) {
+                    console.error("[goals] 목표 일괄 삽입 실패:", insertError.message);
+                    return i.reply({ content: `❌ 목표 저장에 실패했습니다: ${insertError.message}`, flags: [MessageFlags.Ephemeral] });
+                }
+            }
+
+            // 3. Ephemeral reply feedback
             await i.reply({
-                content: `🎯 **오늘의 목표가 등록되었습니다!**\n- 게임: **${gameName}**\n- 목표: **${title}**\n\n*일기가 발행되면 웹 앱의 해당 게임 섹션에서 달성 여부를 체크할 수 있습니다!*`
+                content: `🎯 **오늘의 목표가 업데이트되었습니다!**\n\n*일기가 발행되면 웹 앱의 해당 게임 섹션에서 달성 여부를 체크할 수 있습니다!*`,
+                flags: [MessageFlags.Ephemeral]
             });
+
+            // 4. Fetch all active goals for this session to update the unified listing
+            const { data: allGoals, error: fetchError } = await supabase
+                .from('goals')
+                .select('*')
+                .eq('guild_id', guildId)
+                .eq('game_name', gameName)
+                .gte('created_at', startTime);
+
+            if (fetchError) {
+                console.error("[goals] 전체 목표 조회 실패:", fetchError.message);
+                return;
+            }
+
+            // Determine destination channel
+            let destChannel = null;
+            if (guildId === 'personal') {
+                try {
+                    destChannel = await client.users.fetch(creatorId);
+                } catch (e) {
+                    console.error("[goals] DM 채널 가져오기 실패:", e.message);
+                }
+            } else {
+                const guild = client.guilds.cache.get(guildId);
+                destChannel = guild?.channels.cache.find(c => c.name === '일기장');
+            }
+
+            if (destChannel) {
+                // Format goals list embed
+                const embed = new EmbedBuilder()
+                    .setColor(0xE05D38)
+                    .setTitle(`🎯 [${gameName}] 오늘의 목표 현황`)
+                    .setDescription(allGoals && allGoals.length > 0 
+                        ? allGoals.map((g, idx) => `${idx + 1}. **${g.title}** (등록: <@${g.creator_id}>)`).join('\n')
+                        : '등록된 목표가 없습니다.');
+
+                const buttonCustomId = `btn_goal_reg:${guildId}:${gameName}`;
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(buttonCustomId)
+                        .setLabel('🎯 오늘의 목표 추가/수정하기')
+                        .setStyle(ButtonStyle.Primary)
+                );
+
+                const payload = {
+                    embeds: [embed],
+                    components: [row]
+                };
+
+                // Delete previous goals status message if it exists
+                if (session && session.goalsMessageId) {
+                    try {
+                        const oldMsg = await destChannel.messages.fetch(session.goalsMessageId);
+                        if (oldMsg) await oldMsg.delete();
+                    } catch (e) {
+                        console.log("[goals] 이전 메시지 삭제 실패 또는 이미 삭제됨:", e.message);
+                    }
+                }
+
+                // Send new goals status message
+                const newMsg = await destChannel.send(payload);
+                if (session) {
+                    session.goalsMessageId = newMsg.id;
+                }
+            }
             return;
         }
 
