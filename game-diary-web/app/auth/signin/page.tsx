@@ -8,11 +8,13 @@ import Link from 'next/link';
 export default function SignInPage() {
   const [discordUrl, setDiscordUrl] = React.useState<string | null>(null);
   const [callbackUrl, setCallbackUrl] = React.useState("/diary");
+  const autoStartRedirected = React.useRef(false);
 
   React.useEffect(() => {
     async function initDiscordUrl() {
       try {
         const requestedCallbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+        const requestedAutoStart = new URLSearchParams(window.location.search).get("autoStart") === "1";
         let safeCallbackUrl = "/diary";
 
         if (requestedCallbackUrl) {
@@ -27,6 +29,7 @@ export default function SignInPage() {
         }
 
         setCallbackUrl(safeCallbackUrl);
+        const shouldAutoStart = requestedAutoStart && safeCallbackUrl.startsWith("/api/mobile/auth/complete");
         const csrfToken = await getCsrfToken();
         const res = await fetch('/api/auth/signin/discord', {
           method: 'POST',
@@ -43,6 +46,10 @@ export default function SignInPage() {
           const data = await res.json();
           if (data?.url) {
             setDiscordUrl(data.url);
+            if (shouldAutoStart && !autoStartRedirected.current) {
+              autoStartRedirected.current = true;
+              window.location.assign(data.url);
+            }
           }
         }
       } catch (err) {

@@ -60,6 +60,7 @@ export async function POST(request: Request) {
 
   const authorizationUrl = new URL("/auth/signin", webAppUrl);
   authorizationUrl.searchParams.set("callbackUrl", completeUrl.toString());
+  authorizationUrl.searchParams.set("autoStart", "1");
 
   return withMobileCors(
     NextResponse.json({
