@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "PLOG",
+    "slug": "plog-game-diary",
+    "scheme": "plog",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.insu.plog",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.insu.plog",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "game-diary-2.vercel.app",
+              "pathPrefix": "/mobile/auth/callback"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "34594038-2ad6-4e4b-8ee3-e8a8c2cd0901"
+      }
+    }
+  }
+}
