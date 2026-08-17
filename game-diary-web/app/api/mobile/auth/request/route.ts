@@ -54,13 +54,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const completeUrl = new URL("/api/mobile/auth/complete", webAppUrl);
-  completeUrl.searchParams.set("request_id", requestId);
-  completeUrl.searchParams.set("state", state);
-
-  const authorizationUrl = new URL("/auth/signin", webAppUrl);
-  authorizationUrl.searchParams.set("callbackUrl", completeUrl.toString());
-  authorizationUrl.searchParams.set("autoStart", "1");
+  const authorizationUrl = new URL("/api/mobile/auth/authorize", webAppUrl);
+  authorizationUrl.searchParams.set("request_id", requestId);
+  authorizationUrl.searchParams.set("state", state);
 
   return withMobileCors(
     NextResponse.json({
