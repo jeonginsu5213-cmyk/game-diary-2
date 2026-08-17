@@ -7,10 +7,26 @@ import Link from 'next/link';
 
 export default function SignInPage() {
   const [discordUrl, setDiscordUrl] = React.useState<string | null>(null);
+  const [callbackUrl, setCallbackUrl] = React.useState("/diary");
 
   React.useEffect(() => {
     async function initDiscordUrl() {
       try {
+        const requestedCallbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+        let safeCallbackUrl = "/diary";
+
+        if (requestedCallbackUrl) {
+          try {
+            const parsedCallbackUrl = new URL(requestedCallbackUrl, window.location.origin);
+            if (parsedCallbackUrl.origin === window.location.origin) {
+              safeCallbackUrl = `${parsedCallbackUrl.pathname}${parsedCallbackUrl.search}`;
+            }
+          } catch {
+            // Invalid callback URLs fall back to the normal diary landing page.
+          }
+        }
+
+        setCallbackUrl(safeCallbackUrl);
         const csrfToken = await getCsrfToken();
         const res = await fetch('/api/auth/signin/discord', {
           method: 'POST',
@@ -19,7 +35,7 @@ export default function SignInPage() {
           },
           body: new URLSearchParams({
             csrfToken: csrfToken || '',
-            callbackUrl: '/diary',
+            callbackUrl: safeCallbackUrl,
             json: 'true',
           }),
         });
@@ -45,7 +61,7 @@ export default function SignInPage() {
         transition={{ duration: 0.5 }}
         className="absolute top-6 left-6 z-30"
       >
-        <a 
+        <Link
           href="/" 
           className="group flex items-center gap-1 text-muted-foreground hover:text-foreground transition-all text-sm font-medium cursor-pointer"
         >
@@ -53,7 +69,7 @@ export default function SignInPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
           메인으로
-        </a>
+        </Link>
       </motion.div>
 
       {/* Main Login Content (No Card) */}
@@ -82,7 +98,7 @@ export default function SignInPage() {
             onClick={(e) => {
               if (!discordUrl) {
                 e.preventDefault();
-                signIn('discord', { callbackUrl: '/diary' });
+                signIn('discord', { callbackUrl });
               }
             }}
             className="w-full h-14 bg-primary hover:bg-primary/95 text-primary-foreground rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 group cursor-pointer shadow-md shadow-primary/10"
