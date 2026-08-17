@@ -55,6 +55,23 @@ function getSetCookies(headers: Map<string, HeaderValue>) {
   return typeof value === "string" ? [value] : [];
 }
 
+function getNextAuthCookies(headers: Map<string, HeaderValue>) {
+  return Object.fromEntries(
+    getSetCookies(headers).map((cookie) => {
+      const entry = cookie.split(";", 1)[0];
+      const separator = entry.indexOf("=");
+      const name = entry.slice(0, separator);
+      const value = entry.slice(separator + 1);
+
+      try {
+        return [name, decodeURIComponent(value)];
+      } catch {
+        return [name, value];
+      }
+    }),
+  );
+}
+
 export async function GET(request: NextRequest) {
   const requestId = request.nextUrl.searchParams.get("request_id");
   const state = request.nextUrl.searchParams.get("state");
@@ -110,12 +127,7 @@ export async function GET(request: NextRequest) {
     return errorResponse("Failed to initialize mobile sign-in", 500);
   }
 
-  const csrfCookies = Object.fromEntries(
-    getSetCookies(csrf.headers)
-      .map((cookie) => cookie.split(";", 1)[0])
-      .map((cookie) => cookie.split("=", 2))
-      .map(([name, value]) => [name, value]),
-  );
+  const csrfCookies = getNextAuthCookies(csrf.headers);
   const signIn = await runNextAuth({
     action: "signin",
     providerId: "discord",
