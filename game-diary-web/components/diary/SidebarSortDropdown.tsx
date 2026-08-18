@@ -54,7 +54,7 @@ export default function SidebarSortDropdown({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-1 text-[12px] font-bold text-muted-foreground hover:text-primary transition-all duration-200 group outline-none",
+          "flex items-center text-[14px] font-medium text-[#767676] hover:text-foreground transition-all duration-200 group outline-none md:gap-1 md:text-[12px] md:font-bold md:text-muted-foreground md:hover:text-primary",
           isOpen && "text-primary"
         )}
       >
@@ -66,7 +66,7 @@ export default function SidebarSortDropdown({
           transition={{ duration: 0.2, ease: 'easeInOut' }}
           className={cn("opacity-40 group-hover:opacity-100 transition-opacity", isOpen && "opacity-100")}
         >
-          <ChevronDown className='h-3 w-3' strokeWidth={2.5} />
+          <ChevronDown className='h-5 w-5 md:h-3 md:w-3' strokeWidth={2.5} />
         </motion.div>
       </button>
 

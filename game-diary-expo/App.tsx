@@ -1,20 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
+import { BlurView } from 'expo-blur'
+import MaskedView from '@react-native-masked-view/masked-view'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useFonts } from 'expo-font'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Dimensions,
   FlatList,
   Image,
+  Keyboard,
   Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  type KeyboardEvent,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native'
+import BackIcon from './assets/login/back.svg'
+import DiscordIcon from './assets/login/discord.svg'
+import PlogLogo from './assets/login/plog-logo.svg'
+import DiaryBellIcon from './assets/diary/bell.svg'
+import DiaryCalendarIcon from './assets/diary/calendar.svg'
+import DiaryCaretDownIcon from './assets/diary/caret-down.svg'
+import DiaryListIcon from './assets/diary/list.svg'
+import DiarySearchIcon from './assets/diary/search.svg'
+import DiaryServerIcon from './assets/diary/server.svg'
+import DiaryTrashIcon from './assets/diary/trash.svg'
 import { tokenStore, type MobileTokens } from './src/lib/token-store'
 
 const apiBaseUrl = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
@@ -74,6 +96,11 @@ function formatDuration(minutes: number | null) {
   return rest ? `${hours}시간 ${rest}분` : `${hours}시간`
 }
 
+function formatShortDate(value: string) {
+  const date = new Date(value)
+  return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+}
+
 async function readError(response: Response) {
   const body = await response.json().catch(() => null)
   return typeof body?.error === 'string' ? body.error : '요청을 처리하지 못했습니다.'
@@ -84,14 +111,86 @@ function Avatar({ user, size = 44 }: { user?: User; size?: number }) {
   return <View style={[styles.avatarFallback, { width: size, height: size, borderRadius: size / 2 }]}><Text style={styles.avatarLetter}>{(user?.display_name ?? '?').slice(0, 1)}</Text></View>
 }
 
+function GlassSurface({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[styles.glassSurface, style]}>
+      <View style={styles.glassSurfaceMask}>
+        <BlurView intensity={20} tint="light" style={StyleSheet.absoluteFill} />
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.glassSurfaceFill]} />
+        <LinearGradient colors={['rgba(255, 255, 255, 0.72)', 'rgba(255, 255, 255, 0)']} end={{ x: 0, y: 1 }} pointerEvents="none" start={{ x: 0, y: 0 }} style={styles.glassInnerHighlight} />
+        <LinearGradient colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.08)']} end={{ x: 0, y: 1 }} pointerEvents="none" start={{ x: 0, y: 0 }} style={styles.glassInnerShade} />
+        <View style={styles.glassSurfaceContent}>{children}</View>
+      </View>
+    </View>
+  )
+}
+
 export default function App() {
+  return <SafeAreaProvider style={styles.safeAreaProvider}><AppContent /></SafeAreaProvider>
+}
+
+function AppContent() {
+  const [fontsLoaded] = useFonts({
+    PretendardMedium: require('./assets/fonts/Pretendard-Medium.otf'),
+    PretendardSemiBold: require('./assets/fonts/Pretendard-SemiBold.otf'),
+    PretendardBold: require('./assets/fonts/Pretendard-Bold.otf'),
+  })
   const [screen, setScreen] = useState<Screen>('checking')
   const [user, setUser] = useState<User | null>(null)
   const [items, setItems] = useState<DiaryItem[]>([])
   const [selected, setSelected] = useState<DiaryDetail | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [working, setWorking] = useState(false)
+  const [diarySearchTerm, setDiarySearchTerm] = useState('')
+  const [isLatestFirst, setIsLatestFirst] = useState(true)
   const exchangingRef = useRef(false)
+  const keyboardOffset = useRef(new Animated.Value(0)).current
+  const insets = useSafeAreaInsets()
+
+  useEffect(() => {
+    const animateSearchDock = (event: KeyboardEvent) => {
+      const keyboardHeight = Math.max(0, Dimensions.get('window').height - event.endCoordinates.screenY)
+      Animated.timing(keyboardOffset, {
+        toValue: -keyboardHeight,
+        duration: event.duration || 250,
+        useNativeDriver: true,
+      }).start()
+    }
+    const resetSearchDock = (event: KeyboardEvent) => {
+      Animated.timing(keyboardOffset, {
+        toValue: 0,
+        duration: event.duration || 250,
+        useNativeDriver: true,
+      }).start()
+    }
+
+    if (Platform.OS === 'ios') {
+      const changeFrame = Keyboard.addListener('keyboardWillChangeFrame', animateSearchDock)
+      const hide = Keyboard.addListener('keyboardWillHide', resetSearchDock)
+      return () => { changeFrame.remove(); hide.remove() }
+    }
+
+    const show = Keyboard.addListener('keyboardDidShow', animateSearchDock)
+    const hide = Keyboard.addListener('keyboardDidHide', resetSearchDock)
+    return () => { show.remove(); hide.remove() }
+  }, [keyboardOffset])
+
+  const visibleDiaryItems = useMemo(() => {
+    const normalizedSearchTerm = diarySearchTerm.trim().toLocaleLowerCase('ko-KR')
+    return items
+      .filter((item) => {
+        if (!normalizedSearchTerm) return true
+        const searchText = [item.title, item.channelName, item.guildName, ...item.games.map((game) => game.title)]
+          .filter(Boolean)
+          .join(' ')
+          .toLocaleLowerCase('ko-KR')
+        return searchText.includes(normalizedSearchTerm)
+      })
+      .sort((left, right) => {
+        const difference = new Date(right.startTime).getTime() - new Date(left.startTime).getTime()
+        return isLatestFirst ? difference : -difference
+      })
+  }, [diarySearchTerm, isLatestFirst, items])
 
   const refreshTokens = useCallback(async (): Promise<MobileTokens | null> => {
     const tokens = await tokenStore.getTokens()
@@ -132,6 +231,7 @@ export default function App() {
     setUser(null)
     setItems([])
     setSelected(null)
+    setDiarySearchTerm('')
     setScreen('sign-in')
   }, [])
 
@@ -176,7 +276,7 @@ export default function App() {
       const result = await response.json() as MobileTokens & { user: User }
       await tokenStore.setTokens(result)
       await tokenStore.clearAuthState()
-      await WebBrowser.dismissBrowser()
+      void WebBrowser.dismissBrowser().catch(() => undefined)
       setUser(result.user)
       await loadDiary()
       setScreen('diary')
@@ -243,19 +343,31 @@ export default function App() {
     { text: '로그아웃', style: 'destructive', onPress: () => { void request('/api/mobile/session', { method: 'DELETE' }).catch(() => undefined).finally(() => signOutLocally()) } },
   ])
 
-  if (screen === 'checking') return <View style={styles.loadingPage}><StatusBar style="light" /><ActivityIndicator color="#e2bdff" /><Text style={styles.loadingText}>세션을 확인하는 중입니다…</Text></View>
+  if (screen === 'checking' || !fontsLoaded) return <View style={styles.loadingPage}><StatusBar style="light" /><ActivityIndicator color="#e2bdff" /><Text style={styles.loadingText}>세션을 확인하는 중입니다…</Text></View>
 
   if (screen === 'sign-in') return (
     <SafeAreaView style={styles.authPage}>
-      <StatusBar style="light" />
-      <View style={styles.brandMark}><Text style={styles.brandLetter}>P</Text></View>
-      <Text style={styles.eyebrow}>GAME DIARY</Text>
-      <Text style={styles.authTitle}>게임하던 순간을{`\n`}다시 꺼내 보세요.</Text>
-      <Text style={styles.muted}>Discord로 로그인하면 나의 플레이 일기를 안전하게 확인할 수 있습니다.</Text>
-      {message ? <Text style={styles.errorMessage}>{message}</Text> : null}
-      <Pressable accessibilityRole="button" style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, working && styles.disabled]} disabled={working} onPress={() => { void startSignIn() }}>
-        <Text style={styles.primaryButtonText}>{working ? '로그인 준비 중…' : 'Discord로 로그인'}</Text>
-      </Pressable>
+      <StatusBar style="dark" />
+      <View style={styles.authHeader}>
+        <View style={styles.homeLink} accessibilityLabel="메인으로">
+          <BackIcon width={22} height={22} />
+          <Text allowFontScaling={false} style={styles.homeLinkText}>메인으로</Text>
+        </View>
+      </View>
+      <View style={styles.authContent}>
+        <View style={styles.serviceName}>
+          <PlogLogo width={28} height={28} />
+          <Text allowFontScaling={false} style={styles.serviceNameText}>PLOG</Text>
+        </View>
+        <View style={styles.authActions}>
+          <Pressable accessibilityRole="button" style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, working && styles.disabled]} disabled={working} onPress={() => { void startSignIn() }}>
+            <DiscordIcon width={24} height={18} />
+            <Text allowFontScaling={false} style={styles.primaryButtonText}>{working ? '로그인 준비 중…' : '디스코드로 시작하기'}</Text>
+          </Pressable>
+          <Text allowFontScaling={false} style={styles.termsText}>로그인 시 <Text style={styles.termsLink}>이용 약관</Text> 및 <Text style={styles.termsLink}>개인정보 처리방침</Text>에 동의하게 됩니다.</Text>
+          {message ? <Text style={styles.authErrorMessage}>{message}</Text> : null}
+        </View>
+      </View>
     </SafeAreaView>
   )
 
@@ -278,30 +390,132 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.page}>
-      <StatusBar style="light" />
-      <View style={styles.diaryHeader}><View><Text style={styles.eyebrow}>PLOG</Text><Text style={styles.pageTitle}>{user?.display_name || '나'}의 일기</Text></View><Pressable onPress={signOut} accessibilityRole="button"><Avatar user={user ?? undefined} /></Pressable></View>
-      {message ? <Text style={[styles.errorMessage, styles.pageMessage]}>{message}</Text> : null}
-      <FlatList data={items} keyExtractor={(item) => item.id} contentContainerStyle={items.length ? styles.listContent : styles.emptyList} renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [styles.diaryCard, pressed && styles.pressed]} onPress={() => { void openDiary(item.id) }} disabled={working}>{item.coverImageUrl ? <Image source={{ uri: item.coverImageUrl }} style={styles.coverImage} /> : <View style={styles.coverFallback}><Text style={styles.coverEmoji}>🎮</Text></View>}<View style={styles.cardBody}><Text style={styles.cardDate}>{formatDate(item.startTime)}</Text><Text style={styles.cardTitle} numberOfLines={1}>{item.title || item.channelName || '플레이 기록'}</Text><Text style={styles.cardMeta} numberOfLines={1}>{item.games.map((game) => game.title).join(', ') || '게임 기록'} · {formatDuration(item.totalDurationMin)}</Text><Text style={styles.cardMeta}>{item.participantCount}명 · 사진 {item.screenshotCount}장</Text></View></Pressable>} ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyMark}>✦</Text><Text style={styles.emptyTitle}>아직 표시할 일기가 없어요.</Text><Text style={styles.emptyText}>데스크톱 웹에서 게임 기록을 남기면 이곳에서 확인할 수 있습니다.</Text></View>} />
-    </SafeAreaView>
+      <View style={styles.diaryPage}>
+        <StatusBar style="dark" />
+        <View style={[styles.diaryTabs, { paddingTop: insets.top + 16 }]}>
+        <Pressable accessibilityRole="button" onPress={signOut} style={({ pressed }) => [styles.profileTab, pressed && styles.pressed]}>
+          <Avatar size={44} user={user ?? undefined} />
+        </Pressable>
+        <GlassSurface style={styles.activeTab}>
+          <View style={styles.activeTabContent}><View style={styles.listIconFrame}><DiaryListIcon width={14} height={10.002} /></View><Text allowFontScaling={false} style={styles.activeTabText}>목록</Text></View>
+        </GlassSurface>
+        <GlassSurface style={styles.iconTab}><View style={styles.iconGlyphFrame}><DiaryCalendarIcon width={14.833} height={16.5} /></View></GlassSurface>
+        <GlassSurface style={styles.iconTab}><View style={styles.iconGlyphFrame}><DiaryTrashIcon width={14.833} height={16.5} /></View></GlassSurface>
+        <GlassSurface style={styles.iconTab}><View style={styles.iconGlyphFrame}><DiaryBellIcon width={13.333} height={15} /></View></GlassSurface>
+        </View>
+        <View style={styles.diarySheet}>
+        {message ? <Text style={styles.diaryMessage}>{message}</Text> : null}
+        <FlatList
+          data={visibleDiaryItems}
+          keyExtractor={(item) => item.id}
+          style={styles.diaryScroll}
+          contentContainerStyle={visibleDiaryItems.length ? styles.diaryListContent : styles.diaryEmptyList}
+          renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [styles.diaryListRow, pressed && styles.pressed]} onPress={() => { void openDiary(item.id) }} disabled={working}>
+            <View style={styles.diaryListItem}>
+              <View style={styles.diaryListLeading}><DiaryServerIcon width={28} height={28} /><Text allowFontScaling={false} numberOfLines={1} style={styles.diaryListTitle}>{item.title || item.channelName || '플레이 기록'}</Text></View>
+              <Text allowFontScaling={false} style={styles.diaryListDate}>{formatShortDate(item.startTime)}</Text>
+            </View>
+          </Pressable>}
+          ListEmptyComponent={<View style={styles.emptyState}><Text allowFontScaling={false} style={styles.emptyTitle}>{diarySearchTerm ? '검색 결과가 없어요.' : '아직 표시할 일기가 없어요.'}</Text><Text allowFontScaling={false} style={styles.emptyText}>{diarySearchTerm ? '다른 검색어를 입력해 보세요.' : '데스크톱 웹에서 게임 기록을 남기면 이곳에서 확인할 수 있습니다.'}</Text></View>}
+        />
+        <View pointerEvents="box-none" style={styles.sortOverlay}>
+          <MaskedView
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+            maskElement={<LinearGradient colors={['#ffffff', 'rgba(255, 255, 255, 0)']} end={{ x: 0, y: 1 }} locations={[0, 1]} start={{ x: 0, y: 0 }} style={StyleSheet.absoluteFill} />}
+          >
+            <View style={StyleSheet.absoluteFill}>
+              <BlurView intensity={20} tint="light" style={StyleSheet.absoluteFill} />
+              <View style={[StyleSheet.absoluteFill, styles.sortOverlayWhiteFill]} />
+            </View>
+          </MaskedView>
+          <Pressable accessibilityRole="button" onPress={() => setIsLatestFirst((latestFirst) => !latestFirst)} style={({ pressed }) => [styles.sortButton, pressed && styles.pressed]}>
+            <Text allowFontScaling={false} style={styles.sortText}>{isLatestFirst ? '최신순' : '오래된순'}</Text>
+            <View style={styles.caretIconFrame}><DiaryCaretDownIcon width={7.867} height={4.533} /></View>
+          </Pressable>
+        </View>
+        </View>
+        <Animated.View style={[styles.searchDock, { transform: [{ translateY: keyboardOffset }] }]}>
+          <GlassSurface style={styles.searchDockSurface}>
+            <View style={styles.searchDockContent}>
+              <View style={styles.searchIconFrame}><DiarySearchIcon width={16.5} height={16.5} /></View>
+              <TextInput
+                allowFontScaling={false}
+                autoCapitalize="none"
+                autoCorrect={false}
+                onChangeText={setDiarySearchTerm}
+                placeholder="일기 제목 검색..."
+                placeholderTextColor="#999999"
+                returnKeyType="search"
+                style={styles.diarySearchInput}
+                value={diarySearchTerm}
+              />
+            </View>
+          </GlassSurface>
+        </Animated.View>
+      </View>
   )
 }
 
 const styles = StyleSheet.create({
+  safeAreaProvider: { flex: 1 },
   loadingPage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, backgroundColor: '#17141f' },
   loadingText: { color: '#bcb1ca' },
-  authPage: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#17141f' },
-  brandMark: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#d8a6ff' },
-  brandLetter: { color: '#241d2e', fontSize: 29, fontWeight: '900' },
+  authPage: { flex: 1, backgroundColor: '#ffffff' },
+  authHeader: { height: 60, justifyContent: 'center', paddingHorizontal: 20 },
+  homeLink: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
+  homeLinkText: { color: '#111111', fontFamily: 'PretendardMedium', fontSize: 16, letterSpacing: -0.4, lineHeight: 22.4 },
+  authContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 28, paddingHorizontal: 32, paddingBottom: 95 },
+  serviceName: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  serviceNameText: { color: '#111111', fontFamily: 'PretendardMedium', fontSize: 24, letterSpacing: -0.6, lineHeight: 33.6 },
+  authActions: { width: '100%', alignItems: 'center', gap: 16 },
   eyebrow: { marginTop: 22, marginBottom: 8, color: '#c4a4e3', fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
   authTitle: { color: '#f5f0f9', fontSize: 37, fontWeight: '800', letterSpacing: -1.8, lineHeight: 43 },
   muted: { marginTop: 18, color: '#afa4ba', fontSize: 15, lineHeight: 24 },
-  primaryButton: { minHeight: 54, alignItems: 'center', justifyContent: 'center', marginTop: 30, borderRadius: 16, backgroundColor: '#e2bdff' },
-  primaryButtonText: { color: '#241d2e', fontSize: 16, fontWeight: '800' },
+  primaryButton: { width: '100%', minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 16, backgroundColor: '#ff383c' },
+  primaryButtonText: { color: '#ffffff', fontFamily: 'PretendardSemiBold', fontSize: 16, letterSpacing: -0.4, lineHeight: 22.4 },
+  termsText: { width: '100%', color: '#999999', fontFamily: 'PretendardMedium', fontSize: 12, letterSpacing: -0.3, lineHeight: 16.8, textAlign: 'center' },
+  termsLink: { color: '#767676', fontFamily: 'PretendardSemiBold', textDecorationLine: 'underline' },
+  authErrorMessage: { width: '100%', color: '#d92d32', fontSize: 12, lineHeight: 17, textAlign: 'center' },
   errorMessage: { marginTop: 14, color: '#ffb4b4', fontSize: 14, lineHeight: 20 },
   disabled: { opacity: 0.6 },
   pressed: { opacity: 0.78 },
   page: { flex: 1, backgroundColor: '#17141f' },
+  diaryPage: { flex: 1, backgroundColor: '#f5f5f5' },
+  diaryTabs: { flexDirection: 'row', alignItems: 'center', gap: 7.5, paddingHorizontal: 16, paddingVertical: 16 },
+  profileTab: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden' },
+  glassSurface: { position: 'relative', shadowColor: '#000000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 5 },
+  glassSurfaceMask: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 100, backgroundColor: 'rgba(249, 249, 249, 0.9)' },
+  glassSurfaceFill: { backgroundColor: 'rgba(249, 249, 249, 0.9)' },
+  glassInnerHighlight: { position: 'absolute', top: 0, right: 0, left: 0, height: 14 },
+  glassInnerShade: { position: 'absolute', right: 0, bottom: 0, left: 0, height: 14 },
+  glassSurfaceContent: { flex: 1, minWidth: 0 },
+  activeTab: { height: 44, flex: 1, minWidth: 0 },
+  activeTabContent: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  activeTabText: { color: '#111111', fontFamily: 'PretendardMedium', fontSize: 14, letterSpacing: -0.35, lineHeight: 19.6 },
+  iconTab: { width: 60, height: 44, alignItems: 'center', justifyContent: 'center' },
+  listIconFrame: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  iconGlyphFrame: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  caretIconFrame: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  diarySheet: { flex: 1, minHeight: 0, overflow: 'hidden', borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: '#ffffff' },
+  diaryMessage: { paddingHorizontal: 20, paddingTop: 12, color: '#d92d32', fontFamily: 'PretendardMedium', fontSize: 12, textAlign: 'center' },
+  sortOverlay: { position: 'absolute', top: 0, right: 0, left: 0, zIndex: 2, height: 44, overflow: 'hidden', borderTopLeftRadius: 12, borderTopRightRadius: 12 },
+  sortOverlayWhiteFill: { backgroundColor: '#ffffff' },
+  sortButton: { height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingTop: 8, paddingHorizontal: 16 },
+  sortText: { color: '#767676', fontFamily: 'PretendardMedium', fontSize: 14, letterSpacing: -0.35, lineHeight: 19.6 },
+  diaryScroll: { flex: 1, minHeight: 0 },
+  diaryListContent: { paddingTop: 44, paddingBottom: 200 },
+  diaryEmptyList: { flexGrow: 1, paddingTop: 44, paddingBottom: 200 },
+  diaryListRow: { height: 44, paddingHorizontal: 20, paddingVertical: 8 },
+  diaryListItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  diaryListLeading: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 12 },
+  diaryListTitle: { flex: 1, minWidth: 0, color: '#767676', fontFamily: 'PretendardMedium', fontSize: 14, letterSpacing: -0.35, lineHeight: 19.6 },
+  diaryListDate: { width: 40, color: '#999999', fontFamily: 'PretendardMedium', fontSize: 14, letterSpacing: -0.35, lineHeight: 19.6, textAlign: 'right' },
+  searchDock: { position: 'absolute', right: '9.45%', bottom: 40, left: '9.45%', zIndex: 3, height: 48 },
+  searchDockSurface: { flex: 1, minWidth: 0 },
+  searchDockContent: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12, paddingLeft: 20, paddingRight: 12 },
+  searchIconFrame: { width: 15, height: 15, alignItems: 'center', justifyContent: 'center' },
+  diarySearchInput: { flex: 1, height: '100%', minWidth: 0, padding: 0, color: '#111111', fontFamily: 'PretendardMedium', fontSize: 14, letterSpacing: -0.35, lineHeight: 19.6 },
   diaryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 18 },
   pageTitle: { color: '#f5f0f9', fontSize: 28, fontWeight: '800', letterSpacing: -1.2 },
   pageMessage: { marginHorizontal: 20 },

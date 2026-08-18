@@ -12,7 +12,7 @@ import { formatDurationText, formatDate, formatTime, getObjectParticle, maskNick
 import DiarySidebar from '@/components/diary/DiarySidebar';
 import DiaryHeader from '@/components/diary/DiaryHeader';
 import { BentoGrid, BentoItem } from '@/components/diary/BentoGrid';
-import { Gamepad2, Camera, MessageCircleMore, MessageCircle, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar, Star, Home as HomeIcon, Inbox, List, Bell, Settings, ArrowLeftRight, Info, RotateCcw, Plus, MoreHorizontal, HelpCircle, LogOut, Shield } from 'lucide-react';
+import { Gamepad2, Camera, MessageCircleMore, MessageCircle, Clock, ChevronDown, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderInput, Pin, Calendar, Star, Home as HomeIcon, Inbox, List, Bell, Settings, ArrowLeftRight, Info, RotateCcw, Plus, MoreHorizontal, HelpCircle, LogOut, Shield, Search } from 'lucide-react';
 import { Pagination } from "@ark-ui/react/pagination";
 import SidebarSortDropdown from '@/components/diary/SidebarSortDropdown';
 import SettingsView from '@/components/diary/SettingsView';
@@ -64,7 +64,7 @@ function DiaryListItem({
   const iconOpacity = useTransform(x, [0, -40], [0, 1]);
 
   return (
-    <div className="relative overflow-hidden rounded-lg w-full flex items-center">
+    <div className="relative w-full flex items-center overflow-hidden md:rounded-lg">
       {/* Swipe Star Icon Background (Right-aligned for left swipe) - Only for active lists */}
       {!isTrash && (
         <div className="absolute inset-y-0 right-0 w-24 flex items-center justify-end pr-3 pointer-events-none z-0">
@@ -103,13 +103,13 @@ function DiaryListItem({
               onSelect(s.id);
             }
           }}
-          className={`w-full text-left px-4 py-3 md:p-2 rounded-lg flex items-center gap-3 transition-all duration-200 cursor-pointer select-none active:scale-[0.97] active:bg-muted/80 origin-center ${
+          className={`text-left flex items-center gap-2 px-5 py-2 transition-all duration-200 cursor-pointer select-none active:scale-[0.97] active:bg-muted/80 origin-center md:w-full md:gap-3 md:p-2 md:rounded-lg ${
             isSelected 
-              ? 'bg-transparent md:bg-[#e8ebed] text-foreground shadow-xs md:shadow-none' 
-              : 'bg-transparent text-muted-foreground hover:bg-muted/50 md:hover:bg-[#e8ebed] hover:text-foreground'
+              ? 'mx-3 w-[calc(100%-24px)] rounded-2xl bg-[#f5f5f5] text-foreground shadow-none md:mx-0 md:w-full md:bg-[#e8ebed] md:shadow-none'
+              : 'w-full bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground md:hover:bg-[#e8ebed]'
           }`}
         >
-          <div className="w-6 h-6 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-xs">
+          <div className="w-7 h-7 rounded-full overflow-hidden bg-background border border-border/50 shrink-0 flex items-center justify-center shadow-none md:w-6 md:h-6 md:shadow-xs">
             {s.guild_name && s.guild_name !== '개인' ? (
               s.guild_icon ? (
                 <img src={s.guild_icon} className="w-full h-full object-cover" alt="" />
@@ -126,10 +126,10 @@ function DiaryListItem({
               />
             )}
           </div>
-          <span className={`text-[13.5px] truncate tracking-tight transition-all flex-1 font-medium ${isSelected ? 'text-foreground' : ''}`}>
+          <span className={`text-[14px] truncate tracking-[-0.35px] transition-all flex-1 font-medium ${isSelected ? 'text-foreground' : ''}`}>
             {s.title}
           </span>
-          <span className="text-[11px] font-sans tracking-tighter opacity-70 shrink-0 flex items-center gap-1 select-none">
+          <span className="text-[14px] font-sans tracking-[-0.35px] text-[#999] shrink-0 flex items-center gap-2 select-none md:text-[11px] md:tracking-tighter md:opacity-70 md:gap-1">
             {isTrash ? (
               <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {/* 되돌리기 (복원) 버튼 */}
@@ -160,7 +160,7 @@ function DiaryListItem({
             ) : (
               <>
                 {isFavorite && (
-                  <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200" strokeWidth={2.5} />
+                  <Star className="w-5 h-5 fill-yellow-500 text-yellow-500 shrink-0 animate-in zoom-in duration-200 md:w-3.5 md:h-3.5" strokeWidth={2.5} />
                 )}
                 <span className="opacity-55 w-[34px] text-right tabular-nums font-sans">
                   {new Date(s.start_time).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
@@ -1382,20 +1382,20 @@ function HomeContent() {
   );
 
   return (
-    <div className="flex h-[var(--visual-viewport-height,100vh)] w-full bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-16 md:pb-0 relative">
+    <div className="flex h-[var(--visual-viewport-height,100vh)] w-full bg-[#f5f5f5] md:bg-background text-foreground font-sans overflow-hidden selection:bg-primary/20 pb-0 relative">
       {/* 1. Sidebar: Detailed List Navigation (Main Navigation) */}
-      <aside className={`w-full bg-background md:border-r md:border-border/40 flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
+      <aside className={`w-full bg-[#f5f5f5] md:bg-background md:border-r md:border-border/40 flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out absolute left-0 top-0 md:relative md:left-auto md:top-auto md:w-[312px] ${
         viewMode === 'list' ? 'translate-x-0 pointer-events-auto z-10 md:z-20' : '-translate-x-full pointer-events-none z-10 md:translate-x-0 md:pointer-events-auto md:z-20'
       }`}>
 
 
         {/* Tab Bar (IMG_4513.jpg Style) */}
-        <div className="w-full px-4 pt-4 pb-4 flex items-center gap-2.5 shrink-0 overflow-visible relative z-30">
+        <div className="w-full px-4 pt-[62px] pb-8 flex items-center gap-[7.5px] shrink-0 overflow-visible relative z-30 md:pt-4 md:pb-4 md:gap-2.5">
           {/* 1. 디스코드 프로필 이미지 */}
-          <div className="relative w-10 h-10 shrink-0 md:hidden">
+          <div className="relative w-11 h-11 shrink-0 md:hidden">
             <button 
               onClick={() => setIsProfileOpen(true)}
-              className="w-10 h-10 rounded-full bg-white border-2 border-[#e8ebed] dark:border-muted flex items-center justify-center shadow-xs overflow-hidden shrink-0 focus:outline-none cursor-pointer active:scale-95 transition-transform"
+              className="w-11 h-11 rounded-full bg-[#f9f9f9] border-0 flex items-center justify-center shadow-[0_2px_3px_rgba(0,0,0,0.06)] overflow-hidden shrink-0 focus:outline-none cursor-pointer active:scale-95 transition-transform"
             >
               {session?.user?.image ? (
                 <img src={session.user.image} className="w-full h-full object-cover" alt="" />
@@ -1431,17 +1431,17 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('active')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
+            className={`h-11 rounded-full font-medium text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1 focus:outline-none bg-[#f9f9f9] shadow-[0_2px_3px_rgba(0,0,0,0.06)] dark:bg-muted md:h-10 md:font-bold md:gap-1.5 md:bg-[#e8ebed] md:shadow-none ${
               listTab === 'active' 
-                ? 'flex-1 text-foreground px-5' 
-                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
+                ? 'flex-1 text-foreground px-3'
+                : 'w-[60px] hover:bg-[#f5f5f5] dark:hover:bg-muted/80 text-muted-foreground md:w-14 md:hover:bg-[#e8ebed]/80'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="목록"
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
-              <List className={`w-4 h-4 ${listTab === 'active' ? 'fill-foreground text-foreground' : ''}`} />
+              <List className={`w-6 h-6 md:w-4 md:h-4 ${listTab === 'active' ? 'fill-foreground text-foreground' : ''}`} />
               {listTab === 'active' && <span className="md:hidden">목록</span>}
             </span>
           </motion.button>
@@ -1450,17 +1450,17 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('calendar')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
+            className={`h-11 rounded-full font-medium text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1 focus:outline-none bg-[#f9f9f9] shadow-[0_2px_3px_rgba(0,0,0,0.06)] dark:bg-muted md:h-10 md:font-bold md:gap-1.5 md:bg-[#e8ebed] md:shadow-none ${
               listTab === 'calendar' 
-                ? 'flex-1 text-foreground px-5' 
-                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
+                ? 'flex-1 text-foreground px-3'
+                : 'w-[60px] hover:bg-[#f5f5f5] dark:hover:bg-muted/80 text-muted-foreground md:w-14 md:hover:bg-[#e8ebed]/80'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="캘린더"
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
-              <Calendar className={`w-4 h-4 ${listTab === 'calendar' ? 'fill-foreground text-foreground' : ''}`} />
+              <Calendar className={`w-5 h-5 md:w-4 md:h-4 ${listTab === 'calendar' ? 'fill-foreground text-foreground' : ''}`} />
               {listTab === 'calendar' && <span className="md:hidden">캘린더</span>}
             </span>
           </motion.button>
@@ -1469,17 +1469,17 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('trash')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
+            className={`h-11 rounded-full font-medium text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1 focus:outline-none bg-[#f9f9f9] shadow-[0_2px_3px_rgba(0,0,0,0.06)] dark:bg-muted md:h-10 md:font-bold md:gap-1.5 md:bg-[#e8ebed] md:shadow-none ${
               listTab === 'trash' 
-                ? 'flex-1 text-foreground px-5' 
-                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
+                ? 'flex-1 text-foreground px-3'
+                : 'w-[60px] hover:bg-[#f5f5f5] dark:hover:bg-muted/80 text-muted-foreground md:w-14 md:hover:bg-[#e8ebed]/80'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             title="휴지통"
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
-              <Trash2 className={`w-4 h-4 ${listTab === 'trash' ? 'fill-foreground text-foreground' : ''}`} />
+              <Trash2 className={`w-5 h-5 md:w-4 md:h-4 ${listTab === 'trash' ? 'fill-foreground text-foreground' : ''}`} />
               {listTab === 'trash' && <span className="md:hidden">휴지통</span>}
             </span>
           </motion.button>
@@ -1488,10 +1488,10 @@ function HomeContent() {
           <motion.button 
             layout
             onClick={() => handleTabChange('notifications')}
-            className={`h-10 rounded-full font-bold text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1.5 focus:outline-none bg-[#e8ebed] dark:bg-muted ${
+            className={`h-11 rounded-full font-medium text-[14px] transition-colors duration-200 shrink-0 relative flex items-center justify-center gap-1 focus:outline-none bg-[#f9f9f9] shadow-[0_2px_3px_rgba(0,0,0,0.06)] dark:bg-muted md:h-10 md:font-bold md:gap-1.5 md:bg-[#e8ebed] md:shadow-none ${
               listTab === 'notifications' 
-                ? 'flex-1 text-foreground px-5' 
-                : 'w-14 hover:bg-[#e8ebed]/80 dark:hover:bg-muted/80 text-muted-foreground'
+                ? 'flex-1 text-foreground px-3'
+                : 'w-[60px] hover:bg-[#f5f5f5] dark:hover:bg-muted/80 text-muted-foreground md:w-14 md:hover:bg-[#e8ebed]/80'
             }`}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
@@ -1499,7 +1499,7 @@ function HomeContent() {
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">
               <span className="relative">
-                <Bell className={`w-4 h-4 ${listTab === 'notifications' ? 'fill-foreground text-foreground' : ''}`} />
+                <Bell className={`w-5 h-5 md:w-4 md:h-4 ${listTab === 'notifications' ? 'fill-foreground text-foreground' : ''}`} />
                 {notifications.some(n => !n.is_read) && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#ef4444] rounded-full border border-white dark:border-muted z-20 pointer-events-none" />
                 )}
@@ -1561,10 +1561,10 @@ function HomeContent() {
         </div>
 
         <div 
-          className={`w-full px-4 flex items-center shrink-0 relative z-10 transition-all duration-300 ${
+          className={`w-full px-4 flex items-center shrink-0 relative z-10 transition-all duration-300 md:flex ${
             listTab === 'active' 
-              ? 'h-14 pb-4 md:h-10 md:pb-0 opacity-100 pointer-events-auto' 
-              : 'h-0 pb-0 opacity-0 pointer-events-none'
+              ? 'hidden md:h-10 md:pb-0 md:opacity-100 md:pointer-events-auto'
+              : 'hidden md:h-0 md:pb-0 md:opacity-0 md:pointer-events-none'
           }`}
         >
           <div className="relative group w-full">
@@ -2378,6 +2378,32 @@ function HomeContent() {
             </motion.div>
           </AnimatePresence>
         </motion.div>
+
+        {listTab === 'active' && (
+          <div className="absolute bottom-10 left-1/2 z-40 w-[326px] max-w-[calc(100%-76px)] -translate-x-1/2 md:hidden">
+            <div className="relative flex h-12 items-center rounded-full bg-[rgba(249,249,249,0.9)] py-2 pl-5 pr-3 shadow-[0_12px_24px_rgba(0,0,0,0.06),0_0_48px_rgba(0,0,0,0.12)] ring-1 ring-white">
+              <Search className="h-[15px] w-[15px] shrink-0 text-[#767676]" strokeWidth={2.5} aria-hidden="true" />
+              <input
+                type="text"
+                placeholder="일기 제목 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent px-3 text-[14px] font-medium tracking-[-0.35px] text-foreground outline-none placeholder:text-[#999]"
+                aria-label="일기 제목 검색"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-black/5"
+                  aria-label="검색어 지우기"
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Bottom profile container (desktop only) */}
         <div className="hidden md:flex pt-2 pb-4 px-4 items-center justify-between bg-transparent relative z-30">

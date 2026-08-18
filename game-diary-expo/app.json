@@ -9,6 +9,9 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.insu.plog",
+      "associatedDomains": [
+        "applinks:game-diary-2.vercel.app"
+      ],
       "supportsTablet": true
     },
     "android": {
@@ -40,7 +43,8 @@
           "configureAndroidBackup": true
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ],
     "extra": {
       "eas": {
