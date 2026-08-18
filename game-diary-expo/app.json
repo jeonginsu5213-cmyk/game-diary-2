@@ -9,6 +9,9 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.insu.plog",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
       "associatedDomains": [
         "applinks:game-diary-2.vercel.app"
       ],
