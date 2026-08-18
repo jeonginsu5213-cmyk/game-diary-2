@@ -5,6 +5,7 @@ import MaskedView from '@react-native-masked-view/masked-view'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useFonts } from 'expo-font'
+import { requireOptionalNativeModule } from 'expo-modules-core'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
 import {
@@ -40,6 +41,13 @@ import DiaryTrashIcon from './assets/diary/trash.svg'
 import { tokenStore, type MobileTokens } from './src/lib/token-store'
 
 const apiBaseUrl = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
+const discordApplicationId = '1500540191910264984'
+
+type DiscordSocialAuthModule = {
+  authorize(applicationId: string): Promise<{ code: string; codeVerifier: string; redirectUri: string }>
+}
+
+const discordSocialAuth = requireOptionalNativeModule<DiscordSocialAuthModule>('DiscordSocialAuth')
 
 type User = { id: string; display_name?: string | null; avatar_url?: string | null }
 type DiaryItem = {
@@ -308,6 +316,28 @@ function AppContent() {
     setWorking(true)
     setMessage(null)
     try {
+      if (Platform.OS === 'ios' && discordSocialAuth) {
+        const authorization = await discordSocialAuth.authorize(discordApplicationId)
+        const response = await fetch(`${apiBaseUrl}/api/mobile/auth/discord/exchange`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: authorization.code,
+            codeVerifier: authorization.codeVerifier,
+            redirectUri: authorization.redirectUri,
+            platform: 'ios',
+          }),
+        })
+        if (!response.ok) throw new Error(await readError(response))
+        const result = await response.json() as MobileTokens & { user: User }
+        await tokenStore.setTokens(result)
+        await tokenStore.clearAuthState()
+        setUser(result.user)
+        await loadDiary()
+        setScreen('diary')
+        return
+      }
+
       const response = await fetch(`${apiBaseUrl}/api/mobile/auth/request`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ platform: Platform.OS === 'ios' ? 'ios' : 'android' }),
       })

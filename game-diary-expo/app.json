@@ -10,7 +10,23 @@
     "ios": {
       "bundleIdentifier": "com.insu.plog",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": [
+          "discord"
+        ],
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "plog",
+              "com.insu.plog"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "discord-1500540191910264984"
+            ]
+          }
+        ]
       },
       "associatedDomains": [
         "applinks:game-diary-2.vercel.app"
