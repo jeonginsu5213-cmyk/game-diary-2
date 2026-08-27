@@ -151,10 +151,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   let commentId = "";
   let content = "";
+  let isChecklist: boolean | undefined;
   try {
-    const body = await request.json() as { commentId?: unknown; content?: unknown };
+    const body = await request.json() as { commentId?: unknown; content?: unknown; isChecklist?: unknown };
     commentId = typeof body.commentId === "string" ? body.commentId : "";
     content = typeof body.content === "string" ? body.content.trim() : "";
+    isChecklist = typeof body.isChecklist === "boolean" ? body.isChecklist : undefined;
   } catch {
     return withMobileCors(NextResponse.json({ error: "Invalid request body" }, { status: 400 }), request);
   }
@@ -201,7 +203,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { data: comment, error: commentError } = await supabase
     .from("comments")
-    .update({ content })
+    .update(isChecklist === undefined ? { content } : { content, is_checklist: isChecklist })
     .eq("id", commentId)
     .eq("game_id", game.id)
     .eq("user_id", mobileSession.userId)
