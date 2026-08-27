@@ -29,10 +29,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   let content = "";
   let isChecklist = false;
+  let replaceChecklistCommentId = "";
   try {
-    const body = await request.json() as { content?: unknown; isChecklist?: unknown };
+    const body = await request.json() as { content?: unknown; isChecklist?: unknown; replaceChecklistCommentId?: unknown };
     content = typeof body.content === "string" ? body.content.trim() : "";
     isChecklist = body.isChecklist === true;
+    replaceChecklistCommentId = typeof body.replaceChecklistCommentId === "string" ? body.replaceChecklistCommentId : "";
   } catch {
     return withMobileCors(NextResponse.json({ error: "Invalid request body" }, { status: 400 }), request);
   }
@@ -51,6 +53,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       request,
     );
   }
+
+  let replacedChecklistCommentId: string | null = null;
 
   const [participantResult, gameResult] = await Promise.all([
     supabase
@@ -108,11 +112,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
         request,
       );
     }
-    if (existingChecklistComment) {
+    if (existingChecklistComment && existingChecklistComment.id !== replaceChecklistCommentId) {
       return withMobileCors(
         NextResponse.json({ error: "A checklist comment already exists" }, { status: 409 }),
         request,
       );
+    }
+    if (existingChecklistComment) {
+      const { error: unpinError } = await supabase
+        .from("comments")
+        .update({ is_checklist: false })
+        .eq("id", existingChecklistComment.id)
+        .eq("game_id", game.id)
+        .eq("user_id", mobileSession.userId)
+        .eq("is_checklist", true);
+
+      if (unpinError) {
+        console.error("Failed to replace mobile checklist comment:", unpinError.message);
+        return withMobileCors(
+          NextResponse.json({ error: "Failed to replace checklist comment" }, { status: 500 }),
+          request,
+        );
+      }
+      replacedChecklistCommentId = existingChecklistComment.id;
     }
   }
 
@@ -128,6 +150,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     .single();
 
   if (commentError || !comment) {
+    if (replacedChecklistCommentId) {
+      const { error: restoreError } = await supabase
+        .from("comments")
+        .update({ is_checklist: true })
+        .eq("id", replacedChecklistCommentId)
+        .eq("game_id", game.id)
+        .eq("user_id", mobileSession.userId);
+      if (restoreError) {
+        console.error("Failed to restore mobile checklist comment:", restoreError.message);
+      }
+    }
     console.error("Failed to add mobile game comment:", commentError?.message || "No comment returned");
     return withMobileCors(
       NextResponse.json({ error: "Failed to add comment" }, { status: 500 }),
