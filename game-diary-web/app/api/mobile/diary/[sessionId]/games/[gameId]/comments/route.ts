@@ -185,16 +185,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   let commentId = "";
   let content = "";
   let isChecklist: boolean | undefined;
+  let replaceChecklistCommentId = "";
   try {
-    const body = await request.json() as { commentId?: unknown; content?: unknown; isChecklist?: unknown };
+    const body = await request.json() as { commentId?: unknown; content?: unknown; isChecklist?: unknown; replaceChecklistCommentId?: unknown };
     commentId = typeof body.commentId === "string" ? body.commentId : "";
     content = typeof body.content === "string" ? body.content.trim() : "";
     isChecklist = typeof body.isChecklist === "boolean" ? body.isChecklist : undefined;
+    replaceChecklistCommentId = typeof body.replaceChecklistCommentId === "string" ? body.replaceChecklistCommentId : "";
   } catch {
     return withMobileCors(NextResponse.json({ error: "Invalid request body" }, { status: 400 }), request);
   }
 
-  if (!commentId || commentId.length > 200 || !content || content.length > 500) {
+  if (!commentId || commentId.length > 200 || replaceChecklistCommentId.length > 200 || !content || content.length > 500) {
     return withMobileCors(NextResponse.json({ error: "Invalid checklist comment" }, { status: 400 }), request);
   }
 
@@ -234,23 +236,149 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return withMobileCors(NextResponse.json({ error: "Game not found" }, { status: 404 }), request);
   }
 
+  let replacedChecklistCommentId: string | null = null;
+  if (isChecklist === true) {
+    const { data: existingChecklistComment, error: existingChecklistCommentError } = await supabase
+      .from("comments")
+      .select("id")
+      .eq("game_id", game.id)
+      .eq("user_id", mobileSession.userId)
+      .eq("is_checklist", true)
+      .maybeSingle();
+
+    if (existingChecklistCommentError) {
+      console.error("Failed to check existing mobile checklist comment:", existingChecklistCommentError.message);
+      return withMobileCors(NextResponse.json({ error: "Failed to update comment" }, { status: 500 }), request);
+    }
+    if (existingChecklistComment && existingChecklistComment.id !== commentId) {
+      if (existingChecklistComment.id !== replaceChecklistCommentId) {
+        return withMobileCors(
+          NextResponse.json({ error: "A checklist comment already exists" }, { status: 409 }),
+          request,
+        );
+      }
+      const { error: unpinError } = await supabase
+        .from("comments")
+        .update({ is_checklist: false })
+        .eq("id", existingChecklistComment.id)
+        .eq("game_id", game.id)
+        .eq("user_id", mobileSession.userId)
+        .eq("is_checklist", true);
+      if (unpinError) {
+        console.error("Failed to replace mobile checklist comment:", unpinError.message);
+        return withMobileCors(NextResponse.json({ error: "Failed to replace checklist comment" }, { status: 500 }), request);
+      }
+      replacedChecklistCommentId = existingChecklistComment.id;
+    }
+  }
+
   const { data: comment, error: commentError } = await supabase
     .from("comments")
     .update(isChecklist === undefined ? { content } : { content, is_checklist: isChecklist })
     .eq("id", commentId)
     .eq("game_id", game.id)
     .eq("user_id", mobileSession.userId)
-    .eq("is_checklist", true)
-    .select("id, user_id, content, is_checklist, created_at")
+    .select("id, user_id, content, is_checklist, replies, created_at")
     .maybeSingle();
 
   if (commentError) {
+    if (replacedChecklistCommentId) {
+      const { error: restoreError } = await supabase
+        .from("comments")
+        .update({ is_checklist: true })
+        .eq("id", replacedChecklistCommentId)
+        .eq("game_id", game.id)
+        .eq("user_id", mobileSession.userId);
+      if (restoreError) console.error("Failed to restore mobile checklist comment:", restoreError.message);
+    }
     console.error("Failed to update mobile checklist comment:", commentError.message);
     return withMobileCors(NextResponse.json({ error: "Failed to update comment" }, { status: 500 }), request);
   }
   if (!comment) {
-    return withMobileCors(NextResponse.json({ error: "Checklist comment not found" }, { status: 404 }), request);
+    if (replacedChecklistCommentId) {
+      const { error: restoreError } = await supabase
+        .from("comments")
+        .update({ is_checklist: true })
+        .eq("id", replacedChecklistCommentId)
+        .eq("game_id", game.id)
+        .eq("user_id", mobileSession.userId);
+      if (restoreError) console.error("Failed to restore mobile checklist comment:", restoreError.message);
+    }
+    return withMobileCors(NextResponse.json({ error: "Comment not found" }, { status: 404 }), request);
   }
 
-  return withMobileCors(NextResponse.json({ comment }), request);
+  return withMobileCors(NextResponse.json({ comment, replacedChecklistCommentId }), request);
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const mobileSession = await getMobileSession(request);
+  if (!mobileSession) {
+    return withMobileCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), request);
+  }
+
+  const { sessionId, gameId } = await context.params;
+  if (!sessionId || sessionId.length > 200 || !gameId || gameId.length > 200) {
+    return withMobileCors(NextResponse.json({ error: "Invalid diary or game id" }, { status: 400 }), request);
+  }
+
+  let commentId = "";
+  try {
+    const body = await request.json() as { commentId?: unknown };
+    commentId = typeof body.commentId === "string" ? body.commentId : "";
+  } catch {
+    return withMobileCors(NextResponse.json({ error: "Invalid request body" }, { status: 400 }), request);
+  }
+  if (!commentId || commentId.length > 200) {
+    return withMobileCors(NextResponse.json({ error: "Invalid comment id" }, { status: 400 }), request);
+  }
+
+  const supabase = getServiceClient();
+  if (!supabase) {
+    return withMobileCors(NextResponse.json({ error: "Server configuration error" }, { status: 500 }), request);
+  }
+
+  const [participantResult, gameResult] = await Promise.all([
+    supabase
+      .from("session_participants")
+      .select("session_id, is_deleted")
+      .eq("session_id", sessionId)
+      .eq("user_id", mobileSession.userId)
+      .maybeSingle(),
+    supabase
+      .from("session_games")
+      .select("id")
+      .eq("id", gameId)
+      .eq("session_id", sessionId)
+      .maybeSingle(),
+  ]);
+  const { data: participant, error: participantError } = participantResult;
+  const { data: game, error: gameError } = gameResult;
+  if (participantError || gameError) {
+    console.error("Failed to verify mobile comment deletion:", participantError?.message || gameError?.message);
+    return withMobileCors(NextResponse.json({ error: "Failed to delete comment" }, { status: 500 }), request);
+  }
+  if (!participant || participant.is_deleted === true) {
+    return withMobileCors(NextResponse.json({ error: "Session not found" }, { status: 404 }), request);
+  }
+  if (!game) {
+    return withMobileCors(NextResponse.json({ error: "Game not found" }, { status: 404 }), request);
+  }
+
+  const { data: deletedComment, error: deleteError } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("game_id", game.id)
+    .eq("user_id", mobileSession.userId)
+    .select("id")
+    .maybeSingle();
+  if (deleteError) {
+    console.error("Failed to delete mobile comment:", deleteError.message);
+    return withMobileCors(NextResponse.json({ error: "Failed to delete comment" }, { status: 500 }), request);
+  }
+  if (!deletedComment) {
+    return withMobileCors(NextResponse.json({ error: "Comment not found" }, { status: 404 }), request);
+  }
+
+  return withMobileCors(NextResponse.json({ deletedCommentId: deletedComment.id }), request);
 }
